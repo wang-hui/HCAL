@@ -34,6 +34,9 @@ Implementation:
 #include "Geometry/Records/interface/HcalRecNumberingRecord.h"
 #include "SimCalorimetry/HcalSimAlgos/interface/HcalSimParameters.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
+//#include "CondFormats/HcalObjects/interface/HcalRespCorr.h"
+#include "samplingFactor.h"
 
 //STL headers
 #include <vector>
@@ -60,8 +63,9 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 		virtual void beginJob() override;
 		virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 		virtual void endJob() override;
-		//void sum_energy_per_rawId(std::map <int, float> id_energy_map, int id, float energy);
+		void sum_energy_per_rawId(std::map <int, float> & id_energy_map, int id, float energy);
 
+		bool do_PU;
 		edm::EDGetTokenT<std::vector<PCaloHit>> hcalhitsToken_;
 		edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
 
@@ -78,7 +82,9 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //
 // constructors and destructor
 //
-HCALTestAna::HCALTestAna(const edm::ParameterSet& iConfig)
+HCALTestAna::HCALTestAna(const edm::ParameterSet& iConfig):
+	do_PU(iConfig.getUntrackedParameter<bool>("do_PU"))
+
 {
 	//now do what ever initialization is needed
 	hcalhitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
@@ -101,7 +107,7 @@ HCALTestAna::~HCALTestAna()
 
 // ------------ method called for each event  ------------
 
-void sum_energy_per_rawId(std::map <int, float> & id_energy_map, int id, float energy)
+void HCALTestAna::sum_energy_per_rawId(std::map <int, float> & id_energy_map, int id, float energy)
 {
 	std::map<int,float>::iterator it;
 	it = id_energy_map.find(id);
@@ -116,11 +122,6 @@ void sum_energy_per_rawId(std::map <int, float> & id_energy_map, int id, float e
 	}
 }
 
-//samplingFactor for ietaAbs 1 to 16. Source: https://github.com/cms-sw/cmssw/blob/CMSSW_10_2_X/SimCalorimetry/HcalSimProducers/python/hcalSimParameters_cfi.py#L60
-std::vector <float> samplingFactors_hb = {125.44, 125.54, 125.32, 125.13, 124.46, 125.01, 125.22, 125.48, 124.45, 125.90, 125.83, 127.01, 126.82, 129.73, 131.83, 143.52};
-//samplingFactor for ietaAbs 16 to 29. Source: https://github.com/cms-sw/cmssw/blob/CMSSW_10_2_X/SimCalorimetry/HcalSimProducers/python/hcalSimParameters_cfi.py#L77
-std::vector <float> samplingFactors_he = {210.55, 197.93, 186.12, 189.64, 189.63, 190.28, 189.61, 189.60, 190.12, 191.22, 190.90, 193.06, 188.42, 188.42};
-
 void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
 	using namespace edm;
@@ -133,6 +134,9 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 	ESHandle<HcalDDDRecConstants> pHRNDC;
 	iSetup.get<HcalRecNumberingRecord>().get(pHRNDC);
 	const HcalDDDRecConstants *hcons = &(*pHRNDC);
+
+	ESHandle<HcalDbService> conditions;
+	iSetup.get<HcalDbRecord>().get(conditions);
 
 	//HcalSimParameterMap* theParameterMap;
 	//theParameterMap(new HcalSimParameterMap(iConfig)),
@@ -204,28 +208,38 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 	//std::cout << "Total channel " << SimHits->size() << ", Nhb " << Nhb << ", Nhe " << Nhe << ", Nho " << Nho << ", Nhf " << Nhf << std::endl;
 	//std::cout << "id_energy_map.size() = " << id_energy_map.size() << std::endl;
 
-	Handle<std::vector<PileupSummaryInfo>> pileupInfo;
-	iEvent.getByToken(pileupInfoToken_, pileupInfo);
-
 	//int true_npu = 0;
 	float obs_npu = 0;
 
-	for (std::vector<PileupSummaryInfo>::const_iterator pvi = pileupInfo->begin(); pvi != pileupInfo->end(); ++pvi)
+	if(do_PU)
 	{
-		int bx = pvi->getBunchCrossing();
-		if (bx == 0) {
-			//true_npu = pvi->getTrueNumInteractions();
-			obs_npu = pvi->getPU_NumInteractions();
-			break;
-		}
-	}
+		Handle<std::vector<PileupSummaryInfo>> pileupInfo;
+		iEvent.getByToken(pileupInfoToken_, pileupInfo);
 
-	std::cout << "gen: id, energy, PU" << std::endl;
+		for (std::vector<PileupSummaryInfo>::const_iterator pvi = pileupInfo->begin(); pvi != pileupInfo->end(); ++pvi)
+		{
+			int bx = pvi->getBunchCrossing();
+			if (bx == 0) {
+				//true_npu = pvi->getTrueNumInteractions();
+				obs_npu = pvi->getPU_NumInteractions();
+				break;
+			}
+		}
+		std::cout << "gen: id, energy, PU" << std::endl;
+	}
+	else std::cout << "gen: id, energy" << std::endl;
+
 	for(auto iter : id_energy_map)
 	{
-		std::cout << iter.first << ", " << iter.second << ", " << obs_npu << std::endl;
+		auto rawId = iter.first;
+		float RespCorr = 1;
+		const HcalCalibrations& calibrations = conditions->getHcalCalibrations(rawId);
+		//HcalRespCorr(rawId, RespCorr);
+		RespCorr = calibrations.respcorr ();
+		if(do_PU) std::cout << rawId << ", " << iter.second * RespCorr << ", " << obs_npu << std::endl;
+		else std::cout << rawId << ", " << iter.second * RespCorr << std::endl;
 	}
-	std::cout << "reco: TS1 raw charge, TS1 ped noise, TS1 ADC count, TS1 rise time, TS2 raw charge, TS2 ped noise, TS2 ADC count, TS2 rise time, TS3 raw charge, TS3 ped noise, TS3 ADC count, TS3 rise time, TS4 raw charge, TS4 ped noise, TS4 ADC count, TS4 rise time, TS5 raw charge, TS5 ped noise, TS5 ADC count, TS5 rise time, TS6 raw charge, TS6 ped noise, TS6 ADC count, TS6 rise time, TS7 raw charge, TS7 ped noise, TS7 ADC count, TS7 rise time, TS8 raw charge, TS8 ped noise, TS8 ADC count, TS8 rise time, raw energy, gain, reco energy, id, sub detector, depth, ieta, iphi" << std::endl;
+	//std::cout << "reco: TS1 raw charge, TS1 ped noise, TS1 ADC count, TS1 rise time, TS2 raw charge, TS2 ped noise, TS2 ADC count, TS2 rise time, TS3 raw charge, TS3 ped noise, TS3 ADC count, TS3 rise time, TS4 raw charge, TS4 ped noise, TS4 ADC count, TS4 rise time, TS5 raw charge, TS5 ped noise, TS5 ADC count, TS5 rise time, TS6 raw charge, TS6 ped noise, TS6 ADC count, TS6 rise time, TS7 raw charge, TS7 ped noise, TS7 ADC count, TS7 rise time, TS8 raw charge, TS8 ped noise, TS8 ADC count, TS8 rise time, raw energy, gain, reco energy, id, sub detector, depth, ieta, iphi" << std::endl;
 }
 
 
