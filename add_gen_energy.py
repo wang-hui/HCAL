@@ -6,8 +6,7 @@ import pickle
 
 #pd.set_option('display.max_rows', None)
 
-#f = open("MinBias_test/MinBias.pkl","rb")
-f = open("MinBias_test_include_no_hit/MinBias.pkl","rb")
+f = open("MinBias.pkl","rb")
 MinBias_dic = pickle.load(f)
 f.close
 
