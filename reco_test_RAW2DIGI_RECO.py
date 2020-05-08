@@ -28,7 +28,10 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/eos/uscms/store/user/huiwang/HCAL/opendata/206A6E9A-4DB2-1941-A60B-7174FA398D86.root'),
+    fileNames = cms.untracked.vstring(
+	#'file:/eos/uscms/store/user/huiwang/HCAL/opendata/206A6E9A-4DB2-1941-A60B-7174FA398D86.root'
+	"file:/eos/uscms/store/user/huiwang/HCAL/raw_test.root"
+	),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -56,7 +59,7 @@ process.FEVTSIMoutput = cms.OutputModule("PoolOutputModule",
 )
 
 # Additional output definition
-process.myAna = cms.EDAnalyzer("HCALTestAna")
+process.myAna = cms.EDAnalyzer("HCALTestAna", do_PU = cms.untracked.bool(True))
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag

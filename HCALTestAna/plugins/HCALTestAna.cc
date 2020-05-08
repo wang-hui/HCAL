@@ -88,7 +88,8 @@ HCALTestAna::HCALTestAna(const edm::ParameterSet& iConfig):
 {
 	//now do what ever initialization is needed
 	hcalhitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
-	pileupInfoToken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo","","HLT"));
+	//pileupInfoToken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo","","HLT"));
+	pileupInfoToken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
 }
 
 
@@ -239,7 +240,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		if(do_PU) std::cout << rawId << ", " << iter.second * RespCorr << ", " << obs_npu << std::endl;
 		else std::cout << rawId << ", " << iter.second * RespCorr << std::endl;
 	}
-	//std::cout << "reco: TS1 raw charge, TS1 ped noise, TS1 ADC count, TS1 rise time, TS2 raw charge, TS2 ped noise, TS2 ADC count, TS2 rise time, TS3 raw charge, TS3 ped noise, TS3 ADC count, TS3 rise time, TS4 raw charge, TS4 ped noise, TS4 ADC count, TS4 rise time, TS5 raw charge, TS5 ped noise, TS5 ADC count, TS5 rise time, TS6 raw charge, TS6 ped noise, TS6 ADC count, TS6 rise time, TS7 raw charge, TS7 ped noise, TS7 ADC count, TS7 rise time, TS8 raw charge, TS8 ped noise, TS8 ADC count, TS8 rise time, raw energy, gain, reco energy, id, sub detector, depth, ieta, iphi" << std::endl;
+	std::cout << "reco: TS1 raw charge, TS1 ped noise, TS1 ADC count, TS1 rise time, TS2 raw charge, TS2 ped noise, TS2 ADC count, TS2 rise time, TS3 raw charge, TS3 ped noise, TS3 ADC count, TS3 rise time, TS4 raw charge, TS4 ped noise, TS4 ADC count, TS4 rise time, TS5 raw charge, TS5 ped noise, TS5 ADC count, TS5 rise time, TS6 raw charge, TS6 ped noise, TS6 ADC count, TS6 rise time, TS7 raw charge, TS7 ped noise, TS7 ADC count, TS7 rise time, TS8 raw charge, TS8 ped noise, TS8 ADC count, TS8 rise time, raw energy, gain, reco energy, id, sub detector, depth, ieta, iphi" << std::endl;
 }
 
 
