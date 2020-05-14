@@ -3,14 +3,15 @@ int plot_HCAL()
 	bool plot_reco_vs_gen_h = true;
 	bool plot_ratio_h = true;
 
-	TFile *f1 = new TFile("result_no_PU_energy.root");
+	TFile *f1 = new TFile("result_opendata_2018_TTbar_raw_truth_energy.root");
 
 	if(plot_reco_vs_gen_h)
 	{
 		TString h1_name = "reco_vs_gen_depthG1_h";
-		h1_name = "reco_vs_gen_depthE1_HB_h";
-		h1_name = "reco_vs_gen_depthE1_HE_h";
-		//h1_name = "reco_vs_gen_depthG1_PUS10_h";
+		//h1_name = "reco_vs_gen_depthE1_HB_h";
+		//h1_name = "reco_vs_gen_depthE1_HE_h";
+		//h1_name = "reco_vs_gen_depthG1_HB_h";
+		//h1_name = "reco_vs_gen_depthG1_HE_h";
 		TH2F *h1 = (TH2F*)f1->Get(h1_name);
 
 		TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
@@ -37,9 +38,10 @@ int plot_HCAL()
 	if(plot_ratio_h)
 	{
 		TString h1_name = "ratio_depthG1_h";
-		h1_name = "ratio_depthE1_HB_h";
-		h1_name = "ratio_depthE1_HE_h";
-		//h1_name = "ratio_depthG1_PUS10_h";
+		//h1_name = "ratio_depthE1_HB_h";
+		//h1_name = "ratio_depthE1_HE_h";
+		//h1_name = "ratio_depthG1_HB_h";
+		//h1_name = "ratio_depthG1_HE_h";
 		TH1F *h1 = (TH1F*)f1->Get(h1_name);
 
 		TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);

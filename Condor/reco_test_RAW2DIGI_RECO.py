@@ -4,6 +4,7 @@
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
 # with command line options: reco_test --filein file:root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18DR/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/GEN-SIM-DIGI-RAW/PUAvg50IdealConditions_IdealConditions_102X_upgrade2018_design_v9_ext1-v2/260000/4978A440-0E12-8541-86B8-81086CDC98A0.root --fileout file:reco_test.root --mc --eventcontent FEVTSIM --conditions 102X_upgrade2018_design_v9 --step RAW2DIGI,RECO --nThreads 8 --geometry DB:Extended --era Run2_2018
 import FWCore.ParameterSet.Config as cms
+import sys
 
 from Configuration.StandardSequences.Eras import eras
 
@@ -23,13 +24,12 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1)
+    input = cms.untracked.int32(-1)
 )
 
-f = open("opendata_2018_TTbar_0.list", "r")
+f=open(sys.argv[2], "r")
 my_list = f.readlines()
 f.close()
-
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(

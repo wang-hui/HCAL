@@ -4,8 +4,8 @@ import pandas as pd
 result = pd.read_csv("result.csv", sep=',', header=0)
 
 run_mod = ""
-#run_mod = "_no_PU_energy"
-out_file = rt.TFile("result" + run_mod + ".root","RECREATE")
+run_mod = "_no_PU_energy"
+out_file = rt.TFile("result.root","RECREATE")
 
 PU_h = rt.TH1F("PU_h", "pileup", 100, 0.0, 100.0)
 reco_h = rt.TH1F("reco_h", "reco energy", 100, 0.0, 100.0)
