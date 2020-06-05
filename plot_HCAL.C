@@ -1,24 +1,34 @@
 int plot_HCAL()
 {
+	bool plot_reco_vs_gen_ieta = true;
 	bool plot_reco_vs_gen_h = true;
-	bool plot_ratio_h = true;
+	bool plot_ratio_h = false;
 
-	TFile *f1 = new TFile("result_opendata_2018_TTbar_raw_truth_energy.root");
+	//TString hist_name = "depthG1_HE";
+	//TString hist_name = "depthE1_HE";
+	//TString hist_name = "depthE1_HB";
+	TString hist_name = "depthG1_HB";
 
-	if(plot_reco_vs_gen_h)
+	TFile *f1 = new TFile("result_opendata_2018_TTbar_noPU_raw_truth_energy.root");
+
+	if(plot_reco_vs_gen_ieta)
 	{
-		TString h1_name = "reco_vs_gen_depthG1_h";
-		//h1_name = "reco_vs_gen_depthE1_HB_h";
-		//h1_name = "reco_vs_gen_depthE1_HE_h";
-		//h1_name = "reco_vs_gen_depthG1_HB_h";
-		//h1_name = "reco_vs_gen_depthG1_HE_h";
+		int ieta_first, ieta_last;
+		if (hist_name == "depthG1_HE" || hist_name == "depthE1_HE"){ieta_first = 16; ieta_last = 29;}
+		if (hist_name == "depthE1_HB"){ieta_first = 1; ieta_last = 16;}
+		if (hist_name == "depthG1_HB"){ieta_first = 14; ieta_last = 16;}
+
+		for (int i = ieta_first; i <= ieta_last; i++)
+		{
+		TString h1_name = "reco_vs_gen_" + hist_name + "_iEta_" + to_string(i) + "_h";
+		std::cout << h1_name << std::endl;
 		TH2F *h1 = (TH2F*)f1->Get(h1_name);
 
 		TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
 		gStyle->SetOptStat(kFALSE);
 
 		h1->Draw("colz");
-		h1->SetTitle("");
+		h1->SetTitle(h1_name);
 		h1->GetXaxis()->SetTitle("reco energy [GeV]");
 		h1->GetYaxis()->SetTitle("truth energy [GeV]");
 		gPad->SetLogz();
@@ -29,19 +39,81 @@ int plot_HCAL()
 
 		mycanvas->Clear();
 		TProfile *px = h1->ProfileX("px");
-		px->GetYaxis()->SetNdivisions(512);
+		px->SetTitle(h1_name);
+		//px->GetYaxis()->SetNdivisions(512);
+		px->GetYaxis()->SetRangeUser(h1->GetYaxis()->GetXmin(), h1->GetYaxis()->GetXmax());
+		px->SetLineColor(kRed);
+		//px->SetLineWidth(2);
+		//px->SetMarkerStyle(8);
 		px->Draw();
 		gPad->SetGrid();
+
+		px->Fit("pol1", "w");
+		TF1 *f = (TF1*)px->GetListOfFunctions()->FindObject("pol1");
+		if(f)
+		{
+			f->SetLineColor(kBlue);
+			f->SetLineWidth(1);
+			f->SetLineStyle(2); // 2 = "- - -"
+		}
+
+		TLine *l=new TLine(h1->GetXaxis()->GetXmin(), h1->GetYaxis()->GetXmin(),h1->GetXaxis()->GetXmax(), h1->GetYaxis()->GetXmax());
+		l->SetLineColor(kBlack);
+		l->Draw("same");
+
+		mycanvas->SaveAs("plots/" + h1_name + "_profile.png");
+		}
+	}
+
+	if(plot_reco_vs_gen_h)
+	{
+		TString h1_name = "reco_vs_gen_" + hist_name + "_h";
+
+		TH2F *h1 = (TH2F*)f1->Get(h1_name);
+
+		TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
+		gStyle->SetOptStat(kFALSE);
+
+		h1->Draw("colz");
+		h1->SetTitle(h1_name);
+		h1->GetXaxis()->SetTitle("reco energy [GeV]");
+		h1->GetYaxis()->SetTitle("truth energy [GeV]");
+		gPad->SetLogz();
+
+		mycanvas->SetLeftMargin(0.12);
+		mycanvas->SetRightMargin(0.15);
+		mycanvas->SaveAs("plots/" + h1_name + ".png");
+
+		mycanvas->Clear();
+		TProfile *px = h1->ProfileX("px");
+		px->SetTitle(h1_name);
+		//px->GetYaxis()->SetNdivisions(512);
+		px->GetYaxis()->SetRangeUser(h1->GetYaxis()->GetXmin(), h1->GetYaxis()->GetXmax());
+		px->SetLineColor(kRed);
+		//px->SetLineWidth(2);
+		//px->SetMarkerStyle(8);
+		px->Draw();
+		gPad->SetGrid();
+
+		px->Fit("pol1", "w");
+		TF1 *f = (TF1*)px->GetListOfFunctions()->FindObject("pol1");
+		if(f)
+		{
+			f->SetLineColor(kBlue);
+			f->SetLineWidth(1);
+			f->SetLineStyle(2); // 2 = "- - -"
+		}
+
+		TLine *l=new TLine(h1->GetXaxis()->GetXmin(), h1->GetYaxis()->GetXmin(),h1->GetXaxis()->GetXmax(), h1->GetYaxis()->GetXmax());
+		l->SetLineColor(kBlack);
+		l->Draw("same");
+
 		mycanvas->SaveAs("plots/" + h1_name + "_profile.png");
 	}
 
 	if(plot_ratio_h)
 	{
-		TString h1_name = "ratio_depthG1_h";
-		//h1_name = "ratio_depthE1_HB_h";
-		//h1_name = "ratio_depthE1_HE_h";
-		//h1_name = "ratio_depthG1_HB_h";
-		//h1_name = "ratio_depthG1_HE_h";
+		TString h1_name = "ratio_" + hist_name + "_h";
 		TH1F *h1 = (TH1F*)f1->Get(h1_name);
 
 		TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
@@ -50,9 +122,13 @@ int plot_HCAL()
 		h1->Draw();
 		//h1->Fit("gaus","","",0.7,2);
 		h1->GetXaxis()->SetTitle(h1->GetTitle());
-		h1->SetTitle("");
+		h1->SetTitle(h1_name);
 		h1->GetYaxis()->SetTitle("number of channels");
 		//gPad->SetLogz();
+
+		TLine *l=new TLine(1, h1->GetMinimum(),1, h1->GetMaximum());
+		l->SetLineColor(kBlack);
+		l->Draw("same");
 
 		mycanvas->SetLeftMargin(0.15);
 		mycanvas->SetRightMargin(0.1);
