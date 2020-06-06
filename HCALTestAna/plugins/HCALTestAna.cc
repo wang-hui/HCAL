@@ -66,6 +66,7 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 		void sum_energy_per_rawId(std::map <int, float> & id_energy_map, int id, float energy);
 
 		bool do_PU;
+		bool is_run3_relVal;
 		edm::EDGetTokenT<std::vector<PCaloHit>> hcalhitsToken_;
 		edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
 
@@ -83,7 +84,8 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 // constructors and destructor
 //
 HCALTestAna::HCALTestAna(const edm::ParameterSet& iConfig):
-	do_PU(iConfig.getUntrackedParameter<bool>("do_PU"))
+	do_PU(iConfig.getUntrackedParameter<bool>("do_PU")),
+	is_run3_relVal(iConfig.getUntrackedParameter<bool>("is_run3_relVal"))
 
 {
 	//now do what ever initialization is needed
@@ -129,7 +131,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
 	Handle<std::vector<PCaloHit>> hcalhitsHandle;
 	iEvent.getByToken(hcalhitsToken_, hcalhitsHandle);
-	//   iEvent.getByLabel("g4SimHits", "HcalHits", hand);
+	//iEvent.getByLabel("g4SimHits", "HcalHits", hand);
 	const std::vector<PCaloHit> * SimHits = hcalhitsHandle.product();
 
 	ESHandle<HcalDDDRecConstants> pHRNDC;
@@ -171,11 +173,22 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		if(subdet == 1 || subdet == 2)
 		{
 			float samplingFactor = 0;
-			if(subdet == 1 && ietaAbs-1 < (int)samplingFactors_hb.size()) samplingFactor = samplingFactors_hb.at(ietaAbs-1);
-			if(subdet == 2 && ietaAbs-16 < (int)samplingFactors_he.size()) samplingFactor = samplingFactors_he.at(ietaAbs-16);
+			float run3_relVal_corr = 1;
+			if(subdet == 1 && ietaAbs-1 < (int)samplingFactors_hb.size())
+			{
+				samplingFactor = samplingFactors_hb.at(ietaAbs-1);
+				//factor 0.5 for HB depth1, except for |ieta|=16 depth1
+				if (is_run3_relVal && depth == 1 && ietaAbs != 16) run3_relVal_corr = 0.5; 
+			}
+			if(subdet == 2 && ietaAbs-16 < (int)samplingFactors_he.size())
+			{
+				samplingFactor = samplingFactors_he.at(ietaAbs-16);
+				//factor 1.2 for HE depth1
+				if (is_run3_relVal && depth == 1) run3_relVal_corr = 1.2; 
+			}
 			if(samplingFactor == 0) std::cout << "miss-match samplingFactor" << std::endl;
 			//std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;
-			sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor);
+			sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * run3_relVal_corr);
 		}
 
 		//==================a test of HcalHitRelabeller, to be commented out=========================

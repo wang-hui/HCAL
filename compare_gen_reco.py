@@ -1,8 +1,8 @@
 import ROOT as rt
 import pandas as pd
 
-result_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL_ML_test_samples/opendata_2018_TTbar_noPU/"
-result_file = "result_3"
+result_dir = ""
+result_file = "result"
 
 result = pd.read_csv(result_dir + result_file + ".csv", sep=',', header=0)
 
