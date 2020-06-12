@@ -2,19 +2,23 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "opendata_2018_TTbar"
+folder_name = "run3_relVal_PU65"
 result_path = "/eos/uscms/store/user/huiwang/HCAL/"
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"
-file_list = "../FileList/opendata_2018_TTbar.list"
-tot_jobs = 32
+file_list = "../FileList/run3_relVal_PU65.list"
+tot_jobs = 100
 
 today = str(date.today())
 folder_name_full = folder_name + "-" + today
 result_path_full = result_path + folder_name_full
 condor_path_full = condor_path + folder_name_full
 
-os.mkdir(result_path_full)
-os.mkdir(condor_path_full)
+#try: os.mkdir(result_path_full)
+#except OSError: print result_path_full, " already exisit. Make sure you want to save there" 
+#try: os.mkdir(condor_path_full)
+#except OSError: print condor_path_full, " already exisit. Make sure you want to save there" 
+os.system("mkdir -p " + result_path_full)
+os.system("mkdir -p " + condor_path_full)
 
 f = open(file_list, "r")
 my_list = f.readlines()
@@ -27,7 +31,7 @@ header = (""
 )
 
 tot_lines = len(my_list)
-my_step = int(tot_lines / tot_jobs) #int returns ceil
+my_step = max(int(tot_lines / tot_jobs),1) #int returns floor
 list_of_sublist = []
 for i in xrange (0, tot_lines, my_step):
 	list_of_sublist.append(my_list[i : i + my_step])
@@ -40,8 +44,10 @@ for j in range (len(list_of_sublist)):
 	header = header + "\nArguments = FileList_" + str(j) + ".list " + result_path_full + "/ " + str(j)
 	header = header + "\nQueue"
 
-os.system("tar -cvf FileList.tar FileList_*.list")
-#os.system("rm -f FileList_*.list")
+os.system("tar -cf FileList.tar FileList_*.list")
+os.system("mkdir -p FileList_test")
+os.system("rm FileList_test/*.list")
+os.system("mv FileList_*.list FileList_test")
 
 copyfile("condor_submit.back", "condor_submit.txt")
 f = open("condor_submit.txt", "a")

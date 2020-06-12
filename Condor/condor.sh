@@ -12,7 +12,7 @@ git cms-init --upstream-only
 git cms-addpkg RecoLocalCalo/HcalRecAlgos
 mv ${_CONDOR_SCRATCH_DIR}/MahiFit.cc RecoLocalCalo/HcalRecAlgos/src/
 git clone https://github.com/wang-hui/HCAL.git -b CMSSW_11_1_x
-scram b
+scram b -j 4
 cd ${_CONDOR_SCRATCH_DIR}
 tar -xvf FileList.tar
 pwd
@@ -22,7 +22,6 @@ cmsRun reco_test_RAW2DIGI_RECO.py $1 > reco_test.stdout
 mkdir split_file
 python split_file.py
 #tar -cvf split_file.tar split_file
-ls
 
 python add_gen_energy.py
 

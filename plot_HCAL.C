@@ -1,22 +1,22 @@
 int plot_HCAL()
 {
-	bool plot_reco_vs_gen_ieta = true;
+	bool plot_reco_vs_gen_ieta = false;
 	bool plot_reco_vs_gen_h = true;
-	bool plot_ratio_h = false;
+	bool plot_ratio_h = true;
 
 	//TString hist_name = "depthG1_HE";
 	//TString hist_name = "depthE1_HE";
 	//TString hist_name = "depthE1_HB";
 	TString hist_name = "depthG1_HB";
 
-	TFile *f1 = new TFile("result_opendata_2018_TTbar_noPU_raw_truth_energy.root");
+	TFile *f1 = new TFile("result_run3_relVal_PU65.root");
 
 	if(plot_reco_vs_gen_ieta)
 	{
 		int ieta_first, ieta_last;
 		if (hist_name == "depthG1_HE" || hist_name == "depthE1_HE"){ieta_first = 16; ieta_last = 29;}
-		if (hist_name == "depthE1_HB"){ieta_first = 1; ieta_last = 16;}
-		if (hist_name == "depthG1_HB"){ieta_first = 14; ieta_last = 16;}
+		if (hist_name == "depthE1_HB" || hist_name == "depthG1_HB"){ieta_first = 1; ieta_last = 16;}
+		//if (hist_name == "depthG1_HB"){ieta_first = 14; ieta_last = 16;}
 
 		for (int i = ieta_first; i <= ieta_last; i++)
 		{
@@ -35,7 +35,7 @@ int plot_HCAL()
 
 		mycanvas->SetLeftMargin(0.12);
 		mycanvas->SetRightMargin(0.15);
-		mycanvas->SaveAs("plots/" + h1_name + ".png");
+		mycanvas->SaveAs("plots_temp/" + h1_name + ".png");
 
 		mycanvas->Clear();
 		TProfile *px = h1->ProfileX("px");
@@ -61,7 +61,7 @@ int plot_HCAL()
 		l->SetLineColor(kBlack);
 		l->Draw("same");
 
-		mycanvas->SaveAs("plots/" + h1_name + "_profile.png");
+		mycanvas->SaveAs("plots_temp/" + h1_name + "_profile.png");
 		}
 	}
 
@@ -82,7 +82,7 @@ int plot_HCAL()
 
 		mycanvas->SetLeftMargin(0.12);
 		mycanvas->SetRightMargin(0.15);
-		mycanvas->SaveAs("plots/" + h1_name + ".png");
+		mycanvas->SaveAs("plots_temp/" + h1_name + ".png");
 
 		mycanvas->Clear();
 		TProfile *px = h1->ProfileX("px");
@@ -108,7 +108,7 @@ int plot_HCAL()
 		l->SetLineColor(kBlack);
 		l->Draw("same");
 
-		mycanvas->SaveAs("plots/" + h1_name + "_profile.png");
+		mycanvas->SaveAs("plots_temp/" + h1_name + "_profile.png");
 	}
 
 	if(plot_ratio_h)
