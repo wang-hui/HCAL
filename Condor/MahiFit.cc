@@ -62,7 +62,7 @@ void MahiFit::phase1Apply(const HBHEChannelInfo& channelData,
     int tsAdc = channelData.tsAdc(iTS); //convert from uint8_t to int
 
     //=============================print fitting inputs===============================
-    std::cout << channelData.tsRawCharge(iTS) << ", " << channelData.tsPedestal(iTS) << ", " << tsAdc << ", " << channelData.tsRiseTime(iTS) << ", ";
+    std::cout << channelData.tsRawCharge(iTS) << ", " << channelData.tsPedestal(iTS) << ", " << tsAdc << ", " << channelData.tsRiseTime(iTS) << ", " << channelData.fcByPE() << ", ";
 
     nnlsWork_.amplitudes.coeffRef(iTS) = amplitude;
 

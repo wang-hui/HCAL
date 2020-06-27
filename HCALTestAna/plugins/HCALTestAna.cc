@@ -158,6 +158,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		auto iphi = hid.iphi();
 
 		auto energy = iter.energy();
+		auto time = iter.time();
 		/*float samplingFactor;
 		  if (subdet == HcalForward)
 		  {
@@ -173,22 +174,22 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		if(subdet == 1 || subdet == 2)
 		{
 			float samplingFactor = 0;
-			float run3_relVal_corr = 1;
+			float digi_SF = 1;
 			if(subdet == 1 && ietaAbs-1 < (int)samplingFactors_hb.size())
 			{
 				samplingFactor = samplingFactors_hb.at(ietaAbs-1);
 				//factor 0.5 for HB depth1, except for |ieta|=16 depth1
-				if (is_run3_relVal && depth == 1 && ietaAbs != 16) run3_relVal_corr = 0.5; 
+				if (is_run3_relVal && depth == 1 && ietaAbs != 16) digi_SF = 0.5; 
 			}
 			if(subdet == 2 && ietaAbs-16 < (int)samplingFactors_he.size())
 			{
 				samplingFactor = samplingFactors_he.at(ietaAbs-16);
 				//factor 1.2 for HE depth1
-				if (is_run3_relVal && depth == 1) run3_relVal_corr = 1.2; 
+				if (depth == 1) digi_SF = 1.2; 
 			}
 			if(samplingFactor == 0) std::cout << "miss-match samplingFactor" << std::endl;
 			//std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;
-			sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * run3_relVal_corr);
+			sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * digi_SF);
 		}
 
 		//==================a test of HcalHitRelabeller, to be commented out=========================
@@ -253,7 +254,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		if(do_PU) std::cout << rawId << ", " << iter.second * RespCorr << ", " << obs_npu << std::endl;
 		else std::cout << rawId << ", " << iter.second * RespCorr << std::endl;
 	}
-	std::cout << "reco: TS1 raw charge, TS1 ped noise, TS1 ADC count, TS1 rise time, TS2 raw charge, TS2 ped noise, TS2 ADC count, TS2 rise time, TS3 raw charge, TS3 ped noise, TS3 ADC count, TS3 rise time, TS4 raw charge, TS4 ped noise, TS4 ADC count, TS4 rise time, TS5 raw charge, TS5 ped noise, TS5 ADC count, TS5 rise time, TS6 raw charge, TS6 ped noise, TS6 ADC count, TS6 rise time, TS7 raw charge, TS7 ped noise, TS7 ADC count, TS7 rise time, TS8 raw charge, TS8 ped noise, TS8 ADC count, TS8 rise time, raw energy, gain, reco energy, id, sub detector, depth, ieta, iphi" << std::endl;
+	std::cout << "reco: TS1 raw charge, TS1 ped noise, TS1 ADC count, TS1 rise time, TS1 fcByPE, TS2 raw charge, TS2 ped noise, TS2 ADC count, TS2 rise time, TS2 fcByPE, TS3 raw charge, TS3 ped noise, TS3 ADC count, TS3 rise time, TS3 fcByPE, TS4 raw charge, TS4 ped noise, TS4 ADC count, TS4 rise time, TS4 fcByPE, TS5 raw charge, TS5 ped noise, TS5 ADC count, TS5 rise time, TS5 fcByPE, TS6 raw charge, TS6 ped noise, TS6 ADC count, TS6 rise time, TS6 fcByPE, TS7 raw charge, TS7 ped noise, TS7 ADC count, TS7 rise time, TS7 fcByPE, TS8 raw charge, TS8 ped noise, TS8 ADC count, TS8 rise time, TS8 fcByPE, raw energy, gain, reco energy, id, sub detector, depth, ieta, iphi" << std::endl;
 }
 
 
