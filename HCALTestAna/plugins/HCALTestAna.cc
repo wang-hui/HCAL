@@ -42,6 +42,7 @@ Implementation:
 #include <vector>
 #include <string>
 #include <iostream>
+#include <numeric>
 //
 // class declaration
 //
@@ -63,13 +64,12 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 		virtual void beginJob() override;
 		virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 		virtual void endJob() override;
-		void sum_energy_per_rawId(std::map <int, float> & id_energy_map, int id, float energy);
+		void sum_energy_per_rawId(std::map <int, std::vector<float>> & id_energy_map, int id, float energy);
 
 		bool do_PU;
 		bool is_run3_relVal;
 		edm::EDGetTokenT<std::vector<PCaloHit>> hcalhitsToken_;
 		edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
-
 };
 
 //
@@ -110,19 +110,12 @@ HCALTestAna::~HCALTestAna()
 
 // ------------ method called for each event  ------------
 
-void HCALTestAna::sum_energy_per_rawId(std::map <int, float> & id_energy_map, int id, float energy)
+void HCALTestAna::sum_energy_per_rawId(std::map <int, std::vector<float>> & id_energy_map, int id, float energy)
 {
-	std::map<int,float>::iterator it;
+	std::map<int,std::vector<float>>::iterator it;
 	it = id_energy_map.find(id);
-	if (it != id_energy_map.end())
-	{
-		id_energy_map.at(id) = id_energy_map.at(id) + energy;
-	}
-	else
-	{
-		id_energy_map[id] = energy;
-		//id_energy_map.insert (std::pair<int,float>(id, energy));
-	}
+	if (it != id_energy_map.end()) id_energy_map.at(id).push_back(energy);
+	else id_energy_map[id] = {energy};
 }
 
 void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -144,7 +137,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 	//HcalSimParameterMap* theParameterMap;
 	//theParameterMap(new HcalSimParameterMap(iConfig)),
 
-	std::map <int, float> id_energy_map;
+	std::map <int, std::vector<float>> id_energy_map, id_time_map;
 	//int Nhb = 0, Nhe = 0, Nho = 0, Nhf = 0;
 	for(auto iter : *SimHits)
 	{
@@ -190,6 +183,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 			if(samplingFactor == 0) std::cout << "miss-match samplingFactor" << std::endl;
 			//std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;
 			sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * digi_SF);
+			sum_energy_per_rawId(id_time_map, rawId, time);
 		}
 
 		//==================a test of HcalHitRelabeller, to be commented out=========================
@@ -240,9 +234,9 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 				break;
 			}
 		}
-		std::cout << "gen: id, energy, PU" << std::endl;
+		std::cout << "gen: id, energy, median time, weighted time, PU" << std::endl;
 	}
-	else std::cout << "gen: id, energy" << std::endl;
+	else std::cout << "gen: id, energy, median time, weighted time" << std::endl;
 
 	for(auto iter : id_energy_map)
 	{
@@ -251,8 +245,20 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		const HcalCalibrations& calibrations = conditions->getHcalCalibrations(rawId);
 		//HcalRespCorr(rawId, RespCorr);
 		RespCorr = calibrations.respcorr ();
-		if(do_PU) std::cout << rawId << ", " << iter.second * RespCorr << ", " << obs_npu << std::endl;
-		else std::cout << rawId << ", " << iter.second * RespCorr << std::endl;
+
+                std::vector<float> energy_vec = id_energy_map.at(rawId);
+                std::vector<float> time_vec = id_time_map.at(rawId);
+                float energy_sum = std::accumulate(energy_vec.begin(), energy_vec.end(), 0.0);
+                //float time_sum = std::accumulate(time_vec.begin(), time_vec.end(), 0.0);
+                int vec_size = energy_vec.size();
+                std::sort(time_vec.begin(), time_vec.end());
+                float median_time = time_vec.at(vec_size/2);
+                float weighted_time = 0.0;
+                for(int i = 0; i < vec_size; i++)
+                {weighted_time += time_vec.at(i) * energy_vec.at(i) / energy_sum;}
+
+		if(do_PU) std::cout << rawId << ", " << energy_sum * RespCorr << ", " << median_time << ", " << weighted_time << ", " << obs_npu << std::endl;
+		else std::cout << rawId << ", " << energy_sum * RespCorr << ", " << median_time << ", " << weighted_time << ", " << std::endl;
 	}
 	std::cout << "reco: TS1 raw charge, TS1 ped noise, TS1 ADC count, TS1 rise time, TS1 fcByPE, TS2 raw charge, TS2 ped noise, TS2 ADC count, TS2 rise time, TS2 fcByPE, TS3 raw charge, TS3 ped noise, TS3 ADC count, TS3 rise time, TS3 fcByPE, TS4 raw charge, TS4 ped noise, TS4 ADC count, TS4 rise time, TS4 fcByPE, TS5 raw charge, TS5 ped noise, TS5 ADC count, TS5 rise time, TS5 fcByPE, TS6 raw charge, TS6 ped noise, TS6 ADC count, TS6 rise time, TS6 fcByPE, TS7 raw charge, TS7 ped noise, TS7 ADC count, TS7 rise time, TS7 fcByPE, TS8 raw charge, TS8 ped noise, TS8 ADC count, TS8 rise time, TS8 fcByPE, raw energy, gain, reco energy, id, sub detector, depth, ieta, iphi" << std::endl;
 }
