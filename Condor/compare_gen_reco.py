@@ -1,8 +1,12 @@
 import ROOT as rt
 import pandas as pd
+import sys
 
 result_dir = ""
 result_file = "result"
+#print sys.argv
+#index = sys.argv[1]
+#result_file += index
 
 result = pd.read_csv(result_dir + result_file + ".csv", sep=',', header=0)
 
@@ -25,6 +29,7 @@ reco_h = rt.TH1F("reco_h", "reco energy", Ebins, Emin, Emax)
 gen_h = rt.TH1F("gen_h", "truth energy", Ebins, Emin, Emax)
 
 #==============reco vs gen 2d hist ==================
+weighted_time_vs_gen_h = rt.TH2F("weighted_time_vs_gen_h", "weighted time vs gen", Ebins, Emin, Emax, 100, 0.0, 500.0)
 reco_vs_gen_h = rt.TH2F("reco_vs_gen_h", "reco vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_h = rt.TH2F("reco_vs_gen_depthG1_h", "reco vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HB_h = rt.TH2F("reco_vs_gen_depthG1_HB_h", "reco vs gen, depth > 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -50,36 +55,32 @@ weighted_time_HB_ieta_list = []
 reco_vs_gen_depthE1_HB_list = []
 reco_vs_gen_depthG1_HB_list = []
 for i in range(1,17):
-    time_hist = rt.TH1F("weighted_time_HB_iEta_" + str(i) + "_h", "weighted simHit time, HB |ieta| " + str(i), 100, 0.0, 500.0)
-    weighted_time_HB_ieta_list.append(time_hist)
     E1_hist = rt.TH2F("reco_vs_gen_depthE1_HB_iEta_" + str(i) + "_h", "reco vs gen, depth = 1, HB |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthE1_HB_list.append(E1_hist)
     G1_hist = rt.TH2F("reco_vs_gen_depthG1_HB_iEta_" + str(i) + "_h", "reco vs gen, depth > 1, HB |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthG1_HB_list.append(G1_hist)
+
+    hist_list = []
+    for j in range(1,6):
+        time_hist = rt.TH1F("weighted_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
+        hist_list.append(time_hist)
+    weighted_time_HB_ieta_list.append(hist_list)
 
 #============loop ieta hist for HE ====================
 weighted_time_HE_ieta_list = []
 reco_vs_gen_depthE1_HE_list = []
 reco_vs_gen_depthG1_HE_list = []
 for i in range(16,30):
-    time_hist = rt.TH1F("weighted_time_HE_iEta_" + str(i) + "_h", "weighted simHit time, HE |ieta| " + str(i), 100, 0.0, 500.0)
-    weighted_time_HE_ieta_list.append(time_hist)
     E1_hist = rt.TH2F("reco_vs_gen_depthE1_HE_iEta_" + str(i) + "_h", "reco vs gen, depth = 1, HE |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthE1_HE_list.append(E1_hist)
     G1_hist = rt.TH2F("reco_vs_gen_depthG1_HE_iEta_" + str(i) + "_h", "reco vs gen, depth > 1, HE |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthG1_HE_list.append(G1_hist)
 
-#============loop depth hist for HB ====================
-weighted_time_HB_depth_list = []
-for i in range(1,6):
-    time_hist = rt.TH1F("weighted_time_HB_depth_" + str(i) + "_h", "weighted simHit time, HB depth " + str(i), 100, 0.0, 500.0)
-    weighted_time_HB_depth_list.append(time_hist)
-
-#============loop depth hist for HE ====================
-weighted_time_HE_depth_list = []
-for i in range(1,9):
-    time_hist = rt.TH1F("weighted_time_HE_depth_" + str(i) + "_h", "weighted simHit time, HE depth " + str(i), 100, 0.0, 500.0)
-    weighted_time_HE_depth_list.append(time_hist)
+    hist_list = []
+    for j in range(1,9):
+        time_hist = rt.TH1F("weighted_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
+        hist_list.append(time_hist)
+    weighted_time_HE_ieta_list.append(hist_list)
 
 Nrows = result.shape[0]
 #Nrows = 100000
@@ -115,11 +116,11 @@ for i in range(Nrows):
     PU_h.Fill(PU)
     reco_h.Fill(reco_energy)
     gen_h.Fill(gen_energy)
+    weighted_time_vs_gen_h.Fill(gen_energy, weighted_time)
     reco_vs_gen_h.Fill(reco_energy, gen_energy)
 
     if sub_det == 1:
-        weighted_time_HB_ieta_list[ieta - 1].Fill(weighted_time)
-        weighted_time_HB_depth_list[depth - 1].Fill(weighted_time)
+        weighted_time_HB_ieta_list[ieta - 1][depth - 1].Fill(weighted_time)
         if depth == 1:
             reco_vs_gen_depthE1_HB_h.Fill(reco_energy, gen_energy)
             if ieta < 15: reco_vs_gen_depthE1_HB_ietaS15_h.Fill(reco_energy, gen_energy)
@@ -129,8 +130,7 @@ for i in range(Nrows):
             reco_vs_gen_depthG1_HB_h.Fill(reco_energy, gen_energy)
             reco_vs_gen_depthG1_HB_list[ieta - 1].Fill(reco_energy, gen_energy)
     elif sub_det == 2:
-        weighted_time_HE_ieta_list[ieta - 16].Fill(weighted_time)
-        weighted_time_HE_depth_list[depth - 1].Fill(weighted_time)
+        weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
         if depth == 1:
             reco_vs_gen_depthE1_HE_h.Fill(reco_energy, gen_energy)
             reco_vs_gen_depthE1_HE_list[ieta - 16].Fill(reco_energy, gen_energy)

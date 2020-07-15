@@ -86,6 +86,7 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
 )
 
 # Additional output definition
+process.TFileService = cms.Service("TFileService", fileName = cms.string("gen_hist.root") )
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag

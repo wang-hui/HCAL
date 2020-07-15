@@ -23,6 +23,8 @@ Implementation:
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 //calo headers
 #include "SimDataFormats/CaloHit/interface/PCaloHit.h"
@@ -37,6 +39,14 @@ Implementation:
 #include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
 //#include "CondFormats/HcalObjects/interface/HcalRespCorr.h"
 #include "samplingFactor.h"
+
+// ROOT includes
+#include "TVector3.h"
+#include "TLorentzVector.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TTree.h"
+#include "TMath.h"
 
 //STL headers
 #include <vector>
@@ -68,8 +78,12 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
 		bool do_PU;
 		bool is_run3_relVal;
+                float min_simHit_energy;
 		edm::EDGetTokenT<std::vector<PCaloHit>> hcalhitsToken_;
 		edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
+                
+                TH2F * simHit_energy_vs_time_h;
+                TH2F * channel_energy_vs_time_h;
 };
 
 //
@@ -85,13 +99,19 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //
 HCALTestAna::HCALTestAna(const edm::ParameterSet& iConfig):
 	do_PU(iConfig.getUntrackedParameter<bool>("do_PU")),
-	is_run3_relVal(iConfig.getUntrackedParameter<bool>("is_run3_relVal"))
+	is_run3_relVal(iConfig.getUntrackedParameter<bool>("is_run3_relVal")),
+	min_simHit_energy(iConfig.getUntrackedParameter<double>("min_simHit_energy"))
 
 {
 	//now do what ever initialization is needed
 	hcalhitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
 	//pileupInfoToken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo","","HLT"));
 	pileupInfoToken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
+        
+        edm::Service<TFileService> fs;
+        //fTree = fs->make<TTree>("fTree","fTree");
+        simHit_energy_vs_time_h = fs->make<TH2F>("simHit_energy_vs_time_h", "simHit energy vs time", 200, 0.0, 1000.0, 100, 0.0, 500.0);
+        channel_energy_vs_time_h = fs->make<TH2F>("channel_energy_vs_time_h", "channel energy vs time", 200, 0.0, 1000.0, 100, 0.0, 500.0);
 }
 
 
@@ -152,6 +172,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
 		auto energy = iter.energy();
 		auto time = iter.time();
+
 		/*float samplingFactor;
 		  if (subdet == HcalForward)
 		  {
@@ -184,6 +205,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 			//std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;
 			sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * digi_SF);
 			sum_energy_per_rawId(id_time_map, rawId, time);
+                        simHit_energy_vs_time_h->Fill(energy * samplingFactor * digi_SF, time);
 		}
 
 		//==================a test of HcalHitRelabeller, to be commented out=========================
@@ -251,11 +273,28 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
                 float energy_sum = std::accumulate(energy_vec.begin(), energy_vec.end(), 0.0);
                 //float time_sum = std::accumulate(time_vec.begin(), time_vec.end(), 0.0);
                 int vec_size = energy_vec.size();
-                std::sort(time_vec.begin(), time_vec.end());
-                float median_time = time_vec.at(vec_size/2);
                 float weighted_time = 0.0;
                 for(int i = 0; i < vec_size; i++)
-                {weighted_time += time_vec.at(i) * energy_vec.at(i) / energy_sum;}
+                {
+                    float simHit_energy = energy_vec.at(i);
+                    if (simHit_energy > min_simHit_energy)
+                    {weighted_time += time_vec.at(i) * simHit_energy / energy_sum;}
+                    //==============a test for sigHit time, to be comment out===========
+                    /*
+                    if (energy_sum > 500)
+                    {
+                        if (i == 0)
+                        {std::cout << "energy_sum = " << energy_sum << ", vec_size = " << vec_size << std::endl;
+                        std::cout << "index, energy, time " << std::endl;
+                        }
+                        std::cout << i << ", " << simHit_energy << ", " << time_vec.at(i) << std::endl;
+                    }
+                    */
+                    //====================end of test====================================
+                }
+                channel_energy_vs_time_h->Fill(energy_sum * RespCorr, weighted_time);
+                std::sort(time_vec.begin(), time_vec.end());
+                float median_time = time_vec.at(vec_size/2);
 
 		if(do_PU) std::cout << rawId << ", " << energy_sum * RespCorr << ", " << median_time << ", " << weighted_time << ", " << obs_npu << std::endl;
 		else std::cout << rawId << ", " << energy_sum * RespCorr << ", " << median_time << ", " << weighted_time << ", " << std::endl;

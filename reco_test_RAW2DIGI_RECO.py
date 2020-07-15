@@ -23,19 +23,20 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10),
+    input = cms.untracked.int32(-1),
     output = cms.optional.untracked.allowed(cms.int32,cms.PSet)
 )
 
-f = open("FileList/run3_relVal_noPU_0.list", "r")
-my_list = f.readlines()
-f.close()
+#f = open("FileList/run3_relVal_noPU_0.list", "r")
+#my_list = f.readlines()
+#f.close()
 
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-	#'file:/eos/uscms/store/group/lpcrutgers/aatkinso/hcal/GENSIM_DIGI2RAW-2020-06-04/step2_DIGI_1.root'
-	my_list),
+	'file:/eos/uscms/store/user/huiwang/HCAL/MH-125_MFF-50_CTau-10000mm_step2.root'
+	#my_list
+        ),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -86,13 +87,18 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
 )
 
 # Additional output definition
+process.TFileService = cms.Service("TFileService", fileName = cms.string("gen_hist.root") )
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2021_realistic', '')
 
 # Path and EndPath definitions
-process.myAna = cms.EDAnalyzer("HCALTestAna", do_PU = cms.untracked.bool(True), is_run3_relVal = cms.untracked.bool(True))
+process.myAna = cms.EDAnalyzer(
+    "HCALTestAna",
+    do_PU = cms.untracked.bool(True),
+    is_run3_relVal = cms.untracked.bool(True),
+    min_simHit_energy = cms.untracked.double(1.0))
 
 process.raw2digi_step = cms.Path(process.myAna + process.RawToDigi)
 process.reconstruction_step = cms.Path(process.reconstruction)
