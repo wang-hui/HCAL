@@ -93,7 +93,11 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2021_realistic', '')
 
 # Path and EndPath definitions
-process.myAna = cms.EDAnalyzer("HCALTestAna", do_PU = cms.untracked.bool(True), is_run3_relVal = cms.untracked.bool(True))
+process.myAna = cms.EDAnalyzer(
+    "HCALTestAna",
+    do_PU = cms.untracked.bool(True),
+    is_run3_relVal = cms.untracked.bool(True),
+    min_simHit_energy = cms.untracked.double(0.0))
 
 process.raw2digi_step = cms.Path(process.myAna + process.RawToDigi)
 process.reconstruction_step = cms.Path(process.reconstruction)

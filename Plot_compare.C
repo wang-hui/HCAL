@@ -1,17 +1,14 @@
 int Plot_compare()
 {
-	const bool plot_log = false;
-	std::vector<TString> hist_list = {"obsPU_h"};
-	std::vector<TString> hist2_list = {"truePU_h"};
+	const bool plot_log = true;
+	std::vector<TString> hist_list = {"weighted_time_h"};
+	std::vector<TString> hist2_list = {"median_time_h"};
 
-	TString f1_name = "PU_test_mn1_100_mx1_110";
-	//f1_name = "PU_test_neutrino_gun";
-	//f1_name = "PU_test_opendata_TTbar"; 
-	f1_name = "PU_test_NZS_TTbar"; 
-	TString f1_lag = "observed PU";
+	TString f1_name = "result_no_PU_energy";
+	TString f1_lag = "weighted time";
 	TString f1_folder = "";
 	TString f2_name = f1_name; 
-	TString f2_lag = "truth PU";
+	TString f2_lag = "median time";
 	TString f2_folder = "";
 	TString hist_folder = "";
 
@@ -88,7 +85,7 @@ int Plot_compare()
 		l->SetLineColor(kRed);
 		l->Draw();
 
-		mycanvas->SaveAs("plots/" + f1_name + "_" + hist_name + ".png");
+		mycanvas->SaveAs("plots_temp/" + f1_name + "_" + hist_name + ".png");
 	}
 
 	return 0;

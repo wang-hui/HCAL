@@ -2,16 +2,17 @@ int plot_HCAL()
 {
     bool plot_reco_vs_gen_ieta = false;
     bool plot_reco_vs_gen_h = true;
-    bool plot_ratio_h = false;
+    bool plot_ratio_h = true;
 
-    bool do_profile_study = true;
+    bool do_profile_study = false;
 
-    TString hist_name = "depthG1_HE";
+    //TString hist_name = "depthG1_HE";
     //TString hist_name = "depthE1_HE";
-    //TString hist_name = "depthE1_HB";
     //TString hist_name = "depthG1_HB";
+    TString hist_name = "depthE1_HB_ietaS15";
+    //TString hist_name = "depthE1_HB";
 
-    TFile *f1 = new TFile("result_no_PU_energy_0.root");
+    TFile *f1 = new TFile("results/result_Run3_RelVal_1TeV_pion_gun_0PU_time_study.root");
 
     if(plot_reco_vs_gen_ieta)
     {
