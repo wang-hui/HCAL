@@ -6,9 +6,13 @@ import pickle
 
 #pd.set_option('display.max_rows', None)
 
-f = open("MinBias.pkl","rb")
-MinBias_dic = pickle.load(f)
-f.close
+add_PU_energy = False
+
+MinBias_dic = {}
+if add_PU_energy:
+	f = open("MinBias.pkl","rb")
+	MinBias_dic = pickle.load(f)
+	f.close
 
 def find_PU_energy(sub_det, depth, ieta):
 	return MinBias_dic[(sub_det, depth, abs(ieta))]
@@ -28,8 +32,8 @@ gen_test = pd.read_csv(gen_list[0], nrows=10, sep=',', skipinitialspace = True, 
 gen64_cols = [c for c in gen_test if gen_test[c].dtype == "float64"]
 gen32_cols = {c: np.float32 for c in gen64_cols}
 
-out_file = rt.TFile("reco_miss_id.root","RECREATE")
-miss_energy_h = rt.TH1F("miss_energy_h", "energy of simHit miss in reco", 100, 0.0, 10.0)
+#out_file = rt.TFile("reco_miss_id.root","RECREATE")
+#miss_energy_h = rt.TH1F("miss_energy_h", "energy of simHit miss in reco", 100, 0.0, 10.0)
 
 result = pd.DataFrame()
 for i in range (len(reco_list)):
@@ -55,9 +59,12 @@ for i in range (len(reco_list)):
 	next_pd = pd.merge(reco_df, gen_df, on="id", how="left")
 	PU = gen_df["PU"][0]
 	next_pd["energy"].fillna(0, inplace=True)
+	next_pd["median time"].fillna(0, inplace=True)
+	next_pd["weighted time"].fillna(0, inplace=True)
 	next_pd["PU"].fillna(PU, inplace=True)
-	next_pd["unit PU energy"] = next_pd.apply(lambda row: find_PU_energy(row["sub detector"], row["depth"], row["ieta"]), axis = 1)
-	next_pd["truth energy"] = next_pd.apply(lambda row: row["energy"] + row["PU"] * row["unit PU energy"], axis = 1)
+	if add_PU_energy:
+		next_pd["unit PU energy"] = next_pd.apply(lambda row: find_PU_energy(row["sub detector"], row["depth"], row["ieta"]), axis = 1)
+		next_pd["truth energy"] = next_pd.apply(lambda row: row["energy"] + row["PU"] * row["unit PU energy"], axis = 1)
 	result = result.append(next_pd)
 
 print "final processing"
@@ -69,9 +76,9 @@ print "final processing"
 #print temp_list
 #print list(result)
 
-out_file.cd()
-out_file.Write()
-out_file.Close()
+#out_file.cd()
+#out_file.Write()
+#out_file.Close()
 
 result.drop(['id'], axis=1, inplace=True)
 result.rename(columns={"energy": "raw truth energy"}, inplace=True)

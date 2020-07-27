@@ -5,7 +5,6 @@
 # with command line options: reco_test --filein file:root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18DR/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/GEN-SIM-DIGI-RAW/PUAvg50IdealConditions_IdealConditions_102X_upgrade2018_design_v9_ext1-v2/260000/4978A440-0E12-8541-86B8-81086CDC98A0.root --fileout file:reco_test.root --mc --eventcontent FEVTSIM --conditions 102X_upgrade2018_design_v9 --step RAW2DIGI,RECO --nThreads 8 --geometry DB:Extended --era Run2_2018
 import FWCore.ParameterSet.Config as cms
 import sys
-
 from Configuration.StandardSequences.Eras import eras
 
 process = cms.Process('RECO',eras.Run2_2018)
@@ -27,13 +26,14 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
-f=open(sys.argv[2], "r")
+f = open(sys.argv[2], "r")
 my_list = f.readlines()
 f.close()
+
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-	#'file:/eos/uscms/store/user/huiwang/HCAL/opendata/206A6E9A-4DB2-1941-A60B-7174FA398D86.root'
+	#'file:/eos/uscms/store/user/lpcrutgers/sve6/2018_1TeV_pion_gun_RAW_0PU-2020-07-25/Run3_RelVal_1TeV_pion_gun_RAW_0.root'
 	my_list
 	),
     secondaryFileNames = cms.untracked.vstring()
@@ -63,13 +63,19 @@ process.FEVTSIMoutput = cms.OutputModule("PoolOutputModule",
 )
 
 # Additional output definition
-process.myAna = cms.EDAnalyzer("HCALTestAna", do_PU = cms.untracked.bool(True))
+process.TFileService = cms.Service("TFileService", fileName = cms.string("gen_hist.root") )
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_design_v9', '')
 
 # Path and EndPath definitions
+process.myAna = cms.EDAnalyzer(
+    "HCALTestAna",
+    do_PU = cms.untracked.bool(True),
+    is_run3_relVal = cms.untracked.bool(False),
+    min_simHit_energy = cms.untracked.double(0.0))
+
 process.raw2digi_step = cms.Path(process.myAna + process.RawToDigi)
 process.reconstruction_step = cms.Path(process.reconstruction)
 process.endjob_step = cms.EndPath(process.endOfProcess)

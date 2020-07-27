@@ -1,4 +1,4 @@
-source_file = open("HCAL_ML_test_sample_v1.stdout","r")
+source_file = open("reco_test.stdout","r")
 event = 1
 for gen_and_reco in source_file.read().split("gen: "):
 	if gen_and_reco != "":
