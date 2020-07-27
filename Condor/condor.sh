@@ -12,7 +12,7 @@ git cms-init --upstream-only
 git cms-addpkg RecoLocalCalo/HcalRecAlgos
 mv ${_CONDOR_SCRATCH_DIR}/MahiFit.cc RecoLocalCalo/HcalRecAlgos/src/
 git clone https://github.com/wang-hui/HCAL.git
-scram b
+scram b -j 4
 cd ${_CONDOR_SCRATCH_DIR}
 tar -xvf FileList.tar
 pwd
@@ -31,4 +31,4 @@ python compare_gen_reco.py
 #xrdcp split_file.tar root://cmseos.fnal.gov//${2}/split_file_${3}.tar
 xrdcp reco_test.stdout root://cmseos.fnal.gov//${2}/reco_test_${3}.stdout
 xrdcp result.csv root://cmseos.fnal.gov//${2}/result_${3}.csv
-xrdcp result.root root://cmseos.fnal.gov//${2}/result_${3}.root
+xrdcp result_no_PU_energy.root root://cmseos.fnal.gov//${2}/result_${3}.root
