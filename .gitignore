@@ -1,2 +1,10 @@
 *.root
 *.pyc
+*.stdout
+*.stderr
+*.csv
+
+plots*/
+split_file/
+FileList*/
+
