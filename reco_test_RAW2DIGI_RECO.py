@@ -23,19 +23,19 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1),
+    input = cms.untracked.int32(10),
     output = cms.optional.untracked.allowed(cms.int32,cms.PSet)
 )
 
-#f = open("FileList/run3_relVal_noPU_0.list", "r")
-#my_list = f.readlines()
-#f.close()
+f = open("FileList/Run3_RelVal_1TeV_pion_gun_RAW_0PU_0.list", "r")
+my_list = f.readlines()
+f.close()
 
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-	'file:/eos/uscms/store/user/huiwang/HCAL/MH-125_MFF-50_CTau-10000mm_step2.root'
-	#my_list
+	#'file:/eos/uscms/store/user/huiwang/HCAL/MH-125_MFF-50_CTau-10000mm_step2.root'
+	my_list
         ),
     secondaryFileNames = cms.untracked.vstring()
 )
@@ -98,7 +98,7 @@ process.myAna = cms.EDAnalyzer(
     "HCALTestAna",
     do_PU = cms.untracked.bool(True),
     is_run3_relVal = cms.untracked.bool(True),
-    min_simHit_energy = cms.untracked.double(1.0))
+    min_simHit_energy = cms.untracked.double(0.0))
 
 process.raw2digi_step = cms.Path(process.myAna + process.RawToDigi)
 process.reconstruction_step = cms.Path(process.reconstruction)
