@@ -1,17 +1,17 @@
 int plot_time()
 {
-    bool plot_time_vs_gen = true;
-    bool plot_ieta_vs_depth = false;
+    bool plot_time_vs_gen = false;
+    bool plot_ieta_vs_depth = true;
 
     //TString hist_name = "HB";
     TString hist_name = "HE";
 
-    TFile *f1 = new TFile("gen_hist.root");
+    TFile *f1 = new TFile("result_LLP_no_cut.root");
 
     if(plot_time_vs_gen)
     {
-        TString h1_folder = "myAna/";
-        TString h1_name = "channel_energy_vs_time_h";
+        TString h1_folder = "";
+        TString h1_name = "weighted_time_vs_gen_h";
 
         TH2F *h1 = (TH2F*)f1->Get(h1_folder + h1_name);
 
@@ -20,7 +20,7 @@ int plot_time()
 
         h1->Draw("colz");
         h1->SetTitle(h1_name);
-        //h1->GetXaxis()->SetRangeUser(0,100);
+        h1->GetXaxis()->SetRangeUser(0,100);
         h1->GetXaxis()->SetTitle("truth energy [GeV]");
         h1->GetYaxis()->SetTitle("weighted time [ns]");
         gPad->SetLogz();

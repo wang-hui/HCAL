@@ -2,17 +2,22 @@ int plot_HCAL()
 {
     bool plot_reco_vs_gen_ieta = false;
     bool plot_reco_vs_gen_h = true;
-    bool plot_ratio_h = true;
+    bool plot_ratio_h = false;
+    bool plot_err_h = false;
 
     bool do_profile_study = false;
 
     //TString hist_name = "depthG1_HE";
     //TString hist_name = "depthE1_HE";
     //TString hist_name = "depthG1_HB";
-    TString hist_name = "depthE1_HB_ietaS15";
+    //TString hist_name = "depthE1_HB_ietaS15";
     //TString hist_name = "depthE1_HB";
+    //TString hist_name = "reco";
+    //TString hist_name = "aux";
+    //TString hist_name = "reco_err";
+    TString hist_name = "aux_err";
 
-    TFile *f1 = new TFile("results/result_Run3_RelVal_1TeV_pion_gun_0PU_time_study.root");
+    TFile *f1 = new TFile("result_slope1.root");
 
     if(plot_reco_vs_gen_ieta)
     {
@@ -32,8 +37,8 @@ int plot_HCAL()
 
             h1->Draw("colz");
             h1->SetTitle(h1_name);
-            h1->GetXaxis()->SetTitle("reco energy [GeV]");
-            h1->GetYaxis()->SetTitle("truth energy [GeV]");
+            h1->GetXaxis()->SetTitle("truth energy [GeV]");
+            h1->GetYaxis()->SetTitle("reco energy [GeV]");
             gPad->SetLogz();
 
             mycanvas->SetLeftMargin(0.12);
@@ -70,7 +75,9 @@ int plot_HCAL()
 
     if(plot_reco_vs_gen_h)
     {
-        TString h1_name = "reco_vs_gen_" + hist_name + "_h";
+        TString h1_name = hist_name + "_vs_gen_h";
+        if(!hist_name.Contains("reco") && !hist_name.Contains("aux"))
+        {h1_name = "reco_vs_gen_" + hist_name + "_h";}
 
         TH2F *h1 = (TH2F*)f1->Get(h1_name);
 
@@ -79,8 +86,8 @@ int plot_HCAL()
 
         h1->Draw("colz");
         h1->SetTitle(h1_name);
-        h1->GetXaxis()->SetTitle("reco energy [GeV]");
-        h1->GetYaxis()->SetTitle("truth energy [GeV]");
+        h1->GetXaxis()->SetTitle("truth energy [GeV]");
+        h1->GetYaxis()->SetTitle("reco energy [GeV]");
         gPad->SetLogz();
 
         mycanvas->SetLeftMargin(0.12);
@@ -106,7 +113,7 @@ int plot_HCAL()
         {
             for (int i = 1; i<=15; i++)
             {
-                std::cout << px->GetBinContent(i) << std::endl;
+                std::cout << px->GetBinContent(i) << ", " << px->GetBinError(i) << std::endl;
             }
         }
         px->Fit("pol1", "w");
@@ -120,7 +127,8 @@ int plot_HCAL()
 
         TLine *l=new TLine(h1->GetXaxis()->GetXmin(), h1->GetYaxis()->GetXmin(),h1->GetXaxis()->GetXmax(), h1->GetYaxis()->GetXmax());
         l->SetLineColor(kBlack);
-        l->Draw("same");
+        if(!hist_name.Contains("err"))
+        {l->Draw("same");}
 
         mycanvas->SaveAs("plots_temp/" + h1_name + "_profile.png");
         if (do_profile_study)
@@ -128,10 +136,6 @@ int plot_HCAL()
             TProfile *py = h1->ProfileY("py");
             py->Draw();
             mycanvas->SaveAs("plots_temp/" + h1_name + "_profileY.png");
-        
-            TH1D* pjx = h1->ProjectionX();
-            pjx->Draw();
-            mycanvas->SaveAs("plots_temp/" + h1_name + "_projectionX.png");
         }
     }
 
@@ -153,6 +157,28 @@ int plot_HCAL()
         TLine *l=new TLine(1, h1->GetMinimum(),1, h1->GetMaximum());
         l->SetLineColor(kBlack);
         l->Draw("same");
+
+        mycanvas->SetLeftMargin(0.15);
+        mycanvas->SetRightMargin(0.1);
+        mycanvas->SaveAs("plots_temp/" + h1_name + ".png");
+    }
+
+    if(plot_err_h)
+    {
+        TString h1_name = hist_name + "_err_vs_gen_h";
+        TH1F *h1 = (TH1F*)f1->Get(h1_name);
+
+        TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
+        //gStyle->SetOptStat(kFALSE);
+
+        h1->Draw();
+        h1->GetXaxis()->SetTitle("truth energy [GeV]");
+        h1->SetTitle(h1_name);
+        h1->GetYaxis()->SetTitle("|reco-truth|/truth");
+
+        //TLine *l=new TLine(1, h1->GetMinimum(),1, h1->GetMaximum());
+        //l->SetLineColor(kBlack);
+        //l->Draw("same");
 
         mycanvas->SetLeftMargin(0.15);
         mycanvas->SetRightMargin(0.1);

@@ -10,11 +10,14 @@ result_file = "result"
 
 result = pd.read_csv(result_dir + result_file + ".csv", sep=',', header=0)
 
-run_mod = ""
-run_mod = "_no_PU_energy"
+run_mod = "origin"
+run_mod = "slope1"
+
+reco_slope = 1.07421
+aux_slope = 1.07002
 
 study_gain = False
-out_file = rt.TFile(result_file + run_mod + ".root","RECREATE")
+out_file = rt.TFile(result_file + "_" + run_mod + ".root","RECREATE")
 
 Ebins = 200
 Emin = 0.0
@@ -31,6 +34,9 @@ gen_h = rt.TH1F("gen_h", "truth energy", Ebins, Emin, Emax)
 #==============reco vs gen 2d hist ==================
 weighted_time_vs_gen_h = rt.TH2F("weighted_time_vs_gen_h", "weighted time vs gen", Ebins, Emin, Emax, 100, 0.0, 500.0)
 reco_vs_gen_h = rt.TH2F("reco_vs_gen_h", "reco vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_err_vs_gen_h = rt.TH2F("reco_err_vs_gen_h", "|reco - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
+aux_vs_gen_h = rt.TH2F("aux_vs_gen_h", "AUX vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_err_vs_gen_h = rt.TH2F("aux_err_vs_gen_h", "|aux - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
 reco_vs_gen_depthG1_h = rt.TH2F("reco_vs_gen_depthG1_h", "reco vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HB_h = rt.TH2F("reco_vs_gen_depthG1_HB_h", "reco vs gen, depth > 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HE_h = rt.TH2F("reco_vs_gen_depthG1_HE_h", "reco vs gen, depth > 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -88,18 +94,23 @@ print "total rows: ", Nrows
 for i in range(Nrows):
     if i%100000 == 0: print "process %d rows" %i
 
-    gen_energy = 0.0
-    if run_mod == "": gen_energy = result["truth energy"][i]
-    if run_mod == "_no_PU_energy": gen_energy = result["raw truth energy"][i]
-    reco_energy = result["reco energy"][i]
+    reco_corr = 1
+    aux_corr = 1
+    if run_mod == "slope1":
+        reco_corr = reco_slope
+        aux_corr = aux_slope
+
+    gen_energy = result["raw truth energy"][i]
+    reco_energy = result["reco energy"][i] / reco_corr
+    aux_energy = result["AUX energy"][i] / aux_corr
     ieta = abs(result["ieta"] [i])
     depth = result["depth"] [i]
     sub_det = result["sub detector"] [i]
     PU = result["PU"] [i]
     gain = result["gain"] [i]
-    raw_energy = result["raw energy"] [i]
     weighted_time = result["weighted time"] [i]
     median_time = result["median time"] [i]
+    raw_energy = reco_energy / gain
 
     sum_amplitude = 0
     if study_gain:
@@ -117,30 +128,33 @@ for i in range(Nrows):
     reco_h.Fill(reco_energy)
     gen_h.Fill(gen_energy)
     weighted_time_vs_gen_h.Fill(gen_energy, weighted_time)
-    reco_vs_gen_h.Fill(reco_energy, gen_energy)
+    reco_vs_gen_h.Fill(gen_energy, reco_energy)
+    aux_vs_gen_h.Fill(gen_energy, aux_energy)
 
     if sub_det == 1:
         weighted_time_HB_ieta_list[ieta - 1][depth - 1].Fill(weighted_time)
         if depth == 1:
-            reco_vs_gen_depthE1_HB_h.Fill(reco_energy, gen_energy)
-            if ieta < 15: reco_vs_gen_depthE1_HB_ietaS15_h.Fill(reco_energy, gen_energy)
-            reco_vs_gen_depthE1_HB_list[ieta - 1].Fill(reco_energy, gen_energy)
+            reco_vs_gen_depthE1_HB_h.Fill(gen_energy, reco_energy)
+            if ieta < 15: reco_vs_gen_depthE1_HB_ietaS15_h.Fill(gen_energy, reco_energy)
+            reco_vs_gen_depthE1_HB_list[ieta - 1].Fill(gen_energy, reco_energy)
         else:
-            reco_vs_gen_depthG1_h.Fill(reco_energy, gen_energy)
-            reco_vs_gen_depthG1_HB_h.Fill(reco_energy, gen_energy)
-            reco_vs_gen_depthG1_HB_list[ieta - 1].Fill(reco_energy, gen_energy)
+            reco_vs_gen_depthG1_h.Fill(gen_energy, reco_energy)
+            reco_vs_gen_depthG1_HB_h.Fill(gen_energy, reco_energy)
+            reco_vs_gen_depthG1_HB_list[ieta - 1].Fill(gen_energy, reco_energy)
     elif sub_det == 2:
         weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
         if depth == 1:
-            reco_vs_gen_depthE1_HE_h.Fill(reco_energy, gen_energy)
-            reco_vs_gen_depthE1_HE_list[ieta - 16].Fill(reco_energy, gen_energy)
+            reco_vs_gen_depthE1_HE_h.Fill(gen_energy, reco_energy)
+            reco_vs_gen_depthE1_HE_list[ieta - 16].Fill(gen_energy, reco_energy)
         else:
-            reco_vs_gen_depthG1_h.Fill(reco_energy, gen_energy)
-            reco_vs_gen_depthG1_HE_h.Fill(reco_energy, gen_energy)
-            reco_vs_gen_depthG1_HE_list[ieta - 16].Fill(reco_energy, gen_energy)
+            reco_vs_gen_depthG1_h.Fill(gen_energy, reco_energy)
+            reco_vs_gen_depthG1_HE_h.Fill(gen_energy, reco_energy)
+            reco_vs_gen_depthG1_HE_list[ieta - 16].Fill(gen_energy, reco_energy)
     else: print "strange sub_det: ", sub_det
 
     if gen_energy > 1:
+        reco_err_vs_gen_h.Fill(gen_energy, abs(reco_energy-gen_energy)/gen_energy)
+        aux_err_vs_gen_h.Fill(gen_energy, abs(aux_energy-gen_energy)/gen_energy)
         ratio = reco_energy / gen_energy
         ratio_h.Fill(ratio)
         if depth == 1:

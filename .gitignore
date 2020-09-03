@@ -1,2 +1,9 @@
 *.root
 *.pyc
+*.txt
+*.csv
+*.tar
+*.stdout
+*.stderr
+plots*/
+results*/
