@@ -320,7 +320,7 @@ private:
     std::unique_ptr<HcalRecoParams> paramTS_;
 
     // Struct for DLPHIN
-    struct DLPHIN_input {HcalDetId hid; HBHEChannelInfo channel_info;};
+    struct DLPHIN_input {HBHEChannelInfo channel_info; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
 
     // Status bit setters
@@ -542,9 +542,6 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
         if (infos && (saveDroppedInfos_ || makeThisRechit))
             infos->push_back(*channelInfo);
 
-        // Save DLPHIN_input
-        if (makeThisRechit) {DLPHIN_input_vec.push_back((DLPHIN_input){cell, *channelInfo});}
-
         // Reconstruct the rechit
         if (rechits && makeThisRechit)
         {
@@ -557,6 +554,9 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
                 setAsicSpecificBits(frame, coder, *channelInfo, calib, &rh);
                 setCommonStatusBits(*channelInfo, calib, &rh);
                 rechits->push_back(rh);
+
+                // Save DLPHIN_input
+                DLPHIN_input_vec.push_back((DLPHIN_input){*channelInfo, rh});
             }
         }
     }
@@ -670,6 +670,9 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
         out->reserve(maxOutputSize);
     }
 
+    //make an empty DLPHIN_input_vec for each event
+    DLPHIN_input_vec.clear();
+
     // Process the input collections, filling the output ones
     const bool isData = e.isRealData();
     if (processQIE8_)
@@ -699,7 +702,11 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
     //======================= DLPHIN test here =======================
     for (auto iter : DLPHIN_input_vec)
     {
-        auto hid = iter.hid;
+        auto rec_hit = iter.rec_hit;
+        auto eaux = rec_hit.eaux();
+        auto eraw = rec_hit.eraw();
+
+        auto hid = rec_hit.id();
         auto rawId = hid.rawId();
         auto subdet = hid.subdet();
         auto depth = hid.depth();
@@ -716,7 +723,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
             std::cout << charge << ", " << ped << ", ";
         }
 
-        std::cout << gain << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << std::endl;
+        std::cout << gain << ", " << eaux << ", " << eraw << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << std::endl;
     }
     //===================== end of DLPHIN test ========================
 

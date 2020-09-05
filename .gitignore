@@ -1,10 +1,9 @@
 *.root
 *.pyc
+*.txt
+*.csv
+*.tar
 *.stdout
 *.stderr
-*.csv
-
 plots*/
-split_file/
-FileList*/
-
+results*/
