@@ -413,9 +413,6 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
   // not going to be constructed from such channels.
   const bool skipDroppedChannels = !(infos && saveDroppedInfos_);
 
-  //make an empty DLPHIN_input_vec for each event
-  DLPHIN_input_vec.clear();
-
   // Iterate over the input collection
   for (typename Collection::const_iterator it = coll.begin(); it != coll.end(); ++it) {
     const DFrame& frame(*it);
@@ -662,6 +659,9 @@ void HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& even
     out = std::make_unique<HBHERecHitCollection>();
     out->reserve(maxOutputSize);
   }
+
+  //make an empty DLPHIN_input_vec for each event
+  DLPHIN_input_vec.clear();
 
   // Process the input collections, filling the output ones
   const bool isData = e.isRealData();
