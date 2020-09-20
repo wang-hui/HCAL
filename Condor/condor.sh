@@ -15,6 +15,7 @@ mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
 mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
 scram b -j 4
 cd HCAL
+mv ${_CONDOR_SCRATCH_DIR}/reco_test_RAW2DIGI_RECO.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
 pwd
@@ -33,4 +34,4 @@ python compare_gen_reco.py
 #xrdcp split_file.tar root://cmseos.fnal.gov//${2}/split_file_${3}.tar
 xrdcp reco_test.stdout root://cmseos.fnal.gov//${2}/reco_test_${3}.stdout
 xrdcp result.csv root://cmseos.fnal.gov//${2}/result_${3}.csv
-xrdcp result_no_PU_energy.root root://cmseos.fnal.gov//${2}/result_${3}.root
+xrdcp result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
