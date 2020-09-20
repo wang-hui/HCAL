@@ -9,7 +9,7 @@ eval `scramv1 project CMSSW CMSSW_10_2_12_patch1`
 cd CMSSW_10_2_12_patch1/src
 eval `scramv1 runtime -sh`
 git cms-init --upstream-only
-git cms-addpkg RecoLocalCalo/HcalRecAlgos
+git cms-addpkg RecoLocalCalo/HcalRecProducers
 git clone https://github.com/wang-hui/HCAL.git
 mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
 mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
