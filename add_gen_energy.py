@@ -6,17 +6,6 @@ import pickle
 
 #pd.set_option('display.max_rows', None)
 
-add_PU_energy = False
-
-MinBias_dic = {}
-if add_PU_energy:
-	f = open("MinBias.pkl","rb")
-	MinBias_dic = pickle.load(f)
-	f.close
-
-def find_PU_energy(sub_det, depth, ieta):
-	return MinBias_dic[(sub_det, depth, abs(ieta))]
-
 reco_list = glob.glob("split_file/reco_*.txt")
 gen_list = glob.glob("split_file/gen_*.txt")
 reco_list.sort()
@@ -58,13 +47,10 @@ for i in range (len(reco_list)):
 
 	next_pd = pd.merge(reco_df, gen_df, on="id", how="left")
 	PU = gen_df["PU"][0]
-	next_pd["energy"].fillna(0, inplace=True)
+	next_pd["raw truth energy"].fillna(0, inplace=True)
 	next_pd["median time"].fillna(0, inplace=True)
 	next_pd["weighted time"].fillna(0, inplace=True)
 	next_pd["PU"].fillna(PU, inplace=True)
-	if add_PU_energy:
-		next_pd["unit PU energy"] = next_pd.apply(lambda row: find_PU_energy(row["sub detector"], row["depth"], row["ieta"]), axis = 1)
-		next_pd["truth energy"] = next_pd.apply(lambda row: row["energy"] + row["PU"] * row["unit PU energy"], axis = 1)
 	result = result.append(next_pd)
 
 print "final processing"
@@ -81,7 +67,6 @@ print "final processing"
 #out_file.Close()
 
 result.drop(['id'], axis=1, inplace=True)
-result.rename(columns={"energy": "raw truth energy"}, inplace=True)
 
 #print list(result)
 print "saving to csv"

@@ -1,3 +1,5 @@
+import os
+os.system("rm split_file/*.txt")
 source_file = open("reco_test.stdout","r")
 event = 1
 for gen_and_reco in source_file.read().split("gen: "):

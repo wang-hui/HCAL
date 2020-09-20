@@ -8,12 +8,15 @@ int plot_HCAL()
     bool do_profile_study = false;
 
     //TString hist_name = "depthG1_HE";
+    //TString hist_name = "depthG1_HE_1_pulse";
     //TString hist_name = "depthE1_HE";
+    //TString hist_name = "depthE1_HE_1_pulse";
     //TString hist_name = "depthG1_HB";
     //TString hist_name = "depthE1_HB_ietaS15";
-    //TString hist_name = "depthE1_HB";
+    TString hist_name = "depthE1_HB";
     //TString hist_name = "reco";
-    TString hist_name = "aux";
+    //TString hist_name = "aux";
+    //TString hist_name = "DLPHIN";
     //TString hist_name = "reco_err";
     //TString hist_name = "aux_err";
 
@@ -75,9 +78,9 @@ int plot_HCAL()
 
     if(plot_reco_vs_gen_h)
     {
-        TString h1_name = hist_name + "_vs_gen_h";
-        if(!hist_name.Contains("reco") && !hist_name.Contains("aux"))
-        {h1_name = "reco_vs_gen_" + hist_name + "_h";}
+        TString h1_name = "reco_vs_gen_" + hist_name + "_h";
+        if(hist_name.Contains("reco") || hist_name.Contains("aux") || hist_name.Contains("DLPHIN"))
+        {h1_name = hist_name + "_vs_gen_h";}
 
         TH2F *h1 = (TH2F*)f1->Get(h1_name);
 

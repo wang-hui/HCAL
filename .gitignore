@@ -1,4 +1,5 @@
 *.root
+__init__.py
 *.pyc
 *.txt
 *.csv

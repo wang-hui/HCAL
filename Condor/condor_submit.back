@@ -1,6 +1,6 @@
 universe = vanilla
 Executable = condor.sh
-transfer_input_files = condor.sh, MahiFit.cc, reco_test_RAW2DIGI_RECO.py, split_file.py, MinBias.pkl, add_gen_energy.py, compare_gen_reco.py, FileList.tar 
+transfer_input_files = FileList.tar 
 should_transfer_files = YES 
 when_to_transfer_output = ON_EXIT
 x509userproxy = $ENV(X509_USER_PROXY)

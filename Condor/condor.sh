@@ -10,10 +10,12 @@ cd CMSSW_10_2_12_patch1/src
 eval `scramv1 runtime -sh`
 git cms-init --upstream-only
 git cms-addpkg RecoLocalCalo/HcalRecAlgos
-mv ${_CONDOR_SCRATCH_DIR}/MahiFit.cc RecoLocalCalo/HcalRecAlgos/src/
 git clone https://github.com/wang-hui/HCAL.git
+mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
+mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
 scram b -j 4
-cd ${_CONDOR_SCRATCH_DIR}
+cd HCAL
+mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
 pwd
 

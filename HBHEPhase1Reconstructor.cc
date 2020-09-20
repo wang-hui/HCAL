@@ -60,6 +60,8 @@
 // Fetcher for reco algorithm data
 #include "RecoLocalCalo/HcalRecAlgos/interface/fetchHcalAlgoData.h"
 
+#include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
+
 // Some helper functions
 namespace {
     // Class for making SiPM/QIE11 look like HPD/QIE8. HPD/QIE8
@@ -320,8 +322,9 @@ private:
     std::unique_ptr<HcalRecoParams> paramTS_;
 
     // Struct for DLPHIN
-    struct DLPHIN_input {HBHEChannelInfo channel_info; HBHERecHit rec_hit;};
+    struct DLPHIN_input {HBHEChannelInfo channel_info; float rawgain; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
+    std::vector<float> DLPHIN_output;
 
     // Status bit setters
     const HBHENegativeEFilter* negEFilter_;    // We don't manage this pointer
@@ -341,6 +344,8 @@ private:
                      HBHEChannelInfo* info,
                      HBHEChannelInfoCollection* infoColl,
                      HBHERecHitCollection* rechits);
+
+    void run_dlphin(std::vector<DLPHIN_input> Dinput_vec, std::vector<float>& Doutput);
 
     // Methods for setting rechit status bits
     void setAsicSpecificBits(const HBHEDataFrame& frame, const HcalCoder& coder,
@@ -504,6 +509,7 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
         const RawChargeFromSample<DFrame> rcfs(sipmQTSShift_, sipmQNTStoSum_, 
                                                cond, cell, cs, soi, frame, maxTS);
         int soiCapid = 4;
+        float rawgain = 0;
 
         // Go over time slices and fill the samples
         for (int ts = 0; ts < maxTS; ++ts)
@@ -516,6 +522,7 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
             const double pedestal = saveEffectivePeds ? calib.effpedestal(capid) : calib.pedestal(capid);
             const double pedestalWidth = saveEffectivePeds ? calibWidth.effpedestal(capid) : calibWidth.pedestal(capid);
             const double gain = calib.respcorrgain(capid);
+            if(ts == 0){rawgain = calib.rawgain(capid);}
             const double gainWidth = calibWidth.gain(capid);
             //always use QIE-only pedestal for this computation
             const double rawCharge = rcfs.getRawCharge(cs[ts], calib.pedestal(capid));
@@ -556,7 +563,7 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
                 rechits->push_back(rh);
 
                 // Save DLPHIN_input
-                DLPHIN_input_vec.push_back((DLPHIN_input){*channelInfo, rh});
+                DLPHIN_input_vec.push_back((DLPHIN_input){*channelInfo, rawgain, rh});
             }
         }
     }
@@ -670,8 +677,9 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
         out->reserve(maxOutputSize);
     }
 
-    //make an empty DLPHIN_input_vec for each event
+    //clear DLPHIN input/output vectors for each event
     DLPHIN_input_vec.clear();
+    DLPHIN_output.clear();
 
     // Process the input collections, filling the output ones
     const bool isData = e.isRealData();
@@ -699,33 +707,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
             hbheFlagSetterQIE11_->SetFlagsFromRecHits(*out);
     }
 
-    //======================= DLPHIN test here =======================
-    for (auto iter : DLPHIN_input_vec)
-    {
-        auto rec_hit = iter.rec_hit;
-        auto eaux = rec_hit.eaux();
-        auto eraw = rec_hit.eraw();
-
-        auto hid = rec_hit.id();
-        auto rawId = hid.rawId();
-        auto subdet = hid.subdet();
-        auto depth = hid.depth();
-        auto ieta = hid.ieta();
-        auto iphi = hid.iphi();
-
-        auto channel_info = iter.channel_info;
-        int nSamples = channel_info.nSamples();
-        auto gain = channel_info.tsGain(0);
-        for (int iTS = 0; iTS < nSamples; ++iTS)
-        {
-            auto charge = channel_info.tsRawCharge(iTS);
-            auto ped = channel_info.tsPedestal(iTS);
-            std::cout << charge << ", " << ped << ", ";
-        }
-
-        std::cout << gain << ", " << eaux << ", " << eraw << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << std::endl;
-    }
-    //===================== end of DLPHIN test ========================
+    run_dlphin(DLPHIN_input_vec, DLPHIN_output);
 
     // Add the output collections to the event record
     if (saveInfos_)
@@ -821,6 +803,80 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     add_param_set(pulseShapeParametersQIE11);
     
     descriptions.addDefault(desc);
+}
+
+void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, std::vector<float>& Doutput)
+{
+    tensorflow::GraphDef *graphDef_d1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HB_R2.pb");
+    tensorflow::Session *session_d1HB = tensorflow::createSession(graphDef_d1HB);
+
+    tensorflow::GraphDef *graphDef_dg1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HB_R2.pb");
+    tensorflow::Session *session_dg1HB = tensorflow::createSession(graphDef_dg1HB);
+
+    tensorflow::GraphDef *graphDef_d1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HE_R2.pb");
+    tensorflow::Session *session_d1HE = tensorflow::createSession(graphDef_d1HE);
+
+    tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HE_R2.pb");
+    tensorflow::Session *session_dg1HE = tensorflow::createSession(graphDef_dg1HE);
+
+    for(auto iter : Dinput_vec)
+    {
+        auto rec_hit = iter.rec_hit;
+        auto eraw = rec_hit.eraw();     //m0
+        auto eaux = rec_hit.eaux();     //m3 by default
+        auto energy = rec_hit.energy(); //mahi
+        auto flags = rec_hit.flags();
+
+        auto hid = rec_hit.id();
+        auto rawId = hid.rawId();
+        auto subdet = hid.subdet();
+        auto depth = hid.depth();
+        auto ieta = hid.ieta();
+        auto iphi = hid.iphi();
+
+        auto channel_info = iter.channel_info;
+        int nSamples = channel_info.nSamples();
+        auto gain = channel_info.tsGain(0);
+
+        auto rawgain = iter.rawgain;
+
+        tensorflow::Tensor ch_input(tensorflow::DT_FLOAT, {1, 8}); // template for charge input
+        auto ch_input_tensor = ch_input.tensor<float, 2>(); // place holder for taking in values
+
+        tensorflow::Tensor ty_input(tensorflow::DT_FLOAT, {1, 2}); // template for charge input
+        auto ty_input_tensor = ty_input.tensor<float, 2>(); // place holder for taking in values
+
+        for (int iTS = 0; iTS < nSamples; ++iTS)
+        {
+            auto charge = channel_info.tsRawCharge(iTS);
+            auto ped = channel_info.tsPedestal(iTS);
+            std::cout << charge << ", " << ped << ", ";
+            
+            ch_input_tensor(0, iTS) = (charge - ped)*gain;
+        }
+
+        // ty_input_tensor(0,0) = hid.subdet();
+        ty_input_tensor(0,0) = depth;
+        ty_input_tensor(0,1) = ieta;
+
+        std::vector<tensorflow::Tensor> outputs;
+        if(subdet == 1)
+        {
+            if(depth == 1) tensorflow::run(session_d1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
+            else tensorflow::run(session_dg1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
+        }
+
+        else if(subdet == 2)
+        {
+            if(depth == 1) tensorflow::run(session_d1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
+            else tensorflow::run(session_dg1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
+        }
+
+        float temp = float(outputs[0].matrix<float>()(0));
+        std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << temp << std::endl;
+
+        Doutput.push_back(temp);
+    }
 }
 
 //define this as a plug-in
