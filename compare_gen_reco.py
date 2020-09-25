@@ -24,8 +24,9 @@ Ebins = 200
 Emin = 0.0
 Emax = 1000.0
 
-#==============global 1d hist =======================
+#==============global hist =======================
 weighted_time_h = rt.TH1F("weighted_time_h", "weighted simHit time", 100, 0.0, 500.0)
+weighted_time_vs_gen_h = rt.TH2F("weighted_time_vs_gen_h", "weighted time vs gen", Ebins, Emin, Emax, 100, 0.0, 500.0)
 median_time_h = rt.TH1F("median_time_h", "median simHit time", 100, 0.0, 500.0)
 fcByPE_h = rt.TH1F("fcByPE_h", "fcByPE for each TS", 100, 0.0, 1000.0)
 PU_h = rt.TH1F("PU_h", "pileup", 100, 0.0, 100.0)
@@ -34,21 +35,40 @@ gen_h = rt.TH1F("gen_h", "truth energy", Ebins, Emin, Emax)
 use_8_pulse_h = rt.TH1F("use_8_pulse_h", "use 8 pulses", 2, 0, 2)
 
 #==============reco vs gen 2d hist ==================
-weighted_time_vs_gen_h = rt.TH2F("weighted_time_vs_gen_h", "weighted time vs gen", Ebins, Emin, Emax, 100, 0.0, 500.0)
 reco_vs_gen_h = rt.TH2F("reco_vs_gen_h", "reco vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_err_vs_gen_h = rt.TH2F("reco_err_vs_gen_h", "|reco - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
-aux_vs_gen_h = rt.TH2F("aux_vs_gen_h", "AUX vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
-aux_err_vs_gen_h = rt.TH2F("aux_err_vs_gen_h", "|AUX - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
-DLPHIN_vs_gen_h = rt.TH2F("DLPHIN_vs_gen_h", "DLPHIN vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
-DLPHIN_err_vs_gen_h = rt.TH2F("DLPHIN_err_vs_gen_h", "|DLPHIN - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
 reco_vs_gen_depthG1_h = rt.TH2F("reco_vs_gen_depthG1_h", "reco vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HB_h = rt.TH2F("reco_vs_gen_depthG1_HB_h", "reco vs gen, depth > 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthG1_HB_1_pulse_h = rt.TH2F("reco_vs_gen_depthG1_HB_1_pulse_h", "reco vs gen, depth > 1, HB, 1 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthG1_HB_8_pulse_h = rt.TH2F("reco_vs_gen_depthG1_HB_8_pulse_h", "reco vs gen, depth > 1, HB, 8 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HE_h = rt.TH2F("reco_vs_gen_depthG1_HE_h", "reco vs gen, depth > 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HE_1_pulse_h = rt.TH2F("reco_vs_gen_depthG1_HE_1_pulse_h", "reco vs gen, depth > 1, HE, 1 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthG1_HE_8_pulse_h = rt.TH2F("reco_vs_gen_depthG1_HE_8_pulse_h", "reco vs gen, depth > 1, HE, 8 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthE1_HB_h = rt.TH2F("reco_vs_gen_depthE1_HB_h", "reco vs gen, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthE1_HB_ietaS15_h = rt.TH2F("reco_vs_gen_depthE1_HB_ietaS15_h", "reco vs gen, depth = 1, |ieta| < 15, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthE1_HB_1_pulse_h = rt.TH2F("reco_vs_gen_depthE1_HB_1_pulse_h", "reco vs gen, depth = 1, HB, 1 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthE1_HB_8_pulse_h = rt.TH2F("reco_vs_gen_depthE1_HB_8_pulse_h", "reco vs gen, depth = 1, HB, 8 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthE1_HE_h = rt.TH2F("reco_vs_gen_depthE1_HE_h", "reco vs gen, depth = 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthE1_HE_1_pulse_h = rt.TH2F("reco_vs_gen_depthE1_HE_1_pulse_h", "reco vs gen, depth = 1, HE, 1 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthE1_HE_8_pulse_h = rt.TH2F("reco_vs_gen_depthE1_HE_8_pulse_h", "reco vs gen, depth = 1, HE, 8 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
+
+#==============aux vs gen 2d hist ==================
+aux_vs_gen_h = rt.TH2F("aux_vs_gen_h", "AUX vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_err_vs_gen_h = rt.TH2F("aux_err_vs_gen_h", "|AUX - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
+aux_vs_gen_depthG1_h = rt.TH2F("aux_vs_gen_depthG1_h", "aux vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_vs_gen_depthG1_HB_h = rt.TH2F("aux_vs_gen_depthG1_HB_h", "aux vs gen, depth > 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_vs_gen_depthG1_HE_h = rt.TH2F("aux_vs_gen_depthG1_HE_h", "aux vs gen, depth > 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_vs_gen_depthE1_HB_h = rt.TH2F("aux_vs_gen_depthE1_HB_h", "aux vs gen, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_vs_gen_depthE1_HE_h = rt.TH2F("aux_vs_gen_depthE1_HE_h", "aux vs gen, depth = 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
+
+#==============DLPHIN vs gen 2d hist ==================
+DLPHIN_vs_gen_h = rt.TH2F("DLPHIN_vs_gen_h", "DLPHIN vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_err_vs_gen_h = rt.TH2F("DLPHIN_err_vs_gen_h", "|DLPHIN - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
+DLPHIN_vs_gen_depthG1_h = rt.TH2F("DLPHIN_vs_gen_depthG1_h", "DLPHIN vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_gen_depthG1_HB_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HB_h", "DLPHIN vs gen, depth > 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_gen_depthG1_HE_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_h", "DLPHIN vs gen, depth > 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_gen_depthE1_HB_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HB_h", "DLPHIN vs gen, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_gen_depthE1_HE_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HE_h", "DLPHIN vs gen, depth = 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
 
 #==============ratio 1d hist ==========================
 sum_amp_over_gen_h = rt.TH1F("sum_amp_over_gen_h", "sum 8 amplitudes / gen for gen > 10 GeV", 100, 0.0, 2500.0)
@@ -151,23 +171,37 @@ for i in range(Nrows):
         weighted_time_HB_ieta_list[ieta - 1][depth - 1].Fill(weighted_time)
         if depth == 1:
             reco_vs_gen_depthE1_HB_h.Fill(gen_energy, reco_energy)
+            aux_vs_gen_depthE1_HB_h.Fill(gen_energy, aux_energy)
+            DLPHIN_vs_gen_depthE1_HB_h.Fill(gen_energy, DLPHIN_energy)
             if ieta < 15: reco_vs_gen_depthE1_HB_ietaS15_h.Fill(gen_energy, reco_energy)
             reco_vs_gen_depthE1_HB_list[ieta - 1].Fill(gen_energy, reco_energy)
+            if use_8_pulse: reco_vs_gen_depthE1_HB_8_pulse_h.Fill(gen_energy, reco_energy)
+            else: reco_vs_gen_depthE1_HB_1_pulse_h.Fill(gen_energy, reco_energy)
         else:
             reco_vs_gen_depthG1_h.Fill(gen_energy, reco_energy)
             reco_vs_gen_depthG1_HB_h.Fill(gen_energy, reco_energy)
+            aux_vs_gen_depthG1_HB_h.Fill(gen_energy, aux_energy)
+            DLPHIN_vs_gen_depthG1_HB_h.Fill(gen_energy, DLPHIN_energy)
             reco_vs_gen_depthG1_HB_list[ieta - 1].Fill(gen_energy, reco_energy)
+            if use_8_pulse: reco_vs_gen_depthG1_HB_8_pulse_h.Fill(gen_energy, reco_energy)
+            else: reco_vs_gen_depthG1_HB_1_pulse_h.Fill(gen_energy, reco_energy)
     elif sub_det == 2:
         weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
         if depth == 1:
             reco_vs_gen_depthE1_HE_h.Fill(gen_energy, reco_energy)
-            if not use_8_pulse: reco_vs_gen_depthE1_HE_1_pulse_h.Fill(gen_energy, reco_energy)
+            aux_vs_gen_depthE1_HE_h.Fill(gen_energy, aux_energy)
+            DLPHIN_vs_gen_depthE1_HE_h.Fill(gen_energy, DLPHIN_energy)
             reco_vs_gen_depthE1_HE_list[ieta - 16].Fill(gen_energy, reco_energy)
+            if use_8_pulse: reco_vs_gen_depthE1_HE_8_pulse_h.Fill(gen_energy, reco_energy)
+            else: reco_vs_gen_depthE1_HE_1_pulse_h.Fill(gen_energy, reco_energy)
         else:
             reco_vs_gen_depthG1_h.Fill(gen_energy, reco_energy)
             reco_vs_gen_depthG1_HE_h.Fill(gen_energy, reco_energy)
-            if not use_8_pulse: reco_vs_gen_depthG1_HE_1_pulse_h.Fill(gen_energy, reco_energy)
+            aux_vs_gen_depthG1_HE_h.Fill(gen_energy, aux_energy)
+            DLPHIN_vs_gen_depthG1_HE_h.Fill(gen_energy, DLPHIN_energy)
             reco_vs_gen_depthG1_HE_list[ieta - 16].Fill(gen_energy, reco_energy)
+            if use_8_pulse: reco_vs_gen_depthG1_HE_8_pulse_h.Fill(gen_energy, reco_energy)
+            else: reco_vs_gen_depthG1_HE_1_pulse_h.Fill(gen_energy, reco_energy)
     else: print "strange sub_det: ", sub_det
 
     if gen_energy > 1:
