@@ -20,7 +20,8 @@ mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
 pwd
 
-cmsRun reco_test_RAW2DIGI_RECO.py $1 > reco_test.stdout
+mkdir results_temp
+cmsRun reco_test_RAW2DIGI_RECO.py $1 > results_temp/reco_test.stdout
 
 mkdir split_file
 python split_file.py
@@ -31,7 +32,6 @@ python add_gen_energy.py
 
 python compare_gen_reco.py
 
-#xrdcp split_file.tar root://cmseos.fnal.gov//${2}/split_file_${3}.tar
-xrdcp reco_test.stdout root://cmseos.fnal.gov//${2}/reco_test_${3}.stdout
-xrdcp result.csv root://cmseos.fnal.gov//${2}/result_${3}.csv
-xrdcp result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
+xrdcp results_temp/reco_test.stdout root://cmseos.fnal.gov//${2}/reco_test_${3}.stdout
+xrdcp results_temp/result.csv root://cmseos.fnal.gov//${2}/result_${3}.csv
+xrdcp results_temp/result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root

@@ -298,7 +298,6 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		if(do_PU) std::cout << rawId << ", " << energy_sum << ", " << median_time << ", " << weighted_time << ", " << obs_npu << std::endl;
 		else std::cout << rawId << ", " << energy_sum << ", " << median_time << ", " << weighted_time << ", " << std::endl;
 	}
-	std::cout << "reco: TS1 raw charge, TS1 ped noise, TS2 raw charge, TS2 ped noise, TS3 raw charge, TS3 ped noise, TS4 raw charge, TS4 ped noise, TS5 raw charge, TS5 ped noise, TS6 raw charge, TS6 ped noise, TS7 raw charge, TS7 ped noise, TS8 raw charge, TS8 ped noise, raw gain, gain, raw energy, aux energy, mahi energy, flags, id, sub detector, depth, ieta, iphi, DLPHIN energy" << std::endl;
 }
 
 

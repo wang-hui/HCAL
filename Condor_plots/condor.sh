@@ -10,7 +10,8 @@ cd CMSSW_10_2_12_patch1/src
 eval `scramv1 runtime -sh`
 
 cd ${_CONDOR_SCRATCH_DIR}
-xrdcp $1 result.csv
+mkdir results_temp
+xrdcp $1 results_temp/result.csv
 
 python compare_gen_reco.py
 

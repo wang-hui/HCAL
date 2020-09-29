@@ -70,4 +70,4 @@ result.drop(['id'], axis=1, inplace=True)
 
 #print list(result)
 print "saving to csv"
-result.to_csv("result.csv", index=False)
+result.to_csv("results_temp/result.csv", index=False)

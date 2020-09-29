@@ -2,7 +2,7 @@ import ROOT as rt
 import pandas as pd
 import sys
 
-result_dir = ""
+result_dir = "results_temp/"
 result_file = "result"
 #print sys.argv
 #index = sys.argv[1]
@@ -18,7 +18,7 @@ aux_slope = 1.0
 use_8_pulse_bit = 1<<29
 
 study_gain = False
-out_file = rt.TFile(result_file + "_" + run_mod + ".root","RECREATE")
+out_file = rt.TFile(result_dir + result_file + "_" + run_mod + ".root","RECREATE")
 
 Ebins = 200
 Emin = 0.0
