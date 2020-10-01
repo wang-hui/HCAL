@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 
 result_dir = "results_temp/"
-result_file = "result"
+result_file = "result_data"
 #print sys.argv
 #index = sys.argv[1]
 #result_file += index
