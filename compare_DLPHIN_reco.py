@@ -35,14 +35,20 @@ DLPHIN_vs_reco_depthG1_HE_h = rt.TH2F("DLPHIN_vs_reco_depthG1_HE_h", "DLPHIN vs 
 DLPHIN_vs_reco_depthE1_HB_h = rt.TH2F("DLPHIN_vs_reco_depthE1_HB_h", "DLPHIN vs reco, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_reco_depthE1_HE_h = rt.TH2F("DLPHIN_vs_reco_depthE1_HE_h", "DLPHIN vs reco, depth = 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
 
-ratio_ietaP_depthG1_HB_h = rt.TH3F("ratio_ietaP_depthG1_HB_h", "DLPHIN/reco for 10<reco<30, ieta > 0, depth > 1, HB", 17, 1, 18, 72, 1, 73, 100, 0, 2)
-ratio_ietaM_depthG1_HB_h = rt.TH3F("ratio_ietaM_depthG1_HB_h", "DLPHIN/reco for 10<reco<30, ieta < 0, depth > 1, HB", 17, -17, 0, 72, 1, 73, 100, 0, 2)
-ratio_ietaP_depthG1_HE_h = rt.TH3F("ratio_ietaP_depthG1_HE_h", "DLPHIN/reco for 10<reco<30, ieta > 0, depth > 1, HE", 15, 16, 31, 72, 1, 73, 100, 0, 2)
-ratio_ietaM_depthG1_HE_h = rt.TH3F("ratio_ietaM_depthG1_HE_h", "DLPHIN/reco for 10<reco<30, ieta < 0, depth > 1, HE", 15, -30, -15, 72, 1, 73, 100, 0, 2)
-ratio_ietaP_depthE1_HB_h = rt.TH3F("ratio_ietaP_depthE1_HB_h", "DLPHIN/reco for 10<reco<30, ieta > 0, depth = 1, HB", 17, 1, 18, 72, 1, 73, 100, 0, 2)
-ratio_ietaM_depthE1_HB_h = rt.TH3F("ratio_ietaM_depthE1_HB_h", "DLPHIN/reco for 10<reco<30, ieta < 0, depth = 1, HB", 17, -17, 0, 72, 1, 73, 100, 0, 2)
-ratio_ietaP_depthE1_HE_h = rt.TH3F("ratio_ietaP_depthE1_HE_h", "DLPHIN/reco for 10<reco<30, ieta > 0, depth = 1, HE", 15, 16, 31, 72, 1, 73, 100, 0, 2)
-ratio_ietaM_depthE1_HE_h = rt.TH3F("ratio_ietaM_depthE1_HE_h", "DLPHIN/reco for 10<reco<30, ieta < 0, depth = 1, HE", 15, -30, -15, 72, 1, 73, 100, 0, 2)
+ratio_ieta_depthG1_HB_h = rt.TH2F("ratio_ieta_depthG1_HB_h", "DLPHIN/reco for 10<reco<30GeV, depth > 1, HB", 17, 1, 18, 100, 0, 2)
+ratio_ieta_depthG1_HE_h = rt.TH2F("ratio_ieta_depthG1_HE_h", "DLPHIN/reco for 10<reco<30GeV, depth > 1, HE", 15, 16, 31, 100, 0, 2)
+ratio_ieta_depthE1_HB_h = rt.TH2F("ratio_ieta_depthE1_HB_h", "DLPHIN/reco for 10<reco<30GeV, depth = 1, HB", 17, 1, 18, 100, 0, 2)
+ratio_ieta_depthE1_HE_h = rt.TH2F("ratio_ieta_depthE1_HE_h", "DLPHIN/reco for 10<reco<30GeV, depth = 1, HE", 15, 16, 31, 100, 0, 2)
+
+#==============DLPHIN vs reco 3d hist ==================
+ratio_ietaP_depthG1_HB_h = rt.TH3F("ratio_ietaP_depthG1_HB_h", "DLPHIN/reco for reco>1GeV, ieta > 0, depth > 1, HB", 17, 1, 18, 72, 1, 73, 100, 0, 2)
+ratio_ietaM_depthG1_HB_h = rt.TH3F("ratio_ietaM_depthG1_HB_h", "DLPHIN/reco for reco>1GeV, ieta < 0, depth > 1, HB", 17, -17, 0, 72, 1, 73, 100, 0, 2)
+ratio_ietaP_depthG1_HE_h = rt.TH3F("ratio_ietaP_depthG1_HE_h", "DLPHIN/reco for reco>1GeV, ieta > 0, depth > 1, HE", 15, 16, 31, 72, 1, 73, 100, 0, 2)
+ratio_ietaM_depthG1_HE_h = rt.TH3F("ratio_ietaM_depthG1_HE_h", "DLPHIN/reco for reco>1GeV, ieta < 0, depth > 1, HE", 15, -30, -15, 72, 1, 73, 100, 0, 2)
+ratio_ietaP_depthE1_HB_h = rt.TH3F("ratio_ietaP_depthE1_HB_h", "DLPHIN/reco for reco>1GeV, ieta > 0, depth = 1, HB", 17, 1, 18, 72, 1, 73, 100, 0, 2)
+ratio_ietaM_depthE1_HB_h = rt.TH3F("ratio_ietaM_depthE1_HB_h", "DLPHIN/reco for reco>1GeV, ieta < 0, depth = 1, HB", 17, -17, 0, 72, 1, 73, 100, 0, 2)
+ratio_ietaP_depthE1_HE_h = rt.TH3F("ratio_ietaP_depthE1_HE_h", "DLPHIN/reco for reco>1GeV, ieta > 0, depth = 1, HE", 15, 16, 31, 72, 1, 73, 100, 0, 2)
+ratio_ietaM_depthE1_HE_h = rt.TH3F("ratio_ietaM_depthE1_HE_h", "DLPHIN/reco for reco>1GeV, ieta < 0, depth = 1, HE", 15, -30, -15, 72, 1, 73, 100, 0, 2)
 
 Nrows = result.shape[0]
 #Nrows = 500000
@@ -76,6 +82,8 @@ for i in range(Nrows):
             DLPHIN_vs_reco_depthE1_HB_h.Fill(reco_energy, DLPHIN_energy)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
+                if reco_energy > 10 and reco_energy < 30:
+                   ratio_ieta_depthE1_HB_h.Fill(abs(ieta), ratio)
                 if ieta > 0:
                    ratio_ietaP_depthE1_HB_h.Fill(ieta, iphi, ratio)
                 else: 
@@ -84,6 +92,8 @@ for i in range(Nrows):
             DLPHIN_vs_reco_depthG1_HB_h.Fill(reco_energy, DLPHIN_energy)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
+                if reco_energy > 10 and reco_energy < 30:
+                   ratio_ieta_depthG1_HB_h.Fill(abs(ieta), ratio)
                 if ieta > 0:
                    ratio_ietaP_depthG1_HB_h.Fill(ieta, iphi, ratio)
                 else: 
@@ -93,6 +103,8 @@ for i in range(Nrows):
             DLPHIN_vs_reco_depthE1_HE_h.Fill(reco_energy, DLPHIN_energy)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
+                if reco_energy > 10 and reco_energy < 30:
+                   ratio_ieta_depthE1_HE_h.Fill(abs(ieta), ratio)
                 if ieta > 0:
                    ratio_ietaP_depthE1_HE_h.Fill(ieta, iphi, ratio)
                 else: 
@@ -101,6 +113,8 @@ for i in range(Nrows):
             DLPHIN_vs_reco_depthG1_HE_h.Fill(reco_energy, DLPHIN_energy)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
+                if reco_energy > 10 and reco_energy < 30:
+                   ratio_ieta_depthG1_HE_h.Fill(abs(ieta), ratio)
                 if ieta > 0:
                    ratio_ietaP_depthG1_HE_h.Fill(ieta, iphi, ratio)
                 else: 

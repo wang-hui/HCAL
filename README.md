@@ -32,6 +32,7 @@ root plot_HCAL.C
 
 4. run on data
 ```
+cd HCAL
 mkdir results_temp
 cmsRun reco_data_RAW2DIGI_RECO.py <ntuple_list> > results_temp/reco_data.stdout
 python make_data_csv.py

@@ -819,6 +819,8 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HE_R2.pb");
     tensorflow::Session *session_dg1HE = tensorflow::createSession(graphDef_dg1HE);
 
+    std::cout << "reco: TS1 raw charge, TS1 ped noise, TS2 raw charge, TS2 ped noise, TS3 raw charge, TS3 ped noise, TS4 raw charge, TS4 ped noise, TS5 raw charge, TS5 ped noise, TS6 raw charge, TS6 ped noise, TS7 raw charge, TS7 ped noise, TS8 raw charge, TS8 ped noise, raw gain, gain, raw energy, aux energy, mahi energy, flags, id, sub detector, depth, ieta, iphi, DLPHIN energy" << std::endl;
+
     for(auto iter : Dinput_vec)
     {
         auto rec_hit = iter.rec_hit;
@@ -877,6 +879,14 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
         Doutput.push_back(temp);
     }
+    tensorflow::closeSession(session_d1HB);
+    delete graphDef_d1HB;
+    tensorflow::closeSession(session_dg1HB);
+    delete graphDef_dg1HB;
+    tensorflow::closeSession(session_d1HE);
+    delete graphDef_d1HE;
+    tensorflow::closeSession(session_dg1HE);
+    delete graphDef_dg1HE;
 }
 
 //define this as a plug-in
