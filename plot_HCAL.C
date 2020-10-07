@@ -24,8 +24,8 @@ int plot_HCAL()
         //"aux_err",
     };
 
-    //TFile *f1 = new TFile("result_origin.root");
-    TFile *f1 = new TFile("results/results_2018_1TeV_pion_gun_no_respCorr/2018_1TeV_pion_gun_PU0.root");
+    TFile *f1 = new TFile("results_temp/result_origin.root");
+    //TFile *f1 = new TFile("results/results_2018_1TeV_pion_gun_no_respCorr/2018_1TeV_pion_gun_PU0.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {

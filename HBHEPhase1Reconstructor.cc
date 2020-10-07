@@ -322,7 +322,7 @@ private:
     std::unique_ptr<HcalRecoParams> paramTS_;
 
     // Struct for DLPHIN
-    struct DLPHIN_input {HBHEChannelInfo channel_info; float rawgain; HBHERecHit rec_hit;};
+    struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
     std::vector<float> DLPHIN_output;
 
@@ -345,6 +345,7 @@ private:
                      HBHEChannelInfoCollection* infoColl,
                      HBHERecHitCollection* rechits);
 
+    // Function to run DLPHIN
     void run_dlphin(std::vector<DLPHIN_input> Dinput_vec, std::vector<float>& Doutput);
 
     // Methods for setting rechit status bits
@@ -509,7 +510,6 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
         const RawChargeFromSample<DFrame> rcfs(sipmQTSShift_, sipmQNTStoSum_, 
                                                cond, cell, cs, soi, frame, maxTS);
         int soiCapid = 4;
-        float rawgain = 0;
 
         // Go over time slices and fill the samples
         for (int ts = 0; ts < maxTS; ++ts)
@@ -522,7 +522,6 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
             const double pedestal = saveEffectivePeds ? calib.effpedestal(capid) : calib.pedestal(capid);
             const double pedestalWidth = saveEffectivePeds ? calibWidth.effpedestal(capid) : calibWidth.pedestal(capid);
             const double gain = calib.respcorrgain(capid);
-            if(ts == 0){rawgain = calib.rawgain(capid);}
             const double gainWidth = calibWidth.gain(capid);
             //always use QIE-only pedestal for this computation
             const double rawCharge = rcfs.getRawCharge(cs[ts], calib.pedestal(capid));
@@ -563,7 +562,7 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
                 rechits->push_back(rh);
 
                 // Save DLPHIN_input
-                DLPHIN_input_vec.push_back((DLPHIN_input){*channelInfo, rawgain, rh});
+                DLPHIN_input_vec.push_back((DLPHIN_input){*channelInfo, calib.respcorr(), rh});
             }
         }
     }
@@ -677,7 +676,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
         out->reserve(maxOutputSize);
     }
 
-    //clear DLPHIN input/output vectors for each event
+    //Clear DLPHIN input/output vectors for each event
     DLPHIN_input_vec.clear();
     DLPHIN_output.clear();
 
@@ -707,6 +706,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
             hbheFlagSetterQIE11_->SetFlagsFromRecHits(*out);
     }
 
+    // Run DLPHIN
     run_dlphin(DLPHIN_input_vec, DLPHIN_output);
 
     // Add the output collections to the event record
@@ -840,7 +840,8 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         int nSamples = channel_info.nSamples();
         auto gain = channel_info.tsGain(0);
 
-        auto rawgain = iter.rawgain;
+        auto resp_corr = iter.resp_corr;
+        float rawgain = gain / resp_corr;
 
         tensorflow::Tensor ch_input(tensorflow::DT_FLOAT, {1, 8}); // template for charge input
         auto ch_input_tensor = ch_input.tensor<float, 2>(); // place holder for taking in values
@@ -853,7 +854,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             auto charge = channel_info.tsRawCharge(iTS);
             auto ped = channel_info.tsPedestal(iTS);
             std::cout << charge << ", " << ped << ", ";
-            
+
             ch_input_tensor(0, iTS) = (charge - ped)*gain;
         }
 

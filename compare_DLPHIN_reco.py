@@ -26,6 +26,10 @@ Emax = 100.0
 reco_h = rt.TH1F("reco_h", "reco energy", Ebins, Emin, Emax)
 DLPHIN_h = rt.TH1F("DLPHIN_h", "DLPHIN energy", Ebins, Emin, Emax)
 use_8_pulse_h = rt.TH1F("use_8_pulse_h", "use 8 pulses", 2, 0, 2)
+respCorr_depthG1_HB_h = rt.TH1F("respCorr_depthG1_HB_h", "response correction, depth > 1, HB", 100, 0, 4)
+respCorr_depthG1_HE_h = rt.TH1F("respCorr_depthG1_HE_h", "response correction, depth > 1, HE", 100, 0, 4)
+respCorr_depthE1_HB_h = rt.TH1F("respCorr_depthE1_HB_h", "response correction, depth = 1, HB", 100, 0, 4)
+respCorr_depthE1_HE_h = rt.TH1F("respCorr_depthE1_HE_h", "response correction, depth = 1, HE", 100, 0, 4)
 
 #==============DLPHIN vs reco 2d hist ==================
 DLPHIN_vs_reco_h = rt.TH2F("DLPHIN_vs_reco_h", "DLPHIN vs reco", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -51,7 +55,7 @@ ratio_ietaP_depthE1_HE_h = rt.TH3F("ratio_ietaP_depthE1_HE_h", "DLPHIN/reco for 
 ratio_ietaM_depthE1_HE_h = rt.TH3F("ratio_ietaM_depthE1_HE_h", "DLPHIN/reco for reco>1GeV, ieta < 0, depth = 1, HE", 15, -30, -15, 72, 1, 73, 100, 0, 2)
 
 Nrows = result.shape[0]
-#Nrows = 500000
+Nrows = 500000
 print "total rows: ", Nrows
 for i in range(Nrows):
     if i%100000 == 0: print "process %d rows" %i
@@ -80,6 +84,7 @@ for i in range(Nrows):
     if sub_det == 1:
         if depth == 1:
             DLPHIN_vs_reco_depthE1_HB_h.Fill(reco_energy, DLPHIN_energy)
+            respCorr_depthE1_HB_h.Fill(respCorr)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
                 if reco_energy > 10 and reco_energy < 30:
@@ -90,6 +95,7 @@ for i in range(Nrows):
                    ratio_ietaM_depthE1_HB_h.Fill(ieta, iphi, ratio)
         else:
             DLPHIN_vs_reco_depthG1_HB_h.Fill(reco_energy, DLPHIN_energy)
+            respCorr_depthG1_HB_h.Fill(respCorr)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
                 if reco_energy > 10 and reco_energy < 30:
@@ -101,6 +107,7 @@ for i in range(Nrows):
     elif sub_det == 2:
         if depth == 1:
             DLPHIN_vs_reco_depthE1_HE_h.Fill(reco_energy, DLPHIN_energy)
+            respCorr_depthE1_HE_h.Fill(respCorr)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
                 if reco_energy > 10 and reco_energy < 30:
@@ -111,6 +118,7 @@ for i in range(Nrows):
                    ratio_ietaM_depthE1_HE_h.Fill(ieta, iphi, ratio)
         else:
             DLPHIN_vs_reco_depthG1_HE_h.Fill(reco_energy, DLPHIN_energy)
+            respCorr_depthG1_HE_h.Fill(respCorr)
             if reco_energy > 1:
                 ratio = DLPHIN_energy / reco_energy
                 if reco_energy > 10 and reco_energy < 30:

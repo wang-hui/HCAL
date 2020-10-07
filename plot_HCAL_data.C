@@ -1,23 +1,25 @@
 int plot_HCAL_data()
 {
-    bool plot_reco_vs_gen_h = false;
-    bool plot_ratio_h = true;
+    bool plot_reco_vs_gen = false;
+    bool plot_ratio_ieta_iphi = false;
+    bool plot_ratio_ieta = true;
 
     std::vector<TString> hist_list =
     {
         //"DLPHIN_vs_gen",
         //"DLPHIN_vs_reco_depthG1_HE", "DLPHIN_vs_reco_depthE1_HE", "DLPHIN_vs_reco_depthG1_HB", "DLPHIN_vs_reco_depthE1_HB",
+        "ratio_ieta_depthG1_HB", "ratio_ieta_depthG1_HE", "ratio_ieta_depthE1_HB", "ratio_ieta_depthE1_HE",
         //"ratio_ietaP_depthG1_HE", "ratio_ietaM_depthG1_HE", "ratio_ietaP_depthE1_HE", "ratio_ietaM_depthE1_HE",
-        "ratio_ietaP_depthG1_HB", "ratio_ietaM_depthG1_HB", "ratio_ietaP_depthE1_HB", "ratio_ietaM_depthE1_HB",
+        //"ratio_ietaP_depthG1_HB", "ratio_ietaM_depthG1_HB", "ratio_ietaP_depthE1_HB", "ratio_ietaM_depthE1_HB",
     };
 
-    TFile *f1 = new TFile("result_origin.root");
+    TFile *f1 = new TFile("results/DoubleMuon_Run2018A_Run_316590_raw_1to100.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
         TString hist_name = hist_list.at(i);
 
-        if(plot_reco_vs_gen_h)
+        if(plot_reco_vs_gen)
         {
             TString h1_name = hist_name + "_h";
 
@@ -91,7 +93,7 @@ int plot_HCAL_data()
             mycanvas->SaveAs("plots_temp/" + hist_name + "_SD.png");
         }
 
-        if(plot_ratio_h)
+        if(plot_ratio_ieta_iphi)
         {
             TString h1_name = hist_name + "_h";
 
@@ -111,6 +113,64 @@ int plot_HCAL_data()
             mycanvas->SetLeftMargin(0.15);
             mycanvas->SetRightMargin(0.15);
             mycanvas->SaveAs("plots_temp/" + hist_name + "_profile.png");
+        }
+
+        if(plot_ratio_ieta)
+        {
+            TString h1_name = hist_name + "_h";
+
+            TH2F *h1 = (TH2F*)f1->Get(h1_name);
+
+            TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
+            gStyle->SetOptStat(kFALSE);
+
+            h1->Draw("colz");
+            h1->SetTitle(h1_name);
+            h1->GetXaxis()->SetTitle("ieta");
+            h1->GetYaxis()->SetTitle("DLPHIN/reco");
+            //gPad->SetLogz();
+
+            mycanvas->SetLeftMargin(0.15);
+            mycanvas->SetRightMargin(0.15);
+            mycanvas->SaveAs("plots_temp/" + hist_name + ".png");
+
+            TProfile *px = h1->ProfileX("px", 1, -1, "os");
+            //px->BuildOptions(0, 0, "s");
+            px->SetTitle(h1_name);
+            //px->GetYaxis()->SetNdivisions(512);
+            px->SetLineColor(kRed);
+            //px->SetLineWidth(2);
+            //px->SetMarkerStyle(8);
+            px->GetXaxis()->SetTitle("ieta");
+            px->GetYaxis()->SetTitle("DLPHIN/reco");
+            px->GetYaxis()->SetRangeUser(0,2);
+            px->Draw();
+            gPad->SetGrid();
+            px->Fit("pol0", "w");
+            TF1 *f = (TF1*)px->GetListOfFunctions()->FindObject("pol0");
+            TString fit_TS = "";
+            if(f)
+            {
+                f->SetLineColor(kBlue);
+                f->SetLineWidth(1);
+                f->SetLineStyle(2); // 2 = "- - -"
+
+                std::stringstream fit_SS;
+                fit_SS << "fit = " << std::setprecision(2) << std::fixed << f->GetParameter(0) << " +- " << f->GetParError(0);
+                fit_TS = fit_SS.str();
+            }
+
+            TLatex latex;
+            latex.SetTextSize(0.04);
+            latex.SetNDC();
+            latex.DrawLatex(0.2,0.85,fit_TS);
+            //TLine *l=new TLine(xmin, ymin, xmax * 0.8, ymax * 0.8);
+            //l->SetLineColor(kBlack);
+            //if(!hist_name.Contains("err"))
+            //{l->Draw("same");}
+
+            mycanvas->SaveAs("plots_temp/" + hist_name + "_profile.png");
+
         }
     }
     return 0;
