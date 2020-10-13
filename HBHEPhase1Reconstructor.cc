@@ -855,7 +855,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             auto ped = channel_info.tsPedestal(iTS);
             std::cout << charge << ", " << ped << ", ";
 
-            ch_input_tensor(0, iTS) = (charge - ped)*gain;
+            ch_input_tensor(0, iTS) = (charge - ped) * rawgain;
         }
 
         // ty_input_tensor(0,0) = hid.subdet();

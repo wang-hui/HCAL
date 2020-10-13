@@ -131,7 +131,7 @@ for i in range(Nrows):
     gen_energy = result["raw truth energy"][i]
     reco_energy = (result["mahi energy"][i] / respCorr) / reco_corr
     aux_energy = (result["aux energy"][i] / respCorr) / aux_corr
-    DLPHIN_energy = result["DLPHIN energy"][i] / respCorr
+    DLPHIN_energy = result["DLPHIN energy"][i]
     ieta = abs(result["ieta"] [i])
     depth = result["depth"] [i]
     sub_det = result["sub detector"] [i]
