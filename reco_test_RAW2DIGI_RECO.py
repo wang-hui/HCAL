@@ -67,7 +67,7 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string("gen_hi
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_design_v9', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v15', '')
 
 # Path and EndPath definitions
 process.myAna = cms.EDAnalyzer(
