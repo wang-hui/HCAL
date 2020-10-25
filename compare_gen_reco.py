@@ -4,11 +4,11 @@ import sys
 
 result_dir = "results_temp/"
 result_file = "result"
-#print sys.argv
-#index = sys.argv[1]
-#result_file += index
 
-result = pd.read_csv(result_dir + result_file + ".csv", sep=',', header=0)
+tot_rows = None
+tot_rows = 1000000
+
+result = pd.read_csv(result_dir + result_file + ".csv", sep=',', skipinitialspace = True, header=0, nrows=tot_rows)
 
 run_mod = "origin"
 #run_mod = "slope1"
@@ -114,7 +114,6 @@ for i in range(16,30):
     weighted_time_HE_ieta_list.append(hist_list)
 
 Nrows = result.shape[0]
-#Nrows = 500000
 print "total rows: ", Nrows
 for i in range(Nrows):
     if i%100000 == 0: print "process %d rows" %i

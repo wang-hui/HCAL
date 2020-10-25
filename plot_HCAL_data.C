@@ -1,19 +1,21 @@
 int plot_HCAL_data()
 {
     bool plot_reco_vs_gen = false;
-    bool plot_ratio_ieta_iphi = false;
-    bool plot_ratio_ieta = true;
+    bool plot_ratio_ieta_iphi = true;
+    bool plot_ratio_ieta = false;
 
     std::vector<TString> hist_list =
     {
         //"DLPHIN_vs_gen",
         //"DLPHIN_vs_reco_depthG1_HE", "DLPHIN_vs_reco_depthE1_HE", "DLPHIN_vs_reco_depthG1_HB", "DLPHIN_vs_reco_depthE1_HB",
-        "ratio_ieta_depthG1_HB", "ratio_ieta_depthG1_HE", "ratio_ieta_depthE1_HB", "ratio_ieta_depthE1_HE",
+        //"ratio_ieta_depthG1_HB_EL", "ratio_ieta_depthG1_HE_EL", "ratio_ieta_depthE1_HB_EL", "ratio_ieta_depthE1_HE_EL",
+        //"ratio_ieta_depthG1_HB_EH", "ratio_ieta_depthG1_HE_EH", "ratio_ieta_depthE1_HB_EH", "ratio_ieta_depthE1_HE_EH",
+        "ratio_ieta_depth_HB", "ratio_ieta_depth_HE",
         //"ratio_ietaP_depthG1_HE", "ratio_ietaM_depthG1_HE", "ratio_ietaP_depthE1_HE", "ratio_ietaM_depthE1_HE",
         //"ratio_ietaP_depthG1_HB", "ratio_ietaM_depthG1_HB", "ratio_ietaP_depthE1_HB", "ratio_ietaM_depthE1_HB",
     };
 
-    TFile *f1 = new TFile("results/DoubleMuon_Run2018A_Run_316590_raw_1to100.root");
+    TFile *f1 = new TFile("results_temp/result_data_origin.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {

@@ -13,8 +13,9 @@ git clone https://github.com/wang-hui/HCAL.git
 
 2. add DLPHIN and compile
 ```
-mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
 mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
+mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
+mv HCAL/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecProducers/python
 scram b -j 4
 ```
 
