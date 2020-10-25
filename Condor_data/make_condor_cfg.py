@@ -2,11 +2,11 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "DoubleMuon_Run2018A_Run_316590_raw_1to100"
+folder_name = "DoubleMuon_Run2018A_Run_315512_DLPHIN_vs_MAHI"
 result_path = "/eos/uscms/store/user/huiwang/HCAL/"
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"
-file_list = "../FileList/DoubleMuon_Run2018A_Run_316590_raw_1to100.list"
-tot_jobs = 100
+file_list = "../FileList/DoubleMuon_Run2018A_Run_315512_raw.list"
+tot_jobs = 200
 
 today = str(date.today())
 folder_name_full = folder_name + "-" + today
