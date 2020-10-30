@@ -60,6 +60,8 @@
 // Fetcher for reco algorithm data
 #include "RecoLocalCalo/HcalRecAlgos/interface/fetchHcalAlgoData.h"
 
+#include "TFile.h"
+#include "TProfile2D.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 
 // Some helper functions
@@ -327,9 +329,8 @@ private:
     std::unique_ptr<HcalRecoParams> paramTS_;
 
     // Struct for DLPHIN
-    tensorflow::GraphDef *graphDef_d1HB, *graphDef_dg1HB, *graphDef_d1HE, *graphDef_dg1HE;
     tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
-
+    TProfile2D *ratio_HB, *ratio_HE;
     struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
     std::vector<float> DLPHIN_output;
@@ -440,17 +441,24 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
 
     //std::cout << "HBHEPhase1Reconstructor is called" << std::endl;
     // Keep DLPHIN sessions in memory during process
-    graphDef_d1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HB_R2.pb");
+    tensorflow::GraphDef *graphDef_d1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HB_R2.pb");
     session_d1HB = tensorflow::createSession(graphDef_d1HB);
 
-    graphDef_dg1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HB_R2.pb");
+    tensorflow::GraphDef *graphDef_dg1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HB_R2.pb");
     session_dg1HB = tensorflow::createSession(graphDef_dg1HB);
 
-    graphDef_d1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HE_R2.pb");
+    tensorflow::GraphDef *graphDef_d1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HE_R2.pb");
     session_d1HE = tensorflow::createSession(graphDef_d1HE);
 
-    graphDef_dg1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HE_R2.pb");
+    tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HE_R2.pb");
     session_dg1HE = tensorflow::createSession(graphDef_dg1HE);
+
+    if(DLPHIN_scale_)
+    {
+        TFile *ratio_file = new TFile("DLPHIN_pb/DLPHIN_MAHI_ratio.root");
+        ratio_HB = (TProfile2D*)ratio_file->Get("ratio_ieta_depth_HB_h_pyx");
+        ratio_HE = (TProfile2D*)ratio_file->Get("ratio_ieta_depth_HE_h_pyx");
+    }
 }
 
 
@@ -850,7 +858,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HE_R2.pb");
     tensorflow::Session *session_dg1HE = tensorflow::createSession(graphDef_dg1HE);
 */
-    if(DLPHIN_print_) std::cout << "reco: TS1 raw charge, TS1 ped noise, TS2 raw charge, TS2 ped noise, TS3 raw charge, TS3 ped noise, TS4 raw charge, TS4 ped noise, TS5 raw charge, TS5 ped noise, TS6 raw charge, TS6 ped noise, TS7 raw charge, TS7 ped noise, TS8 raw charge, TS8 ped noise, raw gain, gain, raw energy, aux energy, mahi energy, flags, id, sub detector, depth, ieta, iphi, DLPHIN energy" << std::endl;
+    if(DLPHIN_print_) std::cout << "reco: TS1 raw charge, TS1 ped noise, TS2 raw charge, TS2 ped noise, TS3 raw charge, TS3 ped noise, TS4 raw charge, TS4 ped noise, TS5 raw charge, TS5 ped noise, TS6 raw charge, TS6 ped noise, TS7 raw charge, TS7 ped noise, TS8 raw charge, TS8 ped noise, raw gain, gain, raw energy, aux energy, mahi energy, flags, id, sub detector, depth, ieta, iphi, DLPHIN energy, DLPHIN_SF" << std::endl;
 
     for(auto iter : Dinput_vec)
     {
@@ -897,34 +905,20 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         std::vector<tensorflow::Tensor> outputs;
         if(subdet == 1)
         {
-            if(depth == 1)
-            {
-                tensorflow::run(session_d1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
-                if(DLPHIN_scale_) DLPHIN_SF = 1.16;
-            }
-            else
-            {
-                tensorflow::run(session_dg1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
-                if(DLPHIN_scale_) DLPHIN_SF = 1.0;
-            }
+            if(DLPHIN_scale_) DLPHIN_SF = ratio_HB->GetBinContent(ratio_HB->GetXaxis()->FindBin(abs(ieta)), ratio_HB->GetYaxis()->FindBin(depth));
+            if(depth == 1) {tensorflow::run(session_d1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
+            else {tensorflow::run(session_dg1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
         }
 
         else if(subdet == 2)
         {
-            if(depth == 1)
-            {
-                tensorflow::run(session_d1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
-                if(DLPHIN_scale_) DLPHIN_SF = 0.6;
-            }
-            else
-            {
-                tensorflow::run(session_dg1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);
-                if(DLPHIN_scale_) DLPHIN_SF = 0.9;
-            }
+            if(DLPHIN_scale_) DLPHIN_SF = ratio_HE->GetBinContent(ratio_HE->GetXaxis()->FindBin(abs(ieta)), ratio_HE->GetYaxis()->FindBin(depth));
+            if(depth == 1) {tensorflow::run(session_d1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
+            else {tensorflow::run(session_dg1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
         }
 
         float temp = float(outputs[0].matrix<float>()(0));
-        if(DLPHIN_print_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << temp << std::endl;
+        if(DLPHIN_print_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << temp << ", " << DLPHIN_SF << std::endl;
 
         Doutput.push_back(temp * resp_corr / DLPHIN_SF);
     }

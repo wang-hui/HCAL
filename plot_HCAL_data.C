@@ -1,8 +1,8 @@
 int plot_HCAL_data()
 {
-    bool plot_reco_vs_gen = false;
-    bool plot_ratio_ieta_iphi = true;
-    bool plot_ratio_ieta = false;
+    bool plot_2D = false;
+    bool plot_3D = true;
+    bool plot_2D_fit = false;
 
     std::vector<TString> hist_list =
     {
@@ -15,13 +15,15 @@ int plot_HCAL_data()
         //"ratio_ietaP_depthG1_HB", "ratio_ietaM_depthG1_HB", "ratio_ietaP_depthE1_HB", "ratio_ietaM_depthE1_HB",
     };
 
-    TFile *f1 = new TFile("results_temp/result_data_origin.root");
+    TFile *f1 = new TFile("results/DoubleMuon_Run2018A_Run_315512_DLPHIN_vs_MAHI.root");
+
+    TFile out_file("DLPHIN_MAHI_ratio.root","RECREATE");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
         TString hist_name = hist_list.at(i);
 
-        if(plot_reco_vs_gen)
+        if(plot_2D)
         {
             TString h1_name = hist_name + "_h";
 
@@ -95,7 +97,7 @@ int plot_HCAL_data()
             mycanvas->SaveAs("plots_temp/" + hist_name + "_SD.png");
         }
 
-        if(plot_ratio_ieta_iphi)
+        if(plot_3D)
         {
             TString h1_name = hist_name + "_h";
 
@@ -103,21 +105,52 @@ int plot_HCAL_data()
 
             TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
             gStyle->SetOptStat(kFALSE);
+            gStyle->SetPaintTextFormat(".2f");
 
             TProfile2D *pz = h1->Project3DProfile("yx");
 
             pz->SetTitle(h1_name);
             pz->GetXaxis()->SetTitle("ieta");
-            pz->GetYaxis()->SetTitle("iphi");
-            pz->GetZaxis()->SetRangeUser(0.5,1.5);
+            pz->GetYaxis()->SetTitle("depth");
+            //pz->GetZaxis()->SetRangeUser(0.5,1.5);
             pz->Draw("colz");
+
+            //int ieta24 = pz->GetXaxis()->FindBin(24);
+            //int depth1 = pz->GetYaxis()->FindBin(1);
+            //std::cout << "ieta24(" << ieta24 << "), depth1(" << depth1 << ") " << pz->GetBinContent(ieta24, depth1) << std::endl;
+
+            TProfile2D* entries_h = (TProfile2D*)pz->Clone();
+            entries_h->Reset();
+
+            for(int i = 1; i <= pz->GetNbinsX(); i++)
+            {
+                for(int j = 1; j <= pz->GetNbinsY(); j++)
+                {
+                    int global_bin_number = pz->GetBin(i,j,0);
+                    int entries = pz->GetBinEntries(global_bin_number);
+                    float err = (float)sqrt(entries) / (float)entries;
+                    if (entries > 0)
+                    {
+                        entries_h->SetBinContent(global_bin_number, err);
+                        entries_h->SetBinEntries(global_bin_number, 1);
+                        //std::cout << err << ", " << entries_h->GetBinContent(global_bin_number) << ", " << entries_h->GetBinEntries(global_bin_number) << std::endl;
+                    }
+                    //std::cout << "bin" << global_bin_number << "(" << i << "," << j << ") " << entries << ", " << entries_h->GetBinContent(global_bin_number) << std::endl;
+                }
+            }
+            entries_h->Draw("sametext");
 
             mycanvas->SetLeftMargin(0.15);
             mycanvas->SetRightMargin(0.15);
             mycanvas->SaveAs("plots_temp/" + hist_name + "_profile.png");
+            pz->Draw("text");
+            mycanvas->SaveAs("plots_temp/" + hist_name + "_profile_test.png");
+
+            out_file.cd();
+            pz->Write();
         }
 
-        if(plot_ratio_ieta)
+        if(plot_2D_fit)
         {
             TString h1_name = hist_name + "_h";
 
@@ -175,5 +208,6 @@ int plot_HCAL_data()
 
         }
     }
+    out_file.Close();
     return 0;
 }

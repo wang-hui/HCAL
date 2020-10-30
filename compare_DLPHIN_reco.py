@@ -6,7 +6,7 @@ result_dir = "results_temp/"
 result_file = "result_data"
 
 tot_rows = None
-tot_rows = 1000000
+#tot_rows = 1000000
 
 result = pd.read_csv(result_dir + result_file + ".csv", sep=',', skipinitialspace = True, header=0, nrows=tot_rows)
 

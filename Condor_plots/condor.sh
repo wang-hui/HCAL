@@ -11,8 +11,11 @@ eval `scramv1 runtime -sh`
 
 cd ${_CONDOR_SCRATCH_DIR}
 mkdir results_temp
-xrdcp $1 results_temp/result.csv
 
-python compare_gen_reco.py
+#xrdcp $1 results_temp/result.csv
+#python compare_gen_reco.py
+#xrdcp results_temp/result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
 
-xrdcp result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
+xrdcp $1 results_temp/result_data.csv
+python compare_DLPHIN_reco.py
+xrdcp results_temp/result_data_origin.root root://cmseos.fnal.gov//${2}/result_data_${3}.root

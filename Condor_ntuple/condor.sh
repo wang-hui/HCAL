@@ -17,12 +17,14 @@ mv ${_CONDOR_SCRATCH_DIR}/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecPr
 scram b -j 4
 cd HCAL
 mv ${_CONDOR_SCRATCH_DIR}/miniAOD_data_RAW2DIGI_L1Reco_RECO_EI_PAT.py .
+mv ${_CONDOR_SCRATCH_DIR}/nanoAOD_data_NANO.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
 pwd
 
 mkdir results_temp
 cmsRun miniAOD_data_RAW2DIGI_L1Reco_RECO_EI_PAT.py $1
+cmsRun nanoAOD_data_NANO.py
 
 xrdcp data_AOD_RAW2DIGI_L1Reco_RECO_EI_PAT.root root://cmseos.fnal.gov//${2}/data_AOD_${3}.root
-xrdcp data_miniAOD_RAW2DIGI_L1Reco_RECO_EI_PAT.root root://cmseos.fnal.gov//${2}/data_miniAOD_${3}.root
+xrdcp data_NANO.root root://cmseos.fnal.gov//${2}/data_nanoAOD_${3}.root
