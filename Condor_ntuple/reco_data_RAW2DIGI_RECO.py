@@ -4,7 +4,7 @@
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
 # with command line options: reco_data -s RAW2DIGI,RECO --nThreads 4 --data --era Run2_2018,pf_badHcalMitigation --scenario pp --conditions 102X_dataRun2_v12 --eventcontent RECO --filein file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root -n 100 --no_exec
 import FWCore.ParameterSet.Config as cms
-
+import sys
 from Configuration.StandardSequences.Eras import eras
 
 process = cms.Process('RECO',eras.Run2_2018,eras.pf_badHcalMitigation)
@@ -22,12 +22,19 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    input = cms.untracked.int32(-1)
 )
+
+f = open(sys.argv[2], "r")
+my_list = f.readlines()
+f.close()
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root'),
+    fileNames = cms.untracked.vstring(
+        #'file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root'
+    my_list
+    ),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -72,7 +79,7 @@ from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
 #Setup FWK for multithreaded
-process.options.numberOfThreads=cms.untracked.uint32(4)
+process.options.numberOfThreads=cms.untracked.uint32(2)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 
 
