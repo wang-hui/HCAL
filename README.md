@@ -1,6 +1,7 @@
 # DLPHIN test
-This is a git repo for DLPHIN test using 2018 MC and data  
-For run 3 MC, please check the CMSSW_11_1_x branch  
+This is a git repo for DLPHIN tests  
+Use master branch for 2018 MC and data  
+Use the CMSSW_11_1_x branch for run 3 MC  
 
 1. setup CMSSW and this repo
 ```
@@ -15,28 +16,17 @@ git clone https://github.com/wang-hui/HCAL.git
 ```
 mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
 mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
-mv HCAL/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecProducers/python
 scram b -j 4
 ```
 
-3. run on MC
+3. modify the cfg file and run
 ```
-cd HCAL
-mkdir results_temp
-cmsRun reco_test_RAW2DIGI_RECO.py <ntuple_list> > results_temp/reco_test.stdout
-mkdir split_file
-python split_file.py
-python add_gen_energy.py
-python compare_gen_reco.py
-root plot_HCAL.C
-```
+#edit these 3 lines of HCAL/HBHEPhase1Reconstructor_cfi.py
+ 89     DLPHIN_print = cms.bool(False), #Printout for debug. Keep False
+ 90     DLPHIN_scale = cms.bool(True),  #Apply DLPHIN/MAHI scale factor on DLPHIN energy. Set True in data
+ 91     DLPHIN_save = cms.bool(True),   #Save DLPHIN energy by overwriting the original (MAHI) energy in HBHERecHits
 
-4. run on data
-```
+mv HCAL/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecProducers/python
 cd HCAL
-mkdir results_temp
-cmsRun reco_data_RAW2DIGI_RECO.py <ntuple_list> > results_temp/reco_data.stdout
-python make_data_csv.py
-python compare_DLPHIN_reco.py
-root plot_HCAL_data.C
+cmsRun reco_data_RAW2DIGI_RECO.py
 ```
