@@ -316,10 +316,9 @@ private:
     bool setPulseShapeFlagsQIE8_;
     bool setPulseShapeFlagsQIE11_;
 
-    // Bools for DLPHIN
-    bool DLPHIN_print_;         //print out DLPHIN inputs and outputs
-    bool DLPHIN_scale_;         //apply MAHI/DLPHIN scale factor
-    bool DLPHIN_save_;          //replace MAHI with DLPHIN energy
+    // DLPHIN parameters
+    std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_;
+    bool DLPHIN_print_, DLPHIN_scale_, DLPHIN_save_;
 
     // Other members
     edm::EDGetTokenT<HBHEDigiCollection> tok_qie8_;
@@ -393,6 +392,11 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
       setNoiseFlagsQIE11_(conf.getParameter<bool>("setNoiseFlagsQIE11")),
       setPulseShapeFlagsQIE8_(conf.getParameter<bool>("setPulseShapeFlagsQIE8")),
       setPulseShapeFlagsQIE11_(conf.getParameter<bool>("setPulseShapeFlagsQIE11")),
+      DLPHIN_pb_d1HB_(conf.getParameter<std::string>("DLPHIN_pb_d1HB")),
+      DLPHIN_pb_dg1HB_(conf.getParameter<std::string>("DLPHIN_pb_dg1HB")),
+      DLPHIN_pb_d1HE_(conf.getParameter<std::string>("DLPHIN_pb_d1HE")),
+      DLPHIN_pb_dg1HE_(conf.getParameter<std::string>("DLPHIN_pb_dg1HE")),
+      DLPHIN_pb_SF_(conf.getParameter<std::string>("DLPHIN_pb_SF")),
       DLPHIN_print_(conf.getParameter<bool>("DLPHIN_print")),
       DLPHIN_scale_(conf.getParameter<bool>("DLPHIN_scale")),
       DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
@@ -441,21 +445,21 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
 
     //std::cout << "HBHEPhase1Reconstructor is called" << std::endl;
     // Keep DLPHIN sessions in memory during process
-    tensorflow::GraphDef *graphDef_d1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HB_R2.pb");
+    tensorflow::GraphDef *graphDef_d1HB = tensorflow::loadGraphDef(DLPHIN_pb_d1HB_);
     session_d1HB = tensorflow::createSession(graphDef_d1HB);
 
-    tensorflow::GraphDef *graphDef_dg1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HB_R2.pb");
+    tensorflow::GraphDef *graphDef_dg1HB = tensorflow::loadGraphDef(DLPHIN_pb_dg1HB_);
     session_dg1HB = tensorflow::createSession(graphDef_dg1HB);
 
-    tensorflow::GraphDef *graphDef_d1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HE_R2.pb");
+    tensorflow::GraphDef *graphDef_d1HE = tensorflow::loadGraphDef(DLPHIN_pb_d1HE_);
     session_d1HE = tensorflow::createSession(graphDef_d1HE);
 
-    tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HE_R2.pb");
+    tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef(DLPHIN_pb_dg1HE_);
     session_dg1HE = tensorflow::createSession(graphDef_dg1HE);
 
     if(DLPHIN_scale_)
     {
-        TFile *ratio_file = new TFile("DLPHIN_pb/DLPHIN_MAHI_ratio.root");
+        TFile *ratio_file = new TFile(DLPHIN_pb_SF_.c_str());
         ratio_HB = (TProfile2D*)ratio_file->Get("ratio_ieta_depth_HB_h_pyx");
         ratio_HE = (TProfile2D*)ratio_file->Get("ratio_ieta_depth_HE_h_pyx");
     }
@@ -830,6 +834,11 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<bool>("setPulseShapeFlagsQIE11");
     desc.add<bool>("setLegacyFlagsQIE8");
     desc.add<bool>("setLegacyFlagsQIE11");
+    desc.add<std::string>("DLPHIN_pb_d1HB");
+    desc.add<std::string>("DLPHIN_pb_dg1HB");
+    desc.add<std::string>("DLPHIN_pb_d1HE");
+    desc.add<std::string>("DLPHIN_pb_dg1HE");
+    desc.add<std::string>("DLPHIN_pb_SF");
     desc.add<bool>("DLPHIN_print");
     desc.add<bool>("DLPHIN_scale");
     desc.add<bool>("DLPHIN_save");
@@ -845,19 +854,6 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
 
 void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, std::vector<float>& Doutput)
 {
-/*
-    tensorflow::GraphDef *graphDef_d1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HB_R2.pb");
-    tensorflow::Session *session_d1HB = tensorflow::createSession(graphDef_d1HB);
-
-    tensorflow::GraphDef *graphDef_dg1HB = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HB_R2.pb");
-    tensorflow::Session *session_dg1HB = tensorflow::createSession(graphDef_dg1HB);
-
-    tensorflow::GraphDef *graphDef_d1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_d1HE_R2.pb");
-    tensorflow::Session *session_d1HE = tensorflow::createSession(graphDef_d1HE);
-
-    tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef("DLPHIN_pb/model_dg1HE_R2.pb");
-    tensorflow::Session *session_dg1HE = tensorflow::createSession(graphDef_dg1HE);
-*/
     if(DLPHIN_print_) std::cout << "reco: TS1 raw charge, TS1 ped noise, TS2 raw charge, TS2 ped noise, TS3 raw charge, TS3 ped noise, TS4 raw charge, TS4 ped noise, TS5 raw charge, TS5 ped noise, TS6 raw charge, TS6 ped noise, TS7 raw charge, TS7 ped noise, TS8 raw charge, TS8 ped noise, raw gain, gain, raw energy, aux energy, mahi energy, flags, id, sub detector, depth, ieta, iphi, DLPHIN energy, DLPHIN_SF" << std::endl;
 
     for(auto iter : Dinput_vec)
@@ -922,16 +918,6 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
         Doutput.push_back(temp * resp_corr / DLPHIN_SF);
     }
-/*
-    tensorflow::closeSession(session_d1HB);
-    delete graphDef_d1HB;
-    tensorflow::closeSession(session_dg1HB);
-    delete graphDef_dg1HB;
-    tensorflow::closeSession(session_d1HE);
-    delete graphDef_d1HE;
-    tensorflow::closeSession(session_dg1HE);
-    delete graphDef_dg1HE;
-*/
 }
 
 void HBHEPhase1Reconstructor::save_dlphin(std::vector<float> Doutput, HBHERecHitCollection* rechits)

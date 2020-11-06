@@ -166,9 +166,9 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 		auto rawId = hid.rawId();
 		auto subdet = hid.subdet();
 		auto depth = hid.depth();
-		auto ieta = hid.ieta();
+		//auto ieta = hid.ieta();
 		auto ietaAbs = hid.ietaAbs();
-		auto iphi = hid.iphi();
+		//auto iphi = hid.iphi();
 
 		auto energy = iter.energy();
 		auto time = iter.time();

@@ -21,10 +21,10 @@ scram b -j 4
 
 3. modify the cfg file and run
 ```
-#edit these 3 lines of HCAL/HBHEPhase1Reconstructor_cfi.py
- 89     DLPHIN_print = cms.bool(False), #Printout for debug. Keep False
- 90     DLPHIN_scale = cms.bool(True),  #Apply DLPHIN/MAHI scale factor on DLPHIN energy. Set True in data
- 91     DLPHIN_save = cms.bool(True),   #Save DLPHIN energy by overwriting the original (MAHI) energy in HBHERecHits
+#edit these 2 lines of HCAL/HBHEPhase1Reconstructor_cfi.py if necessary
+100     DLPHIN_scale = cms.bool(True),  #Apply DLPHIN/MAHI scale factor on DLPHIN energy. Set True in data
+101     DLPHIN_save = cms.bool(True),   #If False, DLPHIN will have a "dry run" without being saved
+        #If True, DLPHIN energy will be saved by overwriting the original (MAHI) energy in HBHERecHits
 
 mv HCAL/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecProducers/python
 cd HCAL

@@ -6,6 +6,9 @@ import RecoLocalCalo.HcalRecProducers.HBHEMahiParameters_cfi as mahi
 import RecoLocalCalo.HcalRecProducers.HBHEPulseShapeFlagSetter_cfi as pulseShapeFlag
 import RecoLocalCalo.HcalRecProducers.HBHEStatusBitSetter_cfi as hbheStatusFlag
 
+import os
+DLPHIN_pb_folder = "%s/src/HCAL/DLPHIN_pb/" % os.environ['CMSSW_BASE']
+
 hbheprereco = cms.EDProducer(
     "HBHEPhase1Reconstructor",
 
@@ -86,6 +89,13 @@ hbheprereco = cms.EDProducer(
     setPulseShapeFlagsQIE11 = cms.bool(False),
     setLegacyFlagsQIE8 = cms.bool(True),
     setLegacyFlagsQIE11 = cms.bool(False),
+
+    # DLPHIN parameters
+    DLPHIN_pb_d1HB = cms.string(DLPHIN_pb_folder + "model_d1HB_R2.pb"),
+    DLPHIN_pb_dg1HB = cms.string(DLPHIN_pb_folder + "model_dg1HB_R2.pb"),
+    DLPHIN_pb_d1HE = cms.string(DLPHIN_pb_folder + "model_d1HE_R2.pb"),
+    DLPHIN_pb_dg1HE = cms.string(DLPHIN_pb_folder + "model_dg1HE_R2.pb"),
+    DLPHIN_pb_SF = cms.string(DLPHIN_pb_folder + "DLPHIN_MAHI_ratio.root"),
     DLPHIN_print = cms.bool(True),
     DLPHIN_scale = cms.bool(False),
     DLPHIN_save = cms.bool(False),
