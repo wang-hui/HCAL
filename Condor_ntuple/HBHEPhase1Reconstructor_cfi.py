@@ -97,7 +97,7 @@ hbheprereco = cms.EDProducer(
     DLPHIN_pb_dg1HE = cms.string(DLPHIN_pb_folder + "model_dg1HE_R2.pb"),
     DLPHIN_pb_SF = cms.string(DLPHIN_pb_folder + "DLPHIN_MAHI_ratio.root"),
     DLPHIN_print = cms.bool(False),
-    DLPHIN_scale = cms.bool(True),
+    DLPHIN_scale = cms.bool(False),
     DLPHIN_save = cms.bool(True),
 
     # Parameter sets configuring rechit status bit setters

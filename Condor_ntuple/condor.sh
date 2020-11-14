@@ -18,7 +18,8 @@ scram b -j 4
 cd HCAL
 #mv ${_CONDOR_SCRATCH_DIR}/miniAOD_data_RAW2DIGI_L1Reco_RECO_EI_PAT.py .
 #mv ${_CONDOR_SCRATCH_DIR}/nanoAOD_data_NANO.py .
-mv ${_CONDOR_SCRATCH_DIR}/reco_data_RAW2DIGI_RECO.py .
+#mv ${_CONDOR_SCRATCH_DIR}/reco_data_RAW2DIGI_RECO.py .
+mv ${_CONDOR_SCRATCH_DIR}/reco_test_RAW2DIGI_RECO.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
 pwd
@@ -26,8 +27,10 @@ pwd
 mkdir results_temp
 #cmsRun miniAOD_data_RAW2DIGI_L1Reco_RECO_EI_PAT.py $1
 #cmsRun nanoAOD_data_NANO.py
-cmsRun reco_data_RAW2DIGI_RECO.py $1
+#cmsRun reco_data_RAW2DIGI_RECO.py $1
+cmsRun reco_test_RAW2DIGI_RECO.py $1
 
 #xrdcp data_AOD_RAW2DIGI_L1Reco_RECO_EI_PAT.root root://cmseos.fnal.gov//${2}/data_AOD_${3}.root
 #xrdcp data_NANO.root root://cmseos.fnal.gov//${2}/data_nanoAOD_${3}.root
-xrdcp reco_data_RAW2DIGI_RECO.root root://cmseos.fnal.gov//${2}/data_RECO_${3}.root
+#xrdcp reco_data_RAW2DIGI_RECO.root root://cmseos.fnal.gov//${2}/data_RECO_${3}.root
+xrdcp reco_test.root root://cmseos.fnal.gov//${2}/reco_test_${3}.root
