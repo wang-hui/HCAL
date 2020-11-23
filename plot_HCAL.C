@@ -6,26 +6,29 @@ int plot_HCAL()
     bool plot_err_h = false;
 
     bool do_profile_study = false;
+    float test_bin_energy = 50;
 
     std::vector<TString> hist_list =
     {
         //"reco_vs_gen",
-        "reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_1_pulse", "reco_vs_gen_depthG1_HE_8_pulse",
-        "reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_1_pulse", "reco_vs_gen_depthE1_HE_8_pulse",
-        "reco_vs_gen_depthG1_HB", "reco_vs_gen_depthG1_HB_1_pulse", "reco_vs_gen_depthG1_HB_8_pulse",
+        //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_1_pulse", "reco_vs_gen_depthG1_HE_8_pulse",
+        //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_1_pulse", "reco_vs_gen_depthE1_HE_8_pulse",
+        //"reco_vs_gen_depthG1_HB", "reco_vs_gen_depthG1_HB_1_pulse", "reco_vs_gen_depthG1_HB_8_pulse",
         //"reco_vs_gen_depthE1_HB_ietaS15",
-        "reco_vs_gen_depthE1_HB", "reco_vs_gen_depthE1_HB_1_pulse", "reco_vs_gen_depthE1_HB_8_pulse",
+        //"reco_vs_gen_depthE1_HB", "reco_vs_gen_depthE1_HB_1_pulse", "reco_vs_gen_depthE1_HB_8_pulse",
 
         //"aux_vs_gen",
-        "aux_vs_gen_depthG1_HE", "aux_vs_gen_depthE1_HE", "aux_vs_gen_depthG1_HB", "aux_vs_gen_depthE1_HB",
+        //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthE1_HE", "aux_vs_gen_depthG1_HB", "aux_vs_gen_depthE1_HB",
         //"DLPHIN_vs_gen",
-        "DLPHIN_vs_gen_depthG1_HE", "DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
+        //"DLPHIN_vs_gen_depthG1_HE", "DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
         //"reco_err",
         //"aux_err",
+        "DLPHIN_vs_gen_depthG1_HB", "reco_vs_gen_depthG1_HB"
     };
 
-    TFile *f1 = new TFile("results_temp/result_origin.root");
+    //TFile *f1 = new TFile("results_temp/result_origin.root");
     //TFile *f1 = new TFile("results/results_2018_1TeV_pion_gun_no_respCorr/2018_1TeV_pion_gun_PU0.root");
+    TFile *f1 = new TFile("results/results_2018_1TeV_pion_gun_no_respCorr/2018_1TeV_pion_gun_PU50.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
@@ -101,8 +104,10 @@ int plot_HCAL()
                 float rel_error = 0;
                 if (center > 0) rel_error = error/center;
                 SD_h->SetBinContent(i, rel_error);
-                //std::cout << i << ", " << error << ", " << center << ", " << SD_h->GetBinContent(i) << std::endl;
             }
+            int test_bin = SD_h->GetXaxis()->FindBin(test_bin_energy);
+            std::cout << test_bin << ", " << SD_h->GetBinContent(test_bin) << std::endl;
+
             SD_h->GetXaxis()->SetTitle("truth energy [GeV]");
             SD_h->GetYaxis()->SetTitle("#sigma_{reco energy} / reco energy");
             SD_h->GetXaxis()->SetRangeUser(xmin, xmax * 0.8);
