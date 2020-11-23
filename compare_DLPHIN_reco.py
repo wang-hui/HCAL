@@ -74,7 +74,7 @@ for i in range(Nrows):
     gain = result["gain"] [i]
     respCorr = gain / raw_gain
     reco_energy = (result["mahi energy"][i] / respCorr) / reco_corr
-    DLPHIN_SF = results["DLPHIN_SF"][i]
+    DLPHIN_SF = result["DLPHIN_SF"][i]
     DLPHIN_energy = result["DLPHIN energy"][i] / DLPHIN_SF
     ieta = result["ieta"] [i]
     iphi = result["iphi"] [i]
