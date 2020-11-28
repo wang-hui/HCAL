@@ -10,16 +10,26 @@ int plot_HCAL()
     std::vector<TString> hist_list =
     {
         //"reco_vs_gen",
-        "reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_1_pulse", "reco_vs_gen_depthG1_HE_8_pulse",
-        "reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_1_pulse", "reco_vs_gen_depthE1_HE_8_pulse",
-        "reco_vs_gen_depthG1_HB", "reco_vs_gen_depthG1_HB_1_pulse", "reco_vs_gen_depthG1_HB_8_pulse",
+        //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthE1_HE", "reco_vs_gen_depthG1_HB", "reco_vs_gen_depthE1_HB"
+        //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_1_pulse", "reco_vs_gen_depthG1_HE_8_pulse",
+        //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_1_pulse", "reco_vs_gen_depthE1_HE_8_pulse",
+        //"reco_vs_gen_depthG1_HB", "reco_vs_gen_depthG1_HB_1_pulse", "reco_vs_gen_depthG1_HB_8_pulse",
         //"reco_vs_gen_depthE1_HB_ietaS15",
-        "reco_vs_gen_depthE1_HB", "reco_vs_gen_depthE1_HB_1_pulse", "reco_vs_gen_depthE1_HB_8_pulse",
+        //"reco_vs_gen_depthE1_HB", "reco_vs_gen_depthE1_HB_1_pulse", "reco_vs_gen_depthE1_HB_8_pulse",
+
+        //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
+        //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_PUL", "reco_vs_gen_depthE1_HE_PUH",
+        //"reco_vs_gen_HB", "reco_vs_gen_HB_PUL", "reco_vs_gen_HB_PUH",
 
         //"aux_vs_gen",
-        "aux_vs_gen_depthG1_HE", "aux_vs_gen_depthE1_HE", "aux_vs_gen_depthG1_HB", "aux_vs_gen_depthE1_HB",
+        //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthE1_HE", "aux_vs_gen_depthG1_HB", "aux_vs_gen_depthE1_HB",
+
+        //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
+        //"aux_vs_gen_depthE1_HE", "aux_vs_gen_depthE1_HE_PUL", "aux_vs_gen_depthE1_HE_PUH",
+        "aux_vs_gen_HB", "aux_vs_gen_HB_PUL", "aux_vs_gen_HB_PUH",
+
         //"DLPHIN_vs_gen",
-        "DLPHIN_vs_gen_depthG1_HE", "DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
+        //"DLPHIN_vs_gen_depthG1_HE", "DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
         //"reco_err",
         //"aux_err",
     };
@@ -46,7 +56,8 @@ int plot_HCAL()
             auto ymax = h1->GetYaxis()->GetXmax();
 
             h1->Draw("colz");
-            h1->SetTitle(h1_name);
+            //h1->SetTitle(h1_name);
+            h1->SetTitle("");
             h1->GetXaxis()->SetTitle("truth energy [GeV]");
             //h1->GetXaxis()->SetRangeUser(xmin, xmax * 0.8);
             h1->GetYaxis()->SetTitle("reco energy [GeV]");
@@ -56,13 +67,15 @@ int plot_HCAL()
             mycanvas->SetLeftMargin(0.15);
             mycanvas->SetRightMargin(0.15);
             mycanvas->SaveAs("plots_temp/" + hist_name + ".png");
+            mycanvas->SaveAs("plots_temp/" + hist_name + ".pdf");
 
             TProfile *px = h1->ProfileX("px", 1, -1, "os");
             //px->BuildOptions(0, 0, "s");
-            px->SetTitle(h1_name);
+            //px->SetTitle(h1_name);
+            px->SetTitle("");
             //px->GetYaxis()->SetNdivisions(512);
-            px->GetXaxis()->SetRangeUser(xmin, xmax * 0.8);
-            px->GetYaxis()->SetRangeUser(ymin, ymax * 0.8);
+            px->GetXaxis()->SetRangeUser(xmin, xmax * 0.1);
+            px->GetYaxis()->SetRangeUser(ymin, ymax * 0.1);
             px->SetLineColor(kRed);
             //px->SetLineWidth(2);
             //px->SetMarkerStyle(8);
@@ -79,12 +92,13 @@ int plot_HCAL()
                 f->SetLineStyle(2); // 2 = "- - -"
             }
 
-            TLine *l=new TLine(xmin, ymin, xmax * 0.8, ymax * 0.8);
+            TLine *l=new TLine(xmin, ymin, xmax * 0.1, ymax * 0.1);
             l->SetLineColor(kBlack);
             if(!hist_name.Contains("err"))
             {l->Draw("same");}
 
             mycanvas->SaveAs("plots_temp/" + hist_name + "_profile.png");
+            mycanvas->SaveAs("plots_temp/" + hist_name + "_profile.pdf");
             if (do_profile_study)
             {
                 TProfile *py = h1->ProfileY("py");
@@ -103,12 +117,14 @@ int plot_HCAL()
                 SD_h->SetBinContent(i, rel_error);
                 //std::cout << i << ", " << error << ", " << center << ", " << SD_h->GetBinContent(i) << std::endl;
             }
+            SD_h->SetTitle("");
             SD_h->GetXaxis()->SetTitle("truth energy [GeV]");
             SD_h->GetYaxis()->SetTitle("#sigma_{reco energy} / reco energy");
-            SD_h->GetXaxis()->SetRangeUser(xmin, xmax * 0.8);
-            SD_h->GetYaxis()->SetRangeUser(0, 0.5);
+            SD_h->GetXaxis()->SetRangeUser(xmin, xmax * 0.1);
+            SD_h->GetYaxis()->SetRangeUser(0, 1);
             SD_h->Draw();
             mycanvas->SaveAs("plots_temp/" + hist_name + "_SD.png");
+            mycanvas->SaveAs("plots_temp/" + hist_name + "_SD.pdf");
         }
 
         if(plot_reco_vs_gen_ieta)
