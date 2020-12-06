@@ -1,21 +1,25 @@
 int plot_HCAL_data()
 {
-    bool plot_2D = false;
-    bool plot_3D = true;
+    bool plot_2D = true;
+    bool plot_3D = false;
     bool plot_2D_fit = false;
 
     std::vector<TString> hist_list =
     {
         //"DLPHIN_vs_gen",
-        //"DLPHIN_vs_reco_depthG1_HE", "DLPHIN_vs_reco_depthE1_HE", "DLPHIN_vs_reco_depthG1_HB", "DLPHIN_vs_reco_depthE1_HB",
+        //"DLPHIN_vs_reco_depthG1_HE", "DLPHIN_vs_reco_depthG1_HE_1_pulse", "DLPHIN_vs_reco_depthG1_HE_8_pulse",
+        //"DLPHIN_vs_reco_depthE1_HE", "DLPHIN_vs_reco_depthE1_HE_1_pulse", "DLPHIN_vs_reco_depthE1_HE_8_pulse",
+        //"DLPHIN_vs_reco_depthG1_HB", "DLPHIN_vs_reco_depthG1_HB_1_pulse", "DLPHIN_vs_reco_depthG1_HB_8_pulse",
+        "DLPHIN_vs_reco_depthE1_HB", "DLPHIN_vs_reco_depthE1_HB_1_pulse", "DLPHIN_vs_reco_depthE1_HB_8_pulse",
+
         //"ratio_ieta_depthG1_HB_EL", "ratio_ieta_depthG1_HE_EL", "ratio_ieta_depthE1_HB_EL", "ratio_ieta_depthE1_HE_EL",
         //"ratio_ieta_depthG1_HB_EH", "ratio_ieta_depthG1_HE_EH", "ratio_ieta_depthE1_HB_EH", "ratio_ieta_depthE1_HE_EH",
-        "ratio_ieta_depth_HB", "ratio_ieta_depth_HE",
+        //"ratio_ieta_depth_HB", "ratio_ieta_depth_HE",
         //"ratio_ietaP_depthG1_HE", "ratio_ietaM_depthG1_HE", "ratio_ietaP_depthE1_HE", "ratio_ietaM_depthE1_HE",
         //"ratio_ietaP_depthG1_HB", "ratio_ietaM_depthG1_HB", "ratio_ietaP_depthE1_HB", "ratio_ietaM_depthE1_HB",
     };
 
-    TFile *f1 = new TFile("results/DoubleMuon_Run2018A_Run_315512_DLPHIN_vs_MAHI.root");
+    TFile *f1 = new TFile("results/DoubleMuon_Run2018A_Run_315512_DLPHIN_with_SF_vs_MAHI.root");
 
     TFile out_file("DLPHIN_MAHI_ratio.root","RECREATE");
 
