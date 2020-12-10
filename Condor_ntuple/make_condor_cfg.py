@@ -2,10 +2,10 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "DoubleMuon_Run2018A_Run_315512_raw_DLPHIN_no_SF"
+folder_name = "EGamma_Run2018B_Run_317434_DLPHIN_no_SF"
 result_path = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/"
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"
-file_list = "../FileList/DoubleMuon_Run2018A_Run_315512_raw.list"
+file_list = "../FileList/EGamma_Run2018B_Run_317434_raw_1M_events.list"
 tot_jobs = 200
 
 today = str(date.today())
