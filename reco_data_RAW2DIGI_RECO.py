@@ -22,12 +22,15 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(100)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root'),
+    fileNames = cms.untracked.vstring(
+    #'file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root'
+    "/store/data/Run2018B/EGamma/RAW/v1/000/317/392/00000/08BDDCB0-F167-E811-AC88-FA163EA75E08.root"
+),
     secondaryFileNames = cms.untracked.vstring()
 )
 
