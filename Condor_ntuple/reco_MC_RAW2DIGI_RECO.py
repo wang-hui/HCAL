@@ -4,7 +4,7 @@
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
 # with command line options: reco_MC --filein file:step2.root --fileout file:RECO.root --mc --eventcontent AOD --runUnscheduled --conditions 106X_upgrade2018_realistic_v11_L1v1 --step RAW2DIGI,RECO --nThreads 4 --geometry DB:Extended --era Run2_2018 -n 10 --no_exec
 import FWCore.ParameterSet.Config as cms
-
+import sys
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
 
 process = cms.Process('RECO',Run2_2018)
@@ -26,12 +26,15 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
+f = open(sys.argv[2], "r")
+my_list = f.readlines()
+f.close()
+
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #"file:/uscms_data/d3/huiwang/HCAL/CMSSW_10_6_12/src/HCAL_GEN-SIM-RAW/step2.root"
-        'root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_PU-2020-12-20/UL_1TeV_pion_gun_RAW_PU_0.root'
-        #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_DoublePion_E-50_RAW_PU-2020-12-25/UL_1TeV_pion_gun_RAW_PU_0_0.root"
+        my_list
     ),
     secondaryFileNames = cms.untracked.vstring()
 )
@@ -57,26 +60,18 @@ process.AODoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(31457280),
-    fileName = cms.untracked.string('file:results_temp/RECO_MC.root'),
+    fileName = cms.untracked.string('RECO_MC.root'),
     outputCommands = process.AODEventContent.outputCommands
 )
 
 # Additional output definition
-process.TFileService = cms.Service("TFileService", fileName = cms.string("gen_hist.root") )
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
 
 # Path and EndPath definitions
-process.myAna = cms.EDAnalyzer(
-    "HCALTestAna",
-    do_PU = cms.untracked.bool(True),
-    is_run3_relVal = cms.untracked.bool(False),
-    min_simHit_energy = cms.untracked.double(0.0))
-
-# Path and EndPath definitions
-process.raw2digi_step = cms.Path(process.myAna + process.RawToDigi)
+process.raw2digi_step = cms.Path(process.RawToDigi)
 process.reconstruction_step = cms.Path(process.reconstruction)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.AODoutput_step = cms.EndPath(process.AODoutput)
@@ -87,7 +82,7 @@ from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
 #Setup FWK for multithreaded
-process.options.numberOfThreads=cms.untracked.uint32(1)
+process.options.numberOfThreads=cms.untracked.uint32(2)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 process.options.numberOfConcurrentLuminosityBlocks=cms.untracked.uint32(1)
 

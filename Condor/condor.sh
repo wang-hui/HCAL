@@ -26,8 +26,6 @@ cmsRun reco_MC_RAW2DIGI_RECO.py $1 > results_temp/reco_MC.stdout
 
 mkdir split_file
 python split_file.py
-#tar -cvf split_file.tar split_file
-ls
 
 python add_gen_energy.py
 

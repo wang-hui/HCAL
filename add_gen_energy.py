@@ -33,6 +33,7 @@ for i in range (len(reco_list)):
 	reco_df=pd.read_csv(reco_list[i], engine='c', dtype=reco32_cols, sep=',', skipinitialspace = True, header=0)
 	gen_df=pd.read_csv(gen_list[i], engine='c', dtype=gen32_cols, sep=',', skipinitialspace = True, header=0)
 
+        if len(gen_df.index) == 0: continue
 	#print reco_df["id"]
 	#print "origin number of id: ", len(gen_df["id"])
 	#for rawId in gen_df["id"]:
