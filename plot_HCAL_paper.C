@@ -2,27 +2,34 @@ int plot_HCAL_paper()
 {
     std::vector<TString> hist_list =
     {
-        "reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
+        //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
         //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_PUL", "reco_vs_gen_depthE1_HE_PUH",
-        //"reco_vs_gen_HB", "reco_vs_gen_HB_PUL", "reco_vs_gen_HB_PUH",
+        "reco_vs_gen_HB", "reco_vs_gen_HB_PUL", "reco_vs_gen_HB_PUH",
 
         //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
         //"aux_vs_gen_depthE1_HE", "aux_vs_gen_depthE1_HE_PUL", "aux_vs_gen_depthE1_HE_PUH",
         //"aux_vs_gen_HB", "aux_vs_gen_HB_PUL", "aux_vs_gen_HB_PUH",
+
+        //"raw_vs_gen_depthG1_HE", "raw_vs_gen_depthG1_HE_PUL", "raw_vs_gen_depthG1_HE_PUH",
+        //"raw_vs_gen_depthE1_HE", "raw_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUH",
+        //"raw_vs_gen_HB", "raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUH",
     };
 
-    std::vector<TString> file_list = {"result_origin", "result_origin_PU", "result_origin_PU"};
+    std::vector<TString> file_list = {"result_UL_1TeV_pion_gun_noPU", "result_UL_1TeV_pion_gun_PU", "result_UL_1TeV_pion_gun_PU"};
     std::vector<TString> leg_list = {"0 PU", "low PU", "high PU"};
     std::vector<int> color_list = {kBlack, kRed, kBlue};
 
     std::vector<TH1F*> SD_list;
+
+    float px_scale = 0.1;
+    float px_shift = 5;
 
     for(int i = 0; i < hist_list.size(); i++)
     {
         TString file_name = file_list.at(i);
         TString hist_name = hist_list.at(i);
 
-        TFile *f1 = new TFile("results_temp/" + file_name + ".root");
+        TFile *f1 = new TFile("results/" + file_name + ".root");
         TH2F *h1 = (TH2F*)f1->Get(hist_name + "_h");
 
         TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
@@ -52,8 +59,9 @@ int plot_HCAL_paper()
         //px->SetTitle(hist_name);
         px->SetTitle("");
         //px->GetYaxis()->SetNdivisions(512);
-        px->GetXaxis()->SetRangeUser(xmin, xmax * 0.1);
-        px->GetYaxis()->SetRangeUser(ymin, ymax * 0.1);
+        //px->Rebin(2);
+        px->GetXaxis()->SetRangeUser(xmin + px_shift, xmax * px_scale);
+        px->GetYaxis()->SetRangeUser(ymin, ymax * px_scale);
         px->SetLineColor(kRed);
         //px->SetLineWidth(2);
         //px->SetMarkerStyle(8);
@@ -70,7 +78,7 @@ int plot_HCAL_paper()
             f->SetLineStyle(2); // 2 = "- - -"
         }
 
-        TLine *l=new TLine(xmin, ymin, xmax * 0.1, ymax * 0.1);
+        TLine *l=new TLine(xmin + px_shift, ymin + px_shift, xmax * px_scale, ymax * px_scale);
         l->SetLineColor(kBlack);
         if(!hist_name.Contains("err"))
         {l->Draw("same");}
@@ -92,7 +100,7 @@ int plot_HCAL_paper()
         SD_h->SetTitle("");
         SD_h->GetXaxis()->SetTitle("truth energy [GeV]");
         SD_h->GetYaxis()->SetTitle("#sigma_{reco energy} / reco energy");
-        SD_h->GetXaxis()->SetRangeUser(xmin, xmax * 0.1);
+        SD_h->GetXaxis()->SetRangeUser(xmin + px_shift, xmax * px_scale);
         SD_h->GetYaxis()->SetRangeUser(0, 0.8);
         SD_h->Draw();
         SD_list.push_back(SD_h);
