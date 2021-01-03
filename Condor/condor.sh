@@ -10,9 +10,12 @@ cd CMSSW_10_6_12/src
 eval `scramv1 runtime -sh`
 git cms-init --upstream-only
 git cms-addpkg RecoLocalCalo/HcalRecProducers
+git cms-addpkg RecoLocalCalo/HcalRecAlgos
 git clone -b CMSSW_10_6_x https://github.com/wang-hui/HCAL.git
 mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
 mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
+mv HCAL/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src
+mv HCAL/parseHBHEPhase1AlgoDescription.cc RecoLocalCalo/HcalRecAlgos/src
 mv ${_CONDOR_SCRATCH_DIR}/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecProducers/python
 scram b -j 4
 cd HCAL

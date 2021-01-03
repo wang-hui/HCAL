@@ -72,10 +72,10 @@ hbheprereco = cms.EDProducer(
         tdcTimeShift = cms.double(0.0),
 
         # Use "Method 2"?
-        useM2 = cms.bool(False),
+        useM2 = cms.bool(True),
 
         # Use "Method 3"?
-        useM3 = cms.bool(True),
+        useM3 = cms.bool(False),
 
         # Use Mahi?
         useMahi = cms.bool(True),
