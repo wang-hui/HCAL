@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 
 result_dir = "results_temp/"
-result_file = "result_PU"
+result_file = "result"
 
 tot_rows = None
 #tot_rows = 100000
@@ -20,7 +20,7 @@ use_8_pulse_bit = 1<<29
 study_gain = False
 out_file = rt.TFile(result_dir + result_file + "_" + run_mod + ".root","RECREATE")
 
-Ebins = 200
+Ebins = 400
 Emin = 0.0
 Emax = 1000.0
 
