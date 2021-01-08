@@ -1,12 +1,14 @@
-int plot_HCAL_paper()
+int plot_HCAL_compare()
 {
     std::vector<TString> hist_list =
     {
-        //"reco_vs_gen_depthG1_HE",
+        //"reco_vs_gen_depthG1_HE", "DLPHIN_vs_gen_depthG1_HE"
         //"reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUM", "reco_vs_gen_depthG1_HE_PUH",
-        //"reco_vs_gen_depthE1_HE",
+        "reco_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthE1_HE"
         //"reco_vs_gen_depthE1_HE_PUL", "reco_vs_gen_depthE1_HE_PUM", "reco_vs_gen_depthE1_HE_PUH",
         //"reco_vs_gen_HB",
+        //"reco_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthG1_HB"
+        //"reco_vs_gen_depthE1_HB", "DLPHIN_vs_gen_depthE1_HB"
         //"reco_vs_gen_HB_PUL", "reco_vs_gen_HB_PUM", "reco_vs_gen_HB_PUH",
 
         //"aux_vs_gen_depthG1_HE",
@@ -21,20 +23,19 @@ int plot_HCAL_paper()
         //"raw_vs_gen_depthE1_HE",
         //"raw_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUM", "raw_vs_gen_depthE1_HE_PUH",
         //"raw_vs_gen_HB",
-        "raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUM", "raw_vs_gen_HB_PUH",
+        //"raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUM", "raw_vs_gen_HB_PUH",
     };
 
-    //std::vector<TString> file_list = {"result_UL_1TeV_pion_gun_noPU_DLPHIN_training", "result_UL_1TeV_pion_gun_PU_DLPHIN_training", "result_UL_1TeV_pion_gun_PU_DLPHIN_training"};
-    std::vector<TString> file_list = {"result_UL_1TeV_pion_gun_PU", "result_UL_1TeV_pion_gun_PU", "result_UL_1TeV_pion_gun_PU"};
-    //std::vector<TString> leg_list = {"0 PU", "low PU", "high PU"};
-    std::vector<TString> leg_list = {"low PU", "med PU", "high PU"};
+    std::vector<TString> file_list = {"result_UL_1TeV_pion_gun_PU_DLPHIN_training", "result_UL_1TeV_pion_gun_PU_DLPHIN_training"};
+    std::vector<TString> leg_list = {"MAHI", "DLPHIN"};
+    //std::vector<TString> leg_list = {"low PU", "med PU", "high PU"};
     std::vector<int> color_list = {kBlack, kRed, kBlue};
 
     std::vector<TH1F*> SD_list;
 
-    int rebin_x = 2;
-    float px_scale = 0.15;
-    float px_shift = 5;
+    int rebin_x = 1;
+    float px_scale = 0.08;
+    float px_shift = 0;
 
     for(int i = 0; i < hist_list.size(); i++)
     {
@@ -57,15 +58,15 @@ int plot_HCAL_paper()
         //h1->SetTitle("");
         h1->RebinX(rebin_x);
         h1->GetXaxis()->SetTitle("truth energy [GeV]");
-        h1->GetXaxis()->SetRangeUser(xmin, xmax * 0.2);
+        //h1->GetXaxis()->SetRangeUser(xmin, xmax * 0.2);
         h1->GetYaxis()->SetTitle("reco energy [GeV]");
-        h1->GetYaxis()->SetRangeUser(ymin, ymax * 0.2);
+        //h1->GetYaxis()->SetRangeUser(ymin, ymax * 0.2);
         gPad->SetLogz();
 
         mycanvas->SetLeftMargin(0.15);
         mycanvas->SetRightMargin(0.15);
         mycanvas->SaveAs("plots_temp/" + file_name + "_" + hist_name + ".png");
-        mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + ".pdf");
+        //mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + ".pdf");
 
         TProfile *px = h1->ProfileX("px", 1, -1, "os");
         //px->BuildOptions(0, 0, "s");
@@ -96,7 +97,7 @@ int plot_HCAL_paper()
         {l->Draw("same");}
 
         mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + "_profile.png");
-        mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + "_profile.pdf");
+        //mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + "_profile.pdf");
 
         int nBins = px->GetXaxis()->GetNbins();
         TH1F *SD_h = new TH1F(hist_name + "_SD_h", hist_name + "_SD_h", nBins, xmin, xmax);
@@ -113,11 +114,11 @@ int plot_HCAL_paper()
         SD_h->GetXaxis()->SetTitle("truth energy [GeV]");
         SD_h->GetYaxis()->SetTitle("#sigma_{reco energy} / reco energy");
         SD_h->GetXaxis()->SetRangeUser(xmin + px_shift, xmax * px_scale);
-        SD_h->GetYaxis()->SetRangeUser(0, 0.6);
+        SD_h->GetYaxis()->SetRangeUser(0, 1.0);
         SD_h->Draw();
         SD_list.push_back(SD_h);
         mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + "_SD.png");
-        mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + "_SD.pdf");
+        //mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + "_SD.pdf");
     }
 
     TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
@@ -138,7 +139,7 @@ int plot_HCAL_paper()
     gPad->SetGrid();
 
     mycanvas->SaveAs("plots_temp/" + hist_list.at(0) + "_SD.png");
-    mycanvas->SaveAs("plots_temp/" + hist_list.at(0) + "_SD.pdf");
+    //mycanvas->SaveAs("plots_temp/" + hist_list.at(0) + "_SD.pdf");
 
     return 0;
 }
