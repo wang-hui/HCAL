@@ -2,10 +2,10 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "UL_QCD_HT2000toInf_RECO_default_recHits"
+folder_name = "UL_EGamma_Run2018B_Run_317392_RECO_default_recHits"
 result_path = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/"
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"
-file_list = "../FileList/UL_QCD_HT2000toInf_GEN-SIM-DIGI.list"
+file_list = "../FileList/EGamma_Run2018B_Run_317392_raw_1M_events.list"
 tot_jobs = 2000
 
 today = str(date.today())

@@ -2,10 +2,10 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "2018_1TeV_pion_gun_PU0_plots"
+folder_name = "UL_1TeV_pion_gun_PU_plots"
 result_path = "/eos/uscms/store/user/huiwang/HCAL/"
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"
-file_list = "../FileList/2018_1TeV_pion_gun_PU0_results_csv.list"
+file_list = "../FileList/UL_1TeV_pion_gun_PU_result_csv.list"
 
 today = str(date.today())
 folder_name_full = folder_name + "-" + today

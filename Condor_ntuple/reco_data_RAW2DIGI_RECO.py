@@ -2,12 +2,13 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: reco_data -s RAW2DIGI,RECO --nThreads 4 --data --era Run2_2018,pf_badHcalMitigation --scenario pp --conditions 102X_dataRun2_v12 --eventcontent RECO --filein file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root -n 100 --no_exec
+# with command line options: reco_data -s RAW2DIGI,RECO --nThreads 4 --data --era Run2_2018,pf_badHcalMitigation --scenario pp --conditions 106X_dataRun2_v28 --eventcontent RECO --filein file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root -n 100 --no_exec
 import FWCore.ParameterSet.Config as cms
 import sys
-from Configuration.StandardSequences.Eras import eras
+from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
+from Configuration.Eras.Modifier_pf_badHcalMitigation_cff import pf_badHcalMitigation
 
-process = cms.Process('RECO',eras.Run2_2018,eras.pf_badHcalMitigation)
+process = cms.Process('RECO',Run2_2018,pf_badHcalMitigation)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -22,7 +23,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(8000)
 )
 
 f = open(sys.argv[2], "r")
@@ -33,7 +34,7 @@ f.close()
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #'file:root://cmseos.fnal.gov//store/user/huiwang/HCAL/DoubleMuon_Run2018A-v1_RAW_6601F23E-0E65-E811-859E-FA163E98BEC0.root'
-    my_list
+        my_list
     ),
     secondaryFileNames = cms.untracked.vstring()
 )
@@ -56,7 +57,7 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
         dataTier = cms.untracked.string(''),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('reco_data_RAW2DIGI_RECO.root'),
+    fileName = cms.untracked.string('data_RECO.root'),
     outputCommands = process.RECOEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )
@@ -65,7 +66,7 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_v12', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '106X_dataRun2_v28', '')
 
 # Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)
@@ -81,6 +82,7 @@ associatePatAlgosToolsTask(process)
 #Setup FWK for multithreaded
 process.options.numberOfThreads=cms.untracked.uint32(2)
 process.options.numberOfStreams=cms.untracked.uint32(0)
+process.options.numberOfConcurrentLuminosityBlocks=cms.untracked.uint32(1)
 
 
 # Customisation from command line

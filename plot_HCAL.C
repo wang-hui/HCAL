@@ -1,8 +1,8 @@
 int plot_HCAL()
 {
     bool plot_reco_vs_gen_ieta = false;
-    bool plot_reco_vs_gen_h = true;
-    bool plot_ratio_h = false;
+    bool plot_reco_vs_gen_h = false;
+    bool plot_ratio_h = true;
     bool plot_err_h = false;
 
     bool do_profile_study = false;
@@ -10,7 +10,7 @@ int plot_HCAL()
     std::vector<TString> hist_list =
     {
         //"reco_vs_gen",
-        "reco_vs_gen_depthG1_HE", "reco_vs_gen_depthE1_HE", "reco_vs_gen_depthG1_HB", "reco_vs_gen_depthE1_HB"
+        //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthE1_HE", "reco_vs_gen_depthG1_HB", "reco_vs_gen_depthE1_HB"
         //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_1_pulse", "reco_vs_gen_depthG1_HE_8_pulse",
         //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_1_pulse", "reco_vs_gen_depthE1_HE_8_pulse",
         //"reco_vs_gen_depthG1_HB", "reco_vs_gen_depthG1_HB_1_pulse", "reco_vs_gen_depthG1_HB_8_pulse",
@@ -32,10 +32,38 @@ int plot_HCAL()
         //"DLPHIN_vs_gen_depthG1_HE", "DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
         //"reco_err",
         //"aux_err",
+
+        //"reco_ratio_HB",
+        "reco_ratio_HB_genL", "reco_ratio_HB_genH",
+        //"reco_ratio_depthG1_HE",
+        "reco_ratio_depthG1_HE_genL", "reco_ratio_depthG1_HE_genH",
+        //"reco_ratio_depthE1_HE",
+        "reco_ratio_depthE1_HE_genL", "reco_ratio_depthE1_HE_genH",
+
+        //"aux_ratio_HB",
+        "aux_ratio_HB_genL", "aux_ratio_HB_genH",
+        //"aux_ratio_depthG1_HE",
+        "aux_ratio_depthG1_HE_genL", "aux_ratio_depthG1_HE_genH",
+        //"aux_ratio_depthE1_HE",
+        "aux_ratio_depthE1_HE_genL", "aux_ratio_depthE1_HE_genH",
+
+        //"raw_ratio_HB",
+        "raw_ratio_HB_genL", "raw_ratio_HB_genH",
+        //"raw_ratio_depthG1_HE",
+        "raw_ratio_depthG1_HE_genL", "raw_ratio_depthG1_HE_genH",
+        //"raw_ratio_depthE1_HE",
+        "raw_ratio_depthE1_HE_genL", "raw_ratio_depthE1_HE_genH",
+
+        //"DLPHIN_ratio_HB",
+        "DLPHIN_ratio_HB_genL", "DLPHIN_ratio_HB_genH",
+        //"DLPHIN_ratio_depthG1_HE",
+        "DLPHIN_ratio_depthG1_HE_genL", "DLPHIN_ratio_depthG1_HE_genH",
+        //"DLPHIN_ratio_depthE1_HE",
+        "DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genH",
     };
 
-    TFile *f1 = new TFile("results_temp/result_origin.root");
-    //TFile *f1 = new TFile("results/results_UL_1TeV_pion_gun_PU_DLPHIN_training.root");
+    //TFile *f1 = new TFile("results_temp/result_origin.root");
+    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
@@ -189,22 +217,48 @@ int plot_HCAL()
 
         if(plot_ratio_h)
         {
-            TString h1_name = "ratio_" + hist_name + "_h";
+            TString h1_name = hist_name + "_h";
             TH1F *h1 = (TH1F*)f1->Get(h1_name);
 
             TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
             //gStyle->SetOptStat(kFALSE);
 
-            h1->Draw();
-            //h1->Fit("gaus","","",0.7,2);
-            h1->GetXaxis()->SetTitle(h1->GetTitle());
-            h1->SetTitle(h1_name);
+            h1->Draw("e");
+            auto h1_mean = h1->GetMean();
+            auto h1_std = h1->GetStdDev();
+            //std::cout << h1_mean << ", " << h1_std << std::endl;
+            h1->Fit("gaus", "w", "", h1_mean - h1_std, h1_mean + h1_std);
+            auto f1 = h1->GetFunction("gaus");
+            auto c = f1->GetParameter(0);
+            auto mu = f1->GetParameter(1);
+            auto sigma = f1->GetParameter(2);
+            auto c_err = f1->GetParError(0);
+            auto mu_err = f1->GetParError(1);
+            auto sigma_err = f1->GetParError(2);
+            //std::cout << c << ", " << mu << ", " << sigma << std::endl;
+
+            std::stringstream s1;
+            s1 << "#bf{#mu = " << std::setprecision(2) << mu << " #pm " << mu_err << "}";
+            TString TS1 = s1.str();
+            std::stringstream s2;
+            s2 << "#bf{#sigma = " << std::setprecision(2) << sigma << " #pm " << sigma_err << "}";
+            TString TS2 = s2.str();
+
+            h1->GetXaxis()->SetTitle("reco / gen energy");
+            h1->GetXaxis()->SetRangeUser(0.5,1.5);
+            h1->SetTitle(hist_name);
             h1->GetYaxis()->SetTitle("number of channels");
             //gPad->SetLogz();
 
-            TLine *l=new TLine(1, h1->GetMinimum(),1, h1->GetMaximum());
+            TLine *l = new TLine(1, h1->GetMinimum(),1, h1->GetMaximum());
             l->SetLineColor(kBlack);
             l->Draw("same");
+
+            TLatex latex;
+            latex.SetTextSize(0.04);
+            latex.SetNDC();
+            latex.DrawLatex(0.6,0.75,TS1);
+            latex.DrawLatex(0.6,0.7,TS2);
 
             mycanvas->SetLeftMargin(0.15);
             mycanvas->SetRightMargin(0.1);
