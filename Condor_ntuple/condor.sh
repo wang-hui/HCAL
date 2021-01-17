@@ -21,7 +21,7 @@ scram b -j 4
 cd HCAL
 #mv ${_CONDOR_SCRATCH_DIR}/miniAOD_data_RAW2DIGI_L1Reco_RECO_EI_PAT.py .
 #mv ${_CONDOR_SCRATCH_DIR}/nanoAOD_data_NANO.py .
-#mv ${_CONDOR_SCRATCH_DIR}/reco_data_RAW2DIGI_RECO.py .
+mv ${_CONDOR_SCRATCH_DIR}/reco_data_RAW2DIGI_RECO.py .
 mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_RECO.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
