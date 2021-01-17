@@ -6,7 +6,7 @@ result_dir = "results_temp/"
 result_file = "result"
 
 tot_rows = None
-#tot_rows = 100000
+#tot_rows = 1000000
 
 result = pd.read_csv(result_dir + result_file + ".csv", sep=',', skipinitialspace = True, header=0, nrows=tot_rows)
 
@@ -15,6 +15,7 @@ run_mod = "origin"
 
 reco_slope = 1.0
 aux_slope = 1.0
+raw_slope = 1.0
 use_8_pulse_bit = 1<<29
 
 study_gain = False
@@ -122,57 +123,69 @@ inv_gain_h = rt.TH1F("inv_gain_h", "1/gain for gen > 10 GeV", 100, 0.0, 2500.0)
 reco_ratio_h = rt.TH1F("reco_ratio_h", "reco_ratio_h", 100, 0.0, 2.0)
 reco_ratio_HB_h = rt.TH1F("reco_ratio_HB_h", "reco_ratio_HB_h", 100, 0.0, 2.0)
 reco_ratio_HB_genL_h = rt.TH1F("reco_ratio_HB_genL_h", "reco_ratio_HB_genL_h", 100, 0.0, 2.0)
+reco_ratio_HB_genM_h = rt.TH1F("reco_ratio_HB_genM_h", "reco_ratio_HB_genM_h", 100, 0.0, 2.0)
 reco_ratio_HB_genH_h = rt.TH1F("reco_ratio_HB_genH_h", "reco_ratio_HB_genH_h", 100, 0.0, 2.0)
 reco_ratio_depthG1_h = rt.TH1F("reco_ratio_depthG1_h", "reco_ratio_depthG1_h", 100, 0.0, 2.0)
 reco_ratio_depthG1_HB_h = rt.TH1F("reco_ratio_depthG1_HB_h", "reco_ratio_depthG1_HB_h", 100, 0.0, 2.0)
 reco_ratio_depthG1_HE_h = rt.TH1F("reco_ratio_depthG1_HE_h", "reco_ratio_depthG1_HE_h", 100, 0.0, 2.0)
 reco_ratio_depthG1_HE_genL_h = rt.TH1F("reco_ratio_depthG1_HE_genL_h", "reco_ratio_depthG1_HE_genL_h", 100, 0.0, 2.0)
+reco_ratio_depthG1_HE_genM_h = rt.TH1F("reco_ratio_depthG1_HE_genM_h", "reco_ratio_depthG1_HE_genM_h", 100, 0.0, 2.0)
 reco_ratio_depthG1_HE_genH_h = rt.TH1F("reco_ratio_depthG1_HE_genH_h", "reco_ratio_depthG1_HE_genH_h", 100, 0.0, 2.0)
 reco_ratio_depthE1_HB_h = rt.TH1F("reco_ratio_depthE1_HB_h", "reco_ratio_depthE1_HB_h", 100, 0.0, 2.0)
 reco_ratio_depthE1_HE_h = rt.TH1F("reco_ratio_depthE1_HE_h", "reco_ratio_depthE1_HE_h", 100, 0.0, 2.0)
 reco_ratio_depthE1_HE_genL_h = rt.TH1F("reco_ratio_depthE1_HE_genL_h", "reco_ratio_depthE1_HE_genL_h", 100, 0.0, 2.0)
+reco_ratio_depthE1_HE_genM_h = rt.TH1F("reco_ratio_depthE1_HE_genM_h", "reco_ratio_depthE1_HE_genM_h", 100, 0.0, 2.0)
 reco_ratio_depthE1_HE_genH_h = rt.TH1F("reco_ratio_depthE1_HE_genH_h", "reco_ratio_depthE1_HE_genH_h", 100, 0.0, 2.0)
 
 aux_ratio_h = rt.TH1F("aux_ratio_h", "aux_ratio_h", 100, 0.0, 2.0)
 aux_ratio_HB_h = rt.TH1F("aux_ratio_HB_h", "aux_ratio_HB_h", 100, 0.0, 2.0)
 aux_ratio_HB_genL_h = rt.TH1F("aux_ratio_HB_genL_h", "aux_ratio_HB_genL_h", 100, 0.0, 2.0)
+aux_ratio_HB_genM_h = rt.TH1F("aux_ratio_HB_genM_h", "aux_ratio_HB_genM_h", 100, 0.0, 2.0)
 aux_ratio_HB_genH_h = rt.TH1F("aux_ratio_HB_genH_h", "aux_ratio_HB_genH_h", 100, 0.0, 2.0)
 aux_ratio_depthG1_h = rt.TH1F("aux_ratio_depthG1_h", "aux_ratio_depthG1_h", 100, 0.0, 2.0)
 aux_ratio_depthG1_HB_h = rt.TH1F("aux_ratio_depthG1_HB_h", "aux_ratio_depthG1_HB_h", 100, 0.0, 2.0)
 aux_ratio_depthG1_HE_h = rt.TH1F("aux_ratio_depthG1_HE_h", "aux_ratio_depthG1_HE_h", 100, 0.0, 2.0)
 aux_ratio_depthG1_HE_genL_h = rt.TH1F("aux_ratio_depthG1_HE_genL_h", "aux_ratio_depthG1_HE_genL_h", 100, 0.0, 2.0)
+aux_ratio_depthG1_HE_genM_h = rt.TH1F("aux_ratio_depthG1_HE_genM_h", "aux_ratio_depthG1_HE_genM_h", 100, 0.0, 2.0)
 aux_ratio_depthG1_HE_genH_h = rt.TH1F("aux_ratio_depthG1_HE_genH_h", "aux_ratio_depthG1_HE_genH_h", 100, 0.0, 2.0)
 aux_ratio_depthE1_HB_h = rt.TH1F("aux_ratio_depthE1_HB_h", "aux_ratio_depthE1_HB_h", 100, 0.0, 2.0)
 aux_ratio_depthE1_HE_h = rt.TH1F("aux_ratio_depthE1_HE_h", "aux_ratio_depthE1_HE_h", 100, 0.0, 2.0)
 aux_ratio_depthE1_HE_genL_h = rt.TH1F("aux_ratio_depthE1_HE_genL_h", "aux_ratio_depthE1_HE_genL_h", 100, 0.0, 2.0)
+aux_ratio_depthE1_HE_genM_h = rt.TH1F("aux_ratio_depthE1_HE_genM_h", "aux_ratio_depthE1_HE_genM_h", 100, 0.0, 2.0)
 aux_ratio_depthE1_HE_genH_h = rt.TH1F("aux_ratio_depthE1_HE_genH_h", "aux_ratio_depthE1_HE_genH_h", 100, 0.0, 2.0)
 
 raw_ratio_h = rt.TH1F("raw_ratio_h", "raw_ratio_h", 100, 0.0, 2.0)
 raw_ratio_HB_h = rt.TH1F("raw_ratio_HB_h", "raw_ratio_HB_h", 100, 0.0, 2.0)
 raw_ratio_HB_genL_h = rt.TH1F("raw_ratio_HB_genL_h", "raw_ratio_HB_genL_h", 100, 0.0, 2.0)
+raw_ratio_HB_genM_h = rt.TH1F("raw_ratio_HB_genM_h", "raw_ratio_HB_genM_h", 100, 0.0, 2.0)
 raw_ratio_HB_genH_h = rt.TH1F("raw_ratio_HB_genH_h", "raw_ratio_HB_genH_h", 100, 0.0, 2.0)
 raw_ratio_depthG1_h = rt.TH1F("raw_ratio_depthG1_h", "raw_ratio_depthG1_h", 100, 0.0, 2.0)
 raw_ratio_depthG1_HB_h = rt.TH1F("raw_ratio_depthG1_HB_h", "raw_ratio_depthG1_HB_h", 100, 0.0, 2.0)
 raw_ratio_depthG1_HE_h = rt.TH1F("raw_ratio_depthG1_HE_h", "raw_ratio_depthG1_HE_h", 100, 0.0, 2.0)
 raw_ratio_depthG1_HE_genL_h = rt.TH1F("raw_ratio_depthG1_HE_genL_h", "raw_ratio_depthG1_HE_genL_h", 100, 0.0, 2.0)
+raw_ratio_depthG1_HE_genM_h = rt.TH1F("raw_ratio_depthG1_HE_genM_h", "raw_ratio_depthG1_HE_genM_h", 100, 0.0, 2.0)
 raw_ratio_depthG1_HE_genH_h = rt.TH1F("raw_ratio_depthG1_HE_genH_h", "raw_ratio_depthG1_HE_genH_h", 100, 0.0, 2.0)
 raw_ratio_depthE1_HB_h = rt.TH1F("raw_ratio_depthE1_HB_h", "raw_ratio_depthE1_HB_h", 100, 0.0, 2.0)
 raw_ratio_depthE1_HE_h = rt.TH1F("raw_ratio_depthE1_HE_h", "raw_ratio_depthE1_HE_h", 100, 0.0, 2.0)
 raw_ratio_depthE1_HE_genL_h = rt.TH1F("raw_ratio_depthE1_HE_genL_h", "raw_ratio_depthE1_HE_genL_h", 100, 0.0, 2.0)
+raw_ratio_depthE1_HE_genM_h = rt.TH1F("raw_ratio_depthE1_HE_genM_h", "raw_ratio_depthE1_HE_genM_h", 100, 0.0, 2.0)
 raw_ratio_depthE1_HE_genH_h = rt.TH1F("raw_ratio_depthE1_HE_genH_h", "raw_ratio_depthE1_HE_genH_h", 100, 0.0, 2.0)
 
 DLPHIN_ratio_h = rt.TH1F("DLPHIN_ratio_h", "DLPHIN_ratio_h", 100, 0.0, 2.0)
 DLPHIN_ratio_HB_h = rt.TH1F("DLPHIN_ratio_HB_h", "DLPHIN_ratio_HB_h", 100, 0.0, 2.0)
 DLPHIN_ratio_HB_genL_h = rt.TH1F("DLPHIN_ratio_HB_genL_h", "DLPHIN_ratio_HB_genL_h", 100, 0.0, 2.0)
+DLPHIN_ratio_HB_genM_h = rt.TH1F("DLPHIN_ratio_HB_genM_h", "DLPHIN_ratio_HB_genM_h", 100, 0.0, 2.0)
 DLPHIN_ratio_HB_genH_h = rt.TH1F("DLPHIN_ratio_HB_genH_h", "DLPHIN_ratio_HB_genH_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthG1_h = rt.TH1F("DLPHIN_ratio_depthG1_h", "DLPHIN_ratio_depthG1_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthG1_HB_h = rt.TH1F("DLPHIN_ratio_depthG1_HB_h", "DLPHIN_ratio_depthG1_HB_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthG1_HE_h = rt.TH1F("DLPHIN_ratio_depthG1_HE_h", "DLPHIN_ratio_depthG1_HE_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthG1_HE_genL_h = rt.TH1F("DLPHIN_ratio_depthG1_HE_genL_h", "DLPHIN_ratio_depthG1_HE_genL_h", 100, 0.0, 2.0)
+DLPHIN_ratio_depthG1_HE_genM_h = rt.TH1F("DLPHIN_ratio_depthG1_HE_genM_h", "DLPHIN_ratio_depthG1_HE_genM_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthG1_HE_genH_h = rt.TH1F("DLPHIN_ratio_depthG1_HE_genH_h", "DLPHIN_ratio_depthG1_HE_genH_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthE1_HB_h = rt.TH1F("DLPHIN_ratio_depthE1_HB_h", "DLPHIN_ratio_depthE1_HB_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthE1_HE_h = rt.TH1F("DLPHIN_ratio_depthE1_HE_h", "DLPHIN_ratio_depthE1_HE_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthE1_HE_genL_h = rt.TH1F("DLPHIN_ratio_depthE1_HE_genL_h", "DLPHIN_ratio_depthE1_HE_genL_h", 100, 0.0, 2.0)
+DLPHIN_ratio_depthE1_HE_genM_h = rt.TH1F("DLPHIN_ratio_depthE1_HE_genM_h", "DLPHIN_ratio_depthE1_HE_genM_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthE1_HE_genH_h = rt.TH1F("DLPHIN_ratio_depthE1_HE_genH_h", "DLPHIN_ratio_depthE1_HE_genH_h", 100, 0.0, 2.0)
 
 #============loop ieta hist for HB ====================
@@ -214,9 +227,11 @@ for i in range(Nrows):
 
     reco_corr = 1
     aux_corr = 1
+    raw_corr = 1
     if run_mod == "slope1":
         reco_corr = reco_slope
         aux_corr = aux_slope
+        raw_corr = raw_slope
 
     raw_gain = result["raw gain"] [i]
     gain = result["gain"] [i]
@@ -224,7 +239,7 @@ for i in range(Nrows):
     gen_energy = result["raw truth energy"][i]
     reco_energy = (result["mahi energy"][i] / respCorr) / reco_corr
     aux_energy = (result["aux energy"][i] / respCorr) / aux_corr
-    raw_energy = (result["raw energy"][i] / respCorr) / aux_corr
+    raw_energy = (result["raw energy"][i] / respCorr) / raw_corr
     DLPHIN_energy = result["DLPHIN energy"][i]
     ieta = abs(result["ieta"] [i])
     depth = result["depth"] [i]
@@ -370,11 +385,16 @@ for i in range(Nrows):
             aux_ratio_HB_h.Fill(aux_ratio)
             raw_ratio_HB_h.Fill(raw_ratio)
             DLPHIN_ratio_HB_h.Fill(DLPHIN_ratio)
-            if gen_energy > 25 and gen_energy < 30:
+            if gen_energy > 7.5 and gen_energy < 10:
                 reco_ratio_HB_genL_h.Fill(reco_ratio)
                 aux_ratio_HB_genL_h.Fill(aux_ratio)
                 raw_ratio_HB_genL_h.Fill(raw_ratio)
                 DLPHIN_ratio_HB_genL_h.Fill(DLPHIN_ratio)
+            elif gen_energy > 25 and gen_energy < 30:
+                reco_ratio_HB_genM_h.Fill(reco_ratio)
+                aux_ratio_HB_genM_h.Fill(aux_ratio)
+                raw_ratio_HB_genM_h.Fill(raw_ratio)
+                DLPHIN_ratio_HB_genM_h.Fill(DLPHIN_ratio)
             elif gen_energy > 90 and gen_energy < 110:
                 reco_ratio_HB_genH_h.Fill(reco_ratio)
                 aux_ratio_HB_genH_h.Fill(aux_ratio)
@@ -397,11 +417,16 @@ for i in range(Nrows):
                 aux_ratio_depthE1_HE_h.Fill(aux_ratio)
                 raw_ratio_depthE1_HE_h.Fill(raw_ratio)
                 DLPHIN_ratio_depthE1_HE_h.Fill(DLPHIN_ratio)
-                if gen_energy > 25 and gen_energy < 30:
+                if gen_energy > 7.5 and gen_energy < 10:
                     reco_ratio_depthE1_HE_genL_h.Fill(reco_ratio)
                     aux_ratio_depthE1_HE_genL_h.Fill(aux_ratio)
                     raw_ratio_depthE1_HE_genL_h.Fill(raw_ratio)
                     DLPHIN_ratio_depthE1_HE_genL_h.Fill(DLPHIN_ratio)
+                elif gen_energy > 25 and gen_energy < 30:
+                    reco_ratio_depthE1_HE_genM_h.Fill(reco_ratio)
+                    aux_ratio_depthE1_HE_genM_h.Fill(aux_ratio)
+                    raw_ratio_depthE1_HE_genM_h.Fill(raw_ratio)
+                    DLPHIN_ratio_depthE1_HE_genM_h.Fill(DLPHIN_ratio)
                 elif gen_energy > 90 and gen_energy < 110:
                     reco_ratio_depthE1_HE_genH_h.Fill(reco_ratio)
                     aux_ratio_depthE1_HE_genH_h.Fill(aux_ratio)
@@ -413,11 +438,16 @@ for i in range(Nrows):
                 aux_ratio_depthG1_HE_h.Fill(aux_ratio)
                 raw_ratio_depthG1_HE_h.Fill(raw_ratio)
                 DLPHIN_ratio_depthG1_HE_h.Fill(DLPHIN_ratio)
-                if gen_energy > 25 and gen_energy < 30:
+                if gen_energy > 7.5 and gen_energy < 10:
                     reco_ratio_depthG1_HE_genL_h.Fill(reco_ratio)
                     aux_ratio_depthG1_HE_genL_h.Fill(aux_ratio)
                     raw_ratio_depthG1_HE_genL_h.Fill(raw_ratio)
                     DLPHIN_ratio_depthG1_HE_genL_h.Fill(DLPHIN_ratio)
+                elif gen_energy > 25 and gen_energy < 30:
+                    reco_ratio_depthG1_HE_genM_h.Fill(reco_ratio)
+                    aux_ratio_depthG1_HE_genM_h.Fill(aux_ratio)
+                    raw_ratio_depthG1_HE_genM_h.Fill(raw_ratio)
+                    DLPHIN_ratio_depthG1_HE_genM_h.Fill(DLPHIN_ratio)
                 elif gen_energy > 90 and gen_energy < 110:
                     reco_ratio_depthG1_HE_genH_h.Fill(reco_ratio)
                     aux_ratio_depthG1_HE_genH_h.Fill(aux_ratio)
