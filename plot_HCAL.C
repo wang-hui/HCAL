@@ -1,14 +1,18 @@
 int plot_HCAL()
 {
     bool plot_reco_vs_gen_ieta = false;
-    bool plot_reco_vs_gen_h = false;
-    bool plot_ratio_h = true;
-    bool plot_err_h = false;
+    bool plot_reco_vs_gen = false;
+    bool plot_ratio = false;
+    bool plot_1d = false;
+    bool plot_1d_fit = true;
 
     bool do_profile_study = false;
 
     std::vector<TString> hist_list =
     {
+        //"gen", "genG0",
+        "genG0",
+
         //"reco_vs_gen",
         //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthE1_HE", "reco_vs_gen_depthG1_HB", "reco_vs_gen_depthE1_HB"
         //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_1_pulse", "reco_vs_gen_depthG1_HE_8_pulse",
@@ -34,42 +38,42 @@ int plot_HCAL()
         //"aux_err",
 
         //"reco_ratio_HB",
-        "reco_ratio_HB_genL", "reco_ratio_HB_genH",
+        //"reco_ratio_HB_genL", "reco_ratio_HB_genM",
         //"reco_ratio_depthG1_HE",
-        "reco_ratio_depthG1_HE_genL", "reco_ratio_depthG1_HE_genH",
+        //"reco_ratio_depthG1_HE_genL", "reco_ratio_depthG1_HE_genM",
         //"reco_ratio_depthE1_HE",
-        "reco_ratio_depthE1_HE_genL", "reco_ratio_depthE1_HE_genH",
+        //"reco_ratio_depthE1_HE_genL", "reco_ratio_depthE1_HE_genM",
 
         //"aux_ratio_HB",
-        "aux_ratio_HB_genL", "aux_ratio_HB_genH",
+        //"aux_ratio_HB_genL", "aux_ratio_HB_genM",
         //"aux_ratio_depthG1_HE",
-        "aux_ratio_depthG1_HE_genL", "aux_ratio_depthG1_HE_genH",
+        //"aux_ratio_depthG1_HE_genL", "aux_ratio_depthG1_HE_genM",
         //"aux_ratio_depthE1_HE",
-        "aux_ratio_depthE1_HE_genL", "aux_ratio_depthE1_HE_genH",
+        //"aux_ratio_depthE1_HE_genL", "aux_ratio_depthE1_HE_genM",
 
         //"raw_ratio_HB",
-        "raw_ratio_HB_genL", "raw_ratio_HB_genH",
+        //"raw_ratio_HB_genL", "raw_ratio_HB_genM",
         //"raw_ratio_depthG1_HE",
-        "raw_ratio_depthG1_HE_genL", "raw_ratio_depthG1_HE_genH",
+        //"raw_ratio_depthG1_HE_genL", "raw_ratio_depthG1_HE_genM",
         //"raw_ratio_depthE1_HE",
-        "raw_ratio_depthE1_HE_genL", "raw_ratio_depthE1_HE_genH",
+        //"raw_ratio_depthE1_HE_genL", "raw_ratio_depthE1_HE_genM",
 
         //"DLPHIN_ratio_HB",
-        "DLPHIN_ratio_HB_genL", "DLPHIN_ratio_HB_genH",
+        //"DLPHIN_ratio_HB_genL", "DLPHIN_ratio_HB_genM",
         //"DLPHIN_ratio_depthG1_HE",
-        "DLPHIN_ratio_depthG1_HE_genL", "DLPHIN_ratio_depthG1_HE_genH",
+        //"DLPHIN_ratio_depthG1_HE_genL", "DLPHIN_ratio_depthG1_HE_genM",
         //"DLPHIN_ratio_depthE1_HE",
-        "DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genH",
+        //"DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genM",
     };
 
-    //TFile *f1 = new TFile("results_temp/result_origin.root");
-    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU.root");
+    TFile *f1 = new TFile("results_temp/result_origin.root");
+    //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
         TString hist_name = hist_list.at(i);
 
-        if(plot_reco_vs_gen_h)
+        if(plot_reco_vs_gen)
         {
             TString h1_name = hist_name + "_h";
 
@@ -215,7 +219,7 @@ int plot_HCAL()
             }
         }
 
-        if(plot_ratio_h)
+        if(plot_ratio)
         {
             TString h1_name = hist_name + "_h";
             TH1F *h1 = (TH1F*)f1->Get(h1_name);
@@ -226,8 +230,11 @@ int plot_HCAL()
             h1->Draw("e");
             auto h1_mean = h1->GetMean();
             auto h1_std = h1->GetStdDev();
+            auto max_bin = h1->GetMaximumBin();
+            if(max_bin != 1)
+            {h1_mean = h1->GetXaxis()->GetBinCenter(max_bin);}
             //std::cout << h1_mean << ", " << h1_std << std::endl;
-            h1->Fit("gaus", "w", "", h1_mean - h1_std, h1_mean + h1_std);
+            h1->Fit("gaus", "", "", h1_mean - h1_std, h1_mean + h1_std);
             auto f1 = h1->GetFunction("gaus");
             auto c = f1->GetParameter(0);
             auto mu = f1->GetParameter(1);
@@ -265,26 +272,91 @@ int plot_HCAL()
             mycanvas->SaveAs("plots_temp/" + h1_name + ".png");
         }
 
-        if(plot_err_h)
+        if(plot_1d)
         {
-            TString h1_name = hist_name + "_err_vs_gen_h";
+            TString h1_name = hist_name + "_h";
             TH1F *h1 = (TH1F*)f1->Get(h1_name);
 
             TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
             //gStyle->SetOptStat(kFALSE);
 
-            h1->Draw();
             h1->GetXaxis()->SetTitle("truth energy [GeV]");
-            h1->SetTitle(h1_name);
-            h1->GetYaxis()->SetTitle("|reco-truth|/truth");
+            h1->GetXaxis()->SetRangeUser(0,100);
+            h1->SetTitle(hist_name);
+            //h1->GetYaxis()->SetTitle("|reco-truth|/truth");
 
-            //TLine *l=new TLine(1, h1->GetMinimum(),1, h1->GetMaximum());
-            //l->SetLineColor(kBlack);
-            //l->Draw("same");
+            //h1->Rebin(4);
+            //h1->Scale(1.0/h1->GetEntries());
+            h1->SetLineColor(kRed);
+            h1->Draw("hist");
+
+            gPad-> SetLogy();
+            gPad->SetGrid();
 
             mycanvas->SetLeftMargin(0.15);
             mycanvas->SetRightMargin(0.1);
             mycanvas->SaveAs("plots_temp/" + h1_name + ".png");
+        }
+
+        if(plot_1d_fit)
+        {
+            TString h1_name = hist_name + "_h";
+            TH1F *h1 = (TH1F*)f1->Get(h1_name);
+
+            TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
+            gStyle->SetOptStat(kFALSE);
+
+            h1->GetXaxis()->SetTitle("truth energy [GeV]");
+            h1->GetXaxis()->SetRangeUser(-1,100);
+            h1->SetTitle(hist_name);
+            //h1->GetYaxis()->SetTitle("|reco-truth|/truth");
+
+            h1->Sumw2();
+            //h1->Rebin(4);
+            //h1->Scale(1.0/h1->GetEntries());
+            h1->SetLineColor(kRed);
+            //h1->Draw("hist");
+
+            TH1F* h2 = (TH1F*)h1->Clone();
+            h2->Reset();
+            for(int i = 1; i <= h1->GetNbinsX(); i++)
+            {
+                h2->SetBinContent(i,10);
+            }
+            h2->Divide(h1);
+            h2->Draw("hist");
+
+            //TF1 *f1 = new TF1("f1","tanh(x / [0]) + 0.000169981",0,100);
+            TF1 *f1 = new TF1("f1","tanh([0] * x + [1]) + 0.000169981 - tanh([1])",0,100);
+            //TF1 *f1 = new TF1("f1","tanh(x/2.1925E3) + 0.000169981",-1,100);
+            //f1->Draw("same");
+
+            //f1->SetParameters(100, 0.0003, 0.00005);
+            h2->Fit("f1", "w");
+
+            TF1 *f = (TF1*)h2->GetListOfFunctions()->FindObject("f1");
+            if(f)
+            {
+                f->SetLineColor(kBlue);
+                f->SetLineWidth(1);
+                f->SetLineStyle(2); // 2 = "- - -"
+                f->Draw("same");
+            }
+
+            gPad-> SetLogy();
+            gPad->SetGrid();
+
+            mycanvas->SetLeftMargin(0.15);
+            mycanvas->SetRightMargin(0.1);
+            mycanvas->SaveAs("plots_temp/" + h1_name + ".png");
+
+            for(int i = 1; i <= h2->GetNbinsX(); i++)
+            {
+                if((i-1)%50 == 0)
+                {
+                    std::cout << "(" << h2->GetBinLowEdge(i) << "," << h2->GetBinContent(i) << "), ";
+                }
+            }
         }
     }
     return 0;

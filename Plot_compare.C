@@ -1,17 +1,17 @@
 int Plot_compare()
 {
-    const bool plot_log = false;
-    const bool shape_compare = true;
-    std::vector<TString> hist_list = {"respCorr_depthG1_HB_h", "respCorr_depthG1_HE_h", "respCorr_depthE1_HB_h", "respCorr_depthE1_HE_h"};
+    const bool plot_log = true;
+    const bool shape_compare = false;
+    std::vector<TString> hist_list = {"raw_loss_depthE1_HE_genL_h"};
     std::vector<TString> hist2_list = hist_list;
-    //hist2_list = {""};
+    hist2_list = {"DLPHIN_loss_depthE1_HE_genL_h"};
 
     TString f1_name = "result_origin";
-    TString f1_lag = "MC";
+    TString f1_lag = "M0 loss";
     TString f1_folder = "results_temp/";
     TString f2_name = f1_name;
-    f2_name = "result_data_origin";
-    TString f2_lag = "data";
+    f2_name = "result_origin";
+    TString f2_lag = "DLPHIN loss";
     TString f2_folder = "results_temp/";
     TString hist_folder = "";
 
@@ -50,7 +50,11 @@ int Plot_compare()
 
         float y_max = max(h1->GetMaximum(), h2->GetMaximum()) * 1.2;
         h1->SetMaximum(y_max);
-        if(plot_log) h1->SetMaximum(y_max * 10);
+        if(plot_log)
+        {
+            h1->SetMinimum(1);
+            h1->SetMaximum(y_max * 10);
+        }
 
         TString f1_lag_temp = f1_lag;// + " (" + std::to_string(int(h1->Integral())) + ")";
         TString f2_lag_temp = f2_lag;// + " (" + std::to_string(int(h2->Integral())) + ")";

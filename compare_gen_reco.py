@@ -1,12 +1,13 @@
 import ROOT as rt
 import pandas as pd
 import sys
+import math
 
 result_dir = "results_temp/"
 result_file = "result"
 
 tot_rows = None
-#tot_rows = 1000000
+#tot_rows = 100000
 
 result = pd.read_csv(result_dir + result_file + ".csv", sep=',', skipinitialspace = True, header=0, nrows=tot_rows)
 
@@ -25,6 +26,10 @@ Ebins = 400
 Emin = 0.0
 Emax = 1000.0
 
+def chi2loss(y_true, y_pred):
+    loss = math.pow((y_pred - y_true)/(math.sqrt(1+(y_true/32))), 2)
+    return loss
+
 #==============global hist =======================
 weighted_time_h = rt.TH1F("weighted_time_h", "weighted simHit time", 100, 0.0, 500.0)
 weighted_time_vs_gen_h = rt.TH2F("weighted_time_vs_gen_h", "weighted time vs gen", Ebins, Emin, Emax, 100, 0.0, 500.0)
@@ -33,6 +38,7 @@ fcByPE_h = rt.TH1F("fcByPE_h", "fcByPE for each TS", 100, 0.0, 1000.0)
 PU_h = rt.TH1F("PU_h", "pileup", 100, 0.0, 100.0)
 reco_h = rt.TH1F("reco_h", "reco energy", Ebins, Emin, Emax)
 gen_h = rt.TH1F("gen_h", "truth energy", Ebins, Emin, Emax)
+genG0_h = rt.TH1F("genG0_h", "truth energy > 0 GeV", 400, 0, 100)
 use_8_pulse_h = rt.TH1F("use_8_pulse_h", "use 8 pulses", 2, 0, 2)
 
 #==============reco vs gen 2d hist ==================
@@ -188,6 +194,10 @@ DLPHIN_ratio_depthE1_HE_genL_h = rt.TH1F("DLPHIN_ratio_depthE1_HE_genL_h", "DLPH
 DLPHIN_ratio_depthE1_HE_genM_h = rt.TH1F("DLPHIN_ratio_depthE1_HE_genM_h", "DLPHIN_ratio_depthE1_HE_genM_h", 100, 0.0, 2.0)
 DLPHIN_ratio_depthE1_HE_genH_h = rt.TH1F("DLPHIN_ratio_depthE1_HE_genH_h", "DLPHIN_ratio_depthE1_HE_genH_h", 100, 0.0, 2.0)
 
+raw_loss_depthE1_HE_h = rt.TH1F("raw_loss_depthE1_HE_h", "raw_loss_depthE1_HE_h", 100, 0.0, 50.0)
+DLPHIN_loss_depthE1_HE_h = rt.TH1F("DLPHIN_loss_depthE1_HE_h", "DLPHIN_loss_depthE1_HE_h", 100, 0.0, 50.0)
+raw_loss_depthE1_HE_genL_h = rt.TH1F("raw_loss_depthE1_HE_genL_h", "raw_loss_depthE1_HE_genL_h", 100, 0.0, 2.0)
+DLPHIN_loss_depthE1_HE_genL_h = rt.TH1F("DLPHIN_loss_depthE1_HE_genL_h", "DLPHIN_loss_depthE1_HE_genL_h", 100, 0.0, 2.0)
 #============loop ieta hist for HB ====================
 weighted_time_HB_ieta_list = []
 reco_vs_gen_depthE1_HB_list = []
@@ -365,7 +375,9 @@ for i in range(Nrows):
             else: reco_vs_gen_depthG1_HE_1_pulse_h.Fill(gen_energy, reco_energy)
     else: print "strange sub_det: ", sub_det
 
-    if gen_energy > 1:
+    if gen_energy > 0:
+        genG0_h.Fill(gen_energy)
+
         reco_err_vs_gen_h.Fill(gen_energy, abs(reco_energy-gen_energy)/gen_energy)
         aux_err_vs_gen_h.Fill(gen_energy, abs(aux_energy-gen_energy)/gen_energy)
         DLPHIN_err_vs_gen_h.Fill(gen_energy, abs(DLPHIN_energy-gen_energy)/gen_energy)
@@ -374,6 +386,9 @@ for i in range(Nrows):
         aux_ratio = aux_energy / gen_energy
         raw_ratio = raw_energy / gen_energy
         DLPHIN_ratio = DLPHIN_energy / gen_energy
+
+        raw_loss = chi2loss(gen_energy, raw_energy)
+        DLPHIN_loss = chi2loss(gen_energy, DLPHIN_energy)
 
         reco_ratio_h.Fill(reco_ratio)
         aux_ratio_h.Fill(aux_ratio)
@@ -417,11 +432,16 @@ for i in range(Nrows):
                 aux_ratio_depthE1_HE_h.Fill(aux_ratio)
                 raw_ratio_depthE1_HE_h.Fill(raw_ratio)
                 DLPHIN_ratio_depthE1_HE_h.Fill(DLPHIN_ratio)
+                raw_loss_depthE1_HE_h.Fill(raw_loss)
+                DLPHIN_loss_depthE1_HE_h.Fill(DLPHIN_loss)
                 if gen_energy > 7.5 and gen_energy < 10:
                     reco_ratio_depthE1_HE_genL_h.Fill(reco_ratio)
                     aux_ratio_depthE1_HE_genL_h.Fill(aux_ratio)
                     raw_ratio_depthE1_HE_genL_h.Fill(raw_ratio)
                     DLPHIN_ratio_depthE1_HE_genL_h.Fill(DLPHIN_ratio)
+
+                    raw_loss_depthE1_HE_genL_h.Fill(raw_loss)
+                    DLPHIN_loss_depthE1_HE_genL_h.Fill(DLPHIN_loss)
                 elif gen_energy > 25 and gen_energy < 30:
                     reco_ratio_depthE1_HE_genM_h.Fill(reco_ratio)
                     aux_ratio_depthE1_HE_genM_h.Fill(aux_ratio)
