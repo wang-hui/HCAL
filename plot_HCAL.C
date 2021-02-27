@@ -66,8 +66,8 @@ int plot_HCAL()
         //"DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genM",
     };
 
-    TFile *f1 = new TFile("results_temp/result_origin.root");
-    //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU.root");
+    //TFile *f1 = new TFile("results_temp/result_origin.root");
+    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
@@ -319,19 +319,39 @@ int plot_HCAL()
 
             TH1F* h2 = (TH1F*)h1->Clone();
             h2->Reset();
-            for(int i = 1; i <= h1->GetNbinsX(); i++)
+
+            int tot_bins = h1->GetNbinsX();
+            float last_bin_content = h1->GetBinContent(tot_bins);
+            std::cout << "tot " << tot_bins << " bins, last bin content " << last_bin_content << std::endl;
+
+            for(int i = 1; i <= tot_bins; i++)
             {
-                h2->SetBinContent(i,10);
+                h2->SetBinContent(i,last_bin_content);
             }
             h2->Divide(h1);
             h2->Draw("hist");
+            h2->SetTitle("HE_depth1_weight");
+            h2->SetName("HE_depth1_weight");
 
-            //TF1 *f1 = new TF1("f1","tanh(x / [0]) + 0.000169981",0,100);
-            TF1 *f1 = new TF1("f1","tanh([0] * x + [1]) + 0.000169981 - tanh([1])",0,100);
-            //TF1 *f1 = new TF1("f1","tanh(x/2.1925E3) + 0.000169981",-1,100);
+            TFile out_file("HE_depth1_weight.root","RECREATE");
+            h2->Write();
+            out_file.Close();
+
+            float fit_min = 0;
+            std::ostringstream intercept;
+            intercept.precision(10);
+            intercept << std::fixed << h2->GetBinContent(h2->FindBin(fit_min));
+            TString func_string = "tanh([0] * (x-" + std::to_string(fit_min) + ") + [1]) - tanh([1]) + " + intercept.str();
+            std::cout << func_string << std::endl;
+
+            //TF1 *f1 = new TF1("f1","tanh(0.0154716 * x - 1.4678) + 0.899238",0,100);  // fit "w"
+            //TF1 *f1 = new TF1("f1","tanh(0.0450402 * x - 3.14331) + 0.996366",0,100);  // fit ""
+            TF1 *f1 = new TF1("f1",func_string,fit_min,100);
             //f1->Draw("same");
+            std::cout << "fit at 0 = " << f1->Eval(0) << std::endl;
 
             //f1->SetParameters(100, 0.0003, 0.00005);
+            //h2->Fit("f1");
             h2->Fit("f1", "w");
 
             TF1 *f = (TF1*)h2->GetListOfFunctions()->FindObject("f1");
@@ -343,6 +363,11 @@ int plot_HCAL()
                 f->Draw("same");
             }
 
+            TLegend* leg = new TLegend(0.6,0.5,0.9,0.7);
+            leg->AddEntry(h2,"1/entries","l");
+            leg->AddEntry(f,"fit","l");
+            leg->Draw("same");
+
             gPad-> SetLogy();
             gPad->SetGrid();
 
@@ -350,7 +375,7 @@ int plot_HCAL()
             mycanvas->SetRightMargin(0.1);
             mycanvas->SaveAs("plots_temp/" + h1_name + ".png");
 
-            for(int i = 1; i <= h2->GetNbinsX(); i++)
+            for(int i = 1; i <= tot_bins; i++)
             {
                 if((i-1)%50 == 0)
                 {

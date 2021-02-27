@@ -23,7 +23,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
@@ -68,6 +68,8 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11
 # Path and EndPath definitions
 process.myAna = cms.EDAnalyzer(
     "HCALTestAna",
+    print_1d = cms.untracked.bool(False),
+    print_2d = cms.untracked.bool(True),
     do_PU = cms.untracked.bool(True),
     is_run3_relVal = cms.untracked.bool(False),
     min_simHit_energy = cms.untracked.double(0.0))
@@ -83,7 +85,7 @@ from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
 #Setup FWK for multithreaded
-process.options.numberOfThreads=cms.untracked.uint32(4)
+process.options.numberOfThreads=cms.untracked.uint32(1)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 process.options.numberOfConcurrentLuminosityBlocks=cms.untracked.uint32(1)
 

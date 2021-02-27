@@ -318,7 +318,7 @@ private:
 
     // DLPHIN parameters
     std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_;
-    bool DLPHIN_print_, DLPHIN_scale_, DLPHIN_save_;
+    bool DLPHIN_print_, DLPHIN_scale_, DLPHIN_save_, print_2d_;
 
     // Other members
     edm::EDGetTokenT<HBHEDigiCollection> tok_qie8_;
@@ -402,6 +402,7 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
       DLPHIN_print_(conf.getParameter<bool>("DLPHIN_print")),
       DLPHIN_scale_(conf.getParameter<bool>("DLPHIN_scale")),
       DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
+      print_2d_(conf.getParameter<bool>("print_2d")),
       reco_(parseHBHEPhase1AlgoDescription(conf.getParameter<edm::ParameterSet>("algorithm"))),
       negEFilter_(nullptr)
 {
@@ -853,6 +854,7 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<bool>("DLPHIN_print");
     desc.add<bool>("DLPHIN_scale");
     desc.add<bool>("DLPHIN_save");
+    desc.add<bool>("print_2d");
 
     desc.add<edm::ParameterSetDescription>("algorithm", fillDescriptionForParseHBHEPhase1Algo());
     add_param_set(flagParametersQIE8);
@@ -866,6 +868,25 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
 void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, std::vector<float>& Doutput)
 {
     if(DLPHIN_print_) std::cout << "reco: TS1 raw charge, TS1 ped noise, TS2 raw charge, TS2 ped noise, TS3 raw charge, TS3 ped noise, TS4 raw charge, TS4 ped noise, TS5 raw charge, TS5 ped noise, TS6 raw charge, TS6 ped noise, TS7 raw charge, TS7 ped noise, TS8 raw charge, TS8 ped noise, raw gain, gain, raw energy, aux energy, mahi energy, flags, id, sub detector, depth, ieta, iphi, DLPHIN energy, DLPHIN_SF" << std::endl;
+
+    typedef std::pair<int, int> ieta_iphi_pair;
+    std::map <ieta_iphi_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map;
+    std::vector<float> channel_vec(22, 0.0);
+    std::vector<std::vector<float>> depth6_vec(6, channel_vec);
+    for(int ieta = -25; ieta <= -19; ieta ++)
+    {   
+        for(int iphi = 1; iphi <= 72; iphi ++)
+        {   
+            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth6_vec;
+        }
+    }
+    for(int ieta = 19; ieta <= 25; ieta ++)
+    {
+        for(int iphi = 1; iphi <= 72; iphi ++)
+        {
+            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth6_vec;
+        }
+    }
 
     for(auto iter : Dinput_vec)
     {
@@ -895,13 +916,46 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         tensorflow::Tensor ty_input(tensorflow::DT_FLOAT, {1, 2}); // template for charge input
         auto ty_input_tensor = ty_input.tensor<float, 2>(); // place holder for taking in values
 
+        std::vector<float> channel_vec_temp(22, 0.0);
+
         for (int iTS = 0; iTS < nSamples; ++iTS)
         {
             auto charge = channel_info.tsRawCharge(iTS);
             auto ped = channel_info.tsPedestal(iTS);
+            ch_input_tensor(0, iTS) = (charge - ped) * rawgain;
+
             if(DLPHIN_print_)std::cout << charge << ", " << ped << ", ";
 
-            ch_input_tensor(0, iTS) = (charge - ped) * rawgain;
+            if(abs(ieta) >= 19 && abs(ieta) <= 25)
+            {
+                channel_vec_temp.at(2*iTS) = charge;
+                channel_vec_temp.at(2*iTS + 1) = ped;
+            }
+            //================ test total uncertainty ==================
+            /*
+            //ADC granularity
+            auto noiseADC = (1./sqrt(12))*channel_info.tsDFcPerADC(iTS);
+            //Photostatistics
+            auto noisePhoto = 0.;
+            if ((charge-ped)>channel_info.tsPedestalWidth(iTS))
+            {noisePhoto = sqrt((charge-ped)*channel_info.fcByPE());}
+            //Electronic pedestal
+            auto pedWidth = channel_info.tsPedestalWidth(iTS);
+            std::cout << noiseADC << ", " << noisePhoto << ", " << pedWidth << ", ";
+            std::cout << channel_info.fcByPE() << ", " << pedWidth / ped << ", ";
+            */
+            //================ end test total uncertainty ==================
+        }
+
+        if(abs(ieta) >= 19 && abs(ieta) <= 25)
+        {
+            channel_vec_temp.at(16) = rawgain;
+            channel_vec_temp.at(17) = gain;
+            channel_vec_temp.at(18) = eraw;
+            channel_vec_temp.at(19) = eaux;
+            channel_vec_temp.at(20) = energy;
+            channel_vec_temp.at(21) = 1;
+            ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = channel_vec_temp;
         }
 
         // ty_input_tensor(0,0) = hid.subdet();
@@ -928,6 +982,37 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         if(DLPHIN_print_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << temp << ", " << DLPHIN_SF << std::endl;
 
         Doutput.push_back(temp * resp_corr / DLPHIN_SF);
+    }
+
+    if(print_2d_)
+    {
+        std::string title_string = "reco: ";
+        for (int depth = 1; depth <= 6; depth++)
+        {
+            std::string depth_string = "d" + std::to_string(depth);
+            for (int TS = 1; TS <= 8; TS++)
+            {
+                std::string TS_string = depth_string + " TS" + std::to_string(TS);
+                title_string = title_string + TS_string + " raw charge, " + TS_string + " ped noise, "; 
+            }
+            title_string = title_string + depth_string + " raw gain, " + depth_string + " gain, " + depth_string + " raw energy, " + depth_string + " aux energy, " + depth_string + " mahi energy, " + depth_string + " is real channel, ";
+        }
+
+        title_string = title_string + "ieta, iphi";
+        std::cout << title_string << std::endl;
+
+        for(auto iter : ieta_iphi_energy_map)
+        {
+            auto key = iter.first;
+            auto value = iter.second;
+            for(int i = 0; i < (int)value.size(); i++)
+            {
+                auto channel_vec_temp = value.at(i);
+                for(int j = 0; j < (int)channel_vec_temp.size(); j++)
+                {std::cout << channel_vec_temp.at(j) << ", ";}
+            }
+            std::cout << key.first << ", " << key.second << std::endl;
+        }
     }
 }
 

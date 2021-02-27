@@ -72,10 +72,10 @@ hbheprereco = cms.EDProducer(
         tdcTimeShift = cms.double(0.0),
 
         # Use "Method 2"?
-        useM2 = cms.bool(False),
+        useM2 = cms.bool(True),
 
         # Use "Method 3"?
-        useM3 = cms.bool(True),
+        useM3 = cms.bool(False),
 
         # Use Mahi?
         useMahi = cms.bool(True),
@@ -104,8 +104,9 @@ hbheprereco = cms.EDProducer(
     DLPHIN_pb_dg1HE = cms.string(DLPHIN_pb_folder + "model_dg1HE_R2.pb"),
     DLPHIN_pb_SF = cms.string(DLPHIN_pb_folder + "DLPHIN_MAHI_ratio.root"),
     DLPHIN_print = cms.bool(False),
-    DLPHIN_scale = cms.bool(True),
-    DLPHIN_save = cms.bool(True),
+    DLPHIN_scale = cms.bool(False),
+    DLPHIN_save = cms.bool(False),
+    print_2d = cms.bool(True),
 
     # Parameter sets configuring rechit status bit setters
     flagParametersQIE8 = cms.PSet(

@@ -15,6 +15,7 @@ mkdir results_temp
 xrdcp $1 results_temp/result.csv
 python compare_gen_reco.py
 xrdcp results_temp/result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
+xrdcp results_temp/result_with_weight.csv root://cmseos.fnal.gov//${2}/result_with_weight_${3}.csv
 
 #xrdcp $1 results_temp/result_data.csv
 #python compare_DLPHIN_reco.py

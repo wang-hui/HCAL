@@ -2,14 +2,13 @@ import ROOT as rt
 import pandas as pd
 import sys
 import math
+import numpy as np
 
 result_dir = "results_temp/"
 result_file = "result"
 
 tot_rows = None
 #tot_rows = 100000
-
-result = pd.read_csv(result_dir + result_file + ".csv", sep=',', skipinitialspace = True, header=0, nrows=tot_rows)
 
 run_mod = "origin"
 #run_mod = "slope1"
@@ -20,11 +19,22 @@ raw_slope = 1.0
 use_8_pulse_bit = 1<<29
 
 study_gain = False
-out_file = rt.TFile(result_dir + result_file + "_" + run_mod + ".root","RECREATE")
 
 Ebins = 400
 Emin = 0.0
 Emax = 1000.0
+
+reco_test = pd.read_csv(result_dir + result_file + ".csv", nrows=10, sep=',', skipinitialspace = True, header=0)
+reco64_cols = [c for c in reco_test if reco_test[c].dtype == "float64"]
+reco32_cols = {c: np.float32 for c in reco64_cols}
+
+result = pd.read_csv(result_dir + result_file + ".csv", engine='c', dtype=reco32_cols, sep=',', skipinitialspace = True, header=0, nrows=tot_rows)
+result["weight"] = 1.0
+
+HE_depth1_weight_file = rt.TFile.Open("HE_depth1_weight.root")
+HE_depth1_weight_hist = HE_depth1_weight_file.Get("HE_depth1_weight")
+
+out_file = rt.TFile(result_dir + result_file + "_" + run_mod + ".root","RECREATE")
 
 def chi2loss(y_true, y_pred):
     loss = math.pow((y_pred - y_true)/(math.sqrt(1+(y_true/32))), 2)
@@ -434,6 +444,11 @@ for i in range(Nrows):
                 DLPHIN_ratio_depthE1_HE_h.Fill(DLPHIN_ratio)
                 raw_loss_depthE1_HE_h.Fill(raw_loss)
                 DLPHIN_loss_depthE1_HE_h.Fill(DLPHIN_loss)
+
+                if gen_energy < 100:
+                    HE_depth1_weight = HE_depth1_weight_hist.GetBinContent(HE_depth1_weight_hist.FindBin(gen_energy))
+                    result["weight"].iat[i] = HE_depth1_weight
+
                 if gen_energy > 7.5 and gen_energy < 10:
                     reco_ratio_depthE1_HE_genL_h.Fill(reco_ratio)
                     aux_ratio_depthE1_HE_genL_h.Fill(aux_ratio)
@@ -477,3 +492,5 @@ for i in range(Nrows):
 out_file.cd()
 out_file.Write()
 out_file.Close()
+
+result.to_csv("results_temp/result_with_weight.csv", index = False, header=True)
