@@ -74,6 +74,8 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11
 # Path and EndPath definitions
 process.myAna = cms.EDAnalyzer(
     "HCALTestAna",
+    print_1d = cms.untracked.bool(False),
+    print_2d = cms.untracked.bool(True),
     do_PU = cms.untracked.bool(True),
     is_run3_relVal = cms.untracked.bool(False),
     min_simHit_energy = cms.untracked.double(0.0))

@@ -19,6 +19,7 @@ raw_slope = 1.0
 use_8_pulse_bit = 1<<29
 
 study_gain = False
+add_weight = False
 
 Ebins = 400
 Emin = 0.0
@@ -29,10 +30,11 @@ reco64_cols = [c for c in reco_test if reco_test[c].dtype == "float64"]
 reco32_cols = {c: np.float32 for c in reco64_cols}
 
 result = pd.read_csv(result_dir + result_file + ".csv", engine='c', dtype=reco32_cols, sep=',', skipinitialspace = True, header=0, nrows=tot_rows)
-result["weight"] = 1.0
 
-HE_depth1_weight_file = rt.TFile.Open("HE_depth1_weight.root")
-HE_depth1_weight_hist = HE_depth1_weight_file.Get("HE_depth1_weight")
+if add_weight:
+    result["weight"] = 1.0
+    HE_depth1_weight_file = rt.TFile.Open("HE_depth1_weight.root")
+    HE_depth1_weight_hist = HE_depth1_weight_file.Get("HE_depth1_weight")
 
 out_file = rt.TFile(result_dir + result_file + "_" + run_mod + ".root","RECREATE")
 
@@ -42,7 +44,9 @@ def chi2loss(y_true, y_pred):
 
 #==============global hist =======================
 weighted_time_h = rt.TH1F("weighted_time_h", "weighted simHit time", 100, 0.0, 500.0)
+TS45_time_h = rt.TH1F("TS45_time_h", "TS45 time", 100, 75.0, 100.0)
 weighted_time_vs_gen_h = rt.TH2F("weighted_time_vs_gen_h", "weighted time vs gen", Ebins, Emin, Emax, 100, 0.0, 500.0)
+TS45_time_vs_gen_h = rt.TH2F("TS45_time_vs_gen_h", "TS45 time vs gen", Ebins, Emin, Emax, 100, 75.0, 100.0)
 median_time_h = rt.TH1F("median_time_h", "median simHit time", 100, 0.0, 500.0)
 fcByPE_h = rt.TH1F("fcByPE_h", "fcByPE for each TS", 100, 0.0, 1000.0)
 PU_h = rt.TH1F("PU_h", "pileup", 100, 0.0, 100.0)
@@ -210,6 +214,7 @@ raw_loss_depthE1_HE_genL_h = rt.TH1F("raw_loss_depthE1_HE_genL_h", "raw_loss_dep
 DLPHIN_loss_depthE1_HE_genL_h = rt.TH1F("DLPHIN_loss_depthE1_HE_genL_h", "DLPHIN_loss_depthE1_HE_genL_h", 100, 0.0, 2.0)
 #============loop ieta hist for HB ====================
 weighted_time_HB_ieta_list = []
+TS45_time_HB_ieta_list = []
 reco_vs_gen_depthE1_HB_list = []
 reco_vs_gen_depthG1_HB_list = []
 for i in range(1,17):
@@ -218,14 +223,19 @@ for i in range(1,17):
     G1_hist = rt.TH2F("reco_vs_gen_depthG1_HB_iEta_" + str(i) + "_h", "reco vs gen, depth > 1, HB |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthG1_HB_list.append(G1_hist)
 
-    hist_list = []
+    weighted_time_hist_list = []
+    TS45_time_hist_list = []
     for j in range(1,6):
-        time_hist = rt.TH1F("weighted_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
-        hist_list.append(time_hist)
-    weighted_time_HB_ieta_list.append(hist_list)
+        weighted_time_hist = rt.TH1F("weighted_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
+        TS45_time_hist = rt.TH1F("TS45_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "TS45 time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
+        weighted_time_hist_list.append(weighted_time_hist)
+        TS45_time_hist_list.append(TS45_time_hist)
+    weighted_time_HB_ieta_list.append(weighted_time_hist_list)
+    TS45_time_HB_ieta_list.append(TS45_time_hist_list)
 
 #============loop ieta hist for HE ====================
 weighted_time_HE_ieta_list = []
+TS45_time_HE_ieta_list = []
 reco_vs_gen_depthE1_HE_list = []
 reco_vs_gen_depthG1_HE_list = []
 for i in range(16,30):
@@ -234,11 +244,15 @@ for i in range(16,30):
     G1_hist = rt.TH2F("reco_vs_gen_depthG1_HE_iEta_" + str(i) + "_h", "reco vs gen, depth > 1, HE |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthG1_HE_list.append(G1_hist)
 
-    hist_list = []
+    weighted_time_hist_list = []
+    TS45_time_hist_list = []
     for j in range(1,9):
-        time_hist = rt.TH1F("weighted_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
-        hist_list.append(time_hist)
-    weighted_time_HE_ieta_list.append(hist_list)
+        weighted_time_hist = rt.TH1F("weighted_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
+        TS45_time_hist = rt.TH1F("TS45_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "TS45 time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
+        weighted_time_hist_list.append(weighted_time_hist)
+        TS45_time_hist_list.append(TS45_time_hist)
+    weighted_time_HE_ieta_list.append(weighted_time_hist_list)
+    TS45_time_HE_ieta_list.append(TS45_time_hist_list)
 
 Nrows = result.shape[0]
 print "total rows: ", Nrows
@@ -265,8 +279,6 @@ for i in range(Nrows):
     depth = result["depth"] [i]
     sub_det = result["sub detector"] [i]
     PU = result["PU"] [i]
-    weighted_time = result["weighted time"] [i]
-    median_time = result["median time"] [i]
     flags = result["flags"] [i]
     use_8_pulse = ((flags & use_8_pulse_bit) == use_8_pulse_bit)
 
@@ -285,19 +297,15 @@ for i in range(Nrows):
             sum_amp_over_gen_h.Fill(sum_amplitude / gen_energy)
             inv_gain_h.Fill(1.0 / gain)
 
-    weighted_time_h.Fill(weighted_time)
-    median_time_h.Fill(median_time)
     PU_h.Fill(PU)
     reco_h.Fill(reco_energy)
     gen_h.Fill(gen_energy)
     use_8_pulse_h.Fill(use_8_pulse)
-    weighted_time_vs_gen_h.Fill(gen_energy, weighted_time)
     reco_vs_gen_h.Fill(gen_energy, reco_energy)
     aux_vs_gen_h.Fill(gen_energy, aux_energy)
     DLPHIN_vs_gen_h.Fill(gen_energy, DLPHIN_energy)
 
     if sub_det == 1:
-        weighted_time_HB_ieta_list[ieta - 1][depth - 1].Fill(weighted_time)
         reco_vs_gen_HB_h.Fill(gen_energy, reco_energy)
         aux_vs_gen_HB_h.Fill(gen_energy, aux_energy)
         raw_vs_gen_HB_h.Fill(gen_energy, raw_energy)
@@ -335,7 +343,6 @@ for i in range(Nrows):
             if use_8_pulse: reco_vs_gen_depthG1_HB_8_pulse_h.Fill(gen_energy, reco_energy)
             else: reco_vs_gen_depthG1_HB_1_pulse_h.Fill(gen_energy, reco_energy)
     elif sub_det == 2:
-        weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
         if depth == 1:
             reco_vs_gen_depthE1_HE_h.Fill(gen_energy, reco_energy)
             aux_vs_gen_depthE1_HE_h.Fill(gen_energy, aux_energy)
@@ -386,7 +393,20 @@ for i in range(Nrows):
     else: print "strange sub_det: ", sub_det
 
     if gen_energy > 0:
+        weighted_time = result["weighted time"] [i]
+        median_time = result["median time"] [i]
+        TS4_charge = max(result["TS4 raw charge"] [i] - result["TS4 ped noise"] [i], 0)
+        TS5_charge = max(result["TS5 raw charge"] [i] - result["TS5 ped noise"] [i], 0)
+        TS45_time = 0
+        if TS4_charge + TS5_charge > 0:
+            TS45_time = (TS4_charge * 75 + TS5_charge * 100) / (TS4_charge + TS5_charge)
+
         genG0_h.Fill(gen_energy)
+        weighted_time_h.Fill(weighted_time)
+        TS45_time_h.Fill(TS45_time)
+        weighted_time_vs_gen_h.Fill(gen_energy, weighted_time)
+        TS45_time_vs_gen_h.Fill(gen_energy, TS45_time)
+        median_time_h.Fill(median_time)
 
         reco_err_vs_gen_h.Fill(gen_energy, abs(reco_energy-gen_energy)/gen_energy)
         aux_err_vs_gen_h.Fill(gen_energy, abs(aux_energy-gen_energy)/gen_energy)
@@ -406,6 +426,8 @@ for i in range(Nrows):
         DLPHIN_ratio_h.Fill(DLPHIN_ratio)
 
         if sub_det == 1:
+            weighted_time_HB_ieta_list[ieta - 1][depth - 1].Fill(weighted_time)
+            TS45_time_HB_ieta_list[ieta - 1][depth - 1].Fill(TS45_time)
             reco_ratio_HB_h.Fill(reco_ratio)
             aux_ratio_HB_h.Fill(aux_ratio)
             raw_ratio_HB_h.Fill(raw_ratio)
@@ -437,6 +459,8 @@ for i in range(Nrows):
                 raw_ratio_depthG1_HB_h.Fill(raw_ratio)
                 DLPHIN_ratio_depthG1_HB_h.Fill(DLPHIN_ratio)
         else:
+            weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
+            TS45_time_HE_ieta_list[ieta - 16][depth - 1].Fill(TS45_time)
             if depth == 1:
                 reco_ratio_depthE1_HE_h.Fill(reco_ratio)
                 aux_ratio_depthE1_HE_h.Fill(aux_ratio)
@@ -445,7 +469,7 @@ for i in range(Nrows):
                 raw_loss_depthE1_HE_h.Fill(raw_loss)
                 DLPHIN_loss_depthE1_HE_h.Fill(DLPHIN_loss)
 
-                if gen_energy < 100:
+                if add_weight and gen_energy < 100:
                     HE_depth1_weight = HE_depth1_weight_hist.GetBinContent(HE_depth1_weight_hist.FindBin(gen_energy))
                     result["weight"].iat[i] = HE_depth1_weight
 
@@ -493,4 +517,5 @@ out_file.cd()
 out_file.Write()
 out_file.Close()
 
-result.to_csv("results_temp/result_with_weight.csv", index = False, header=True)
+if add_weight:
+    result.to_csv("results_temp/result_with_weight.csv", index = False, header=True)

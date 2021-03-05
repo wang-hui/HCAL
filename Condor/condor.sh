@@ -30,10 +30,11 @@ cmsRun reco_MC_RAW2DIGI_RECO.py $1 > results_temp/reco_MC.stdout
 mkdir split_file
 python split_file.py
 
-python add_gen_energy.py
-
-python compare_gen_reco.py
+#python add_gen_energy.py
+python add_gen_energy_2d.py
+#python compare_gen_reco.py
 
 xrdcp results_temp/reco_MC.stdout root://cmseos.fnal.gov//${2}/reco_test_${3}.stdout
-xrdcp results_temp/result.csv root://cmseos.fnal.gov//${2}/result_${3}.csv
-xrdcp results_temp/result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
+#xrdcp results_temp/result.csv root://cmseos.fnal.gov//${2}/result_${3}.csv
+#xrdcp results_temp/result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
+xrdcp results_temp/result_2d.csv root://cmseos.fnal.gov//${2}/result_2d_${3}.csv

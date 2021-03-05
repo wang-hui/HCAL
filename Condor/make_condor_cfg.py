@@ -2,7 +2,7 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "UL_1TeV_pion_gun_PU_DLPHIN_training"
+folder_name = "UL_1TeV_pion_gun_PU_2d_test"
 result_path = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/"
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"
 file_list = "../FileList/UL_1TeV_pion_gun_RAW_PU.list"
