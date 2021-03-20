@@ -872,19 +872,19 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     typedef std::pair<int, int> ieta_iphi_pair;
     std::map <ieta_iphi_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map;
     std::vector<float> channel_vec(22, 0.0);
-    std::vector<std::vector<float>> depth6_vec(6, channel_vec);
-    for(int ieta = -25; ieta <= -19; ieta ++)
+    std::vector<std::vector<float>> depth_vec(7, channel_vec);
+    for(int ieta = -29; ieta <= -16; ieta ++)
     {   
         for(int iphi = 1; iphi <= 72; iphi ++)
         {   
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth6_vec;
+            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
         }
     }
-    for(int ieta = 19; ieta <= 25; ieta ++)
+    for(int ieta = 16; ieta <= 29; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth6_vec;
+            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
         }
     }
 
@@ -918,15 +918,26 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
         std::vector<float> channel_vec_temp(22, 0.0);
 
+        //============= test un-reconstructed channels =========================
+        /*
+        if(depth == 1 && ieta == -19 && (iphi == 24 || iphi == 23))
+        {
+            std::cout << "find channel " << rawId << ", depth " << depth << ", ieta " << ieta << ", iphi " << iphi << std::endl;
+        }
+        */
+        //============= test end ===============================================
+
         for (int iTS = 0; iTS < nSamples; ++iTS)
         {
             auto charge = channel_info.tsRawCharge(iTS);
             auto ped = channel_info.tsPedestal(iTS);
+            //auto rise_time = channel_info.tsRiseTime(iTS);
             ch_input_tensor(0, iTS) = (charge - ped) * rawgain;
 
             if(DLPHIN_print_)std::cout << charge << ", " << ped << ", ";
+            //if(DLPHIN_print_)std::cout << rise_time << ", ";
 
-            if(abs(ieta) >= 19 && abs(ieta) <= 25)
+            if(subdet == 2)
             {
                 channel_vec_temp.at(2*iTS) = charge;
                 channel_vec_temp.at(2*iTS + 1) = ped;
@@ -947,7 +958,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             //================ end test total uncertainty ==================
         }
 
-        if(abs(ieta) >= 19 && abs(ieta) <= 25)
+        if(subdet == 2)
         {
             channel_vec_temp.at(16) = rawgain;
             channel_vec_temp.at(17) = gain;
@@ -987,7 +998,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     if(print_2d_)
     {
         std::string title_string = "reco: ";
-        for (int depth = 1; depth <= 6; depth++)
+        for (int depth = 1; depth <= 7; depth++)
         {
             std::string depth_string = "d" + std::to_string(depth);
             for (int TS = 1; TS <= 8; TS++)

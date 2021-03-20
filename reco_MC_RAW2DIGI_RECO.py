@@ -23,15 +23,18 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(10)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'file:step2.root'
-        "root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_PU-2020-12-20/UL_1TeV_pion_gun_RAW_PU_0.root"
+        #"file:results_temp/step2.root"
+        "root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_PU-2020-12-20/UL_1TeV_pion_gun_RAW_PU_27.root"
+        #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_noPU-2020-12-20/UL_1TeV_pion_gun_RAW_0.root"
+        #"/store/mc/RunIISummer19UL18DIGIPremix/QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8/GEN-SIM-DIGI/106X_upgrade2018_realistic_v11_L1v1-v2/260000/ED88DE9D-DF15-EF43-AFE2-37DBB0105D8A.root"
     ),
+    #skipEvents = cms.untracked.uint32(516),
     secondaryFileNames = cms.untracked.vstring()
 )
 

@@ -160,19 +160,19 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     typedef std::pair<int, int> ieta_iphi_pair;
     std::map <ieta_iphi_pair, std::vector<float>> ieta_iphi_energy_map;
-    std::vector<float> depth6_vec = {0,0,0,0,0,0};
-    for(int ieta = -25; ieta <= -19; ieta ++)
+    std::vector<float> depth_vec(7,0.0);
+    for(int ieta = -29; ieta <= -16; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth6_vec;
+            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
         }
     }
-    for(int ieta = 19; ieta <= 25; ieta ++)
+    for(int ieta = 16; ieta <= 29; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth6_vec;
+            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
         }
     }
 
@@ -222,7 +222,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
                 //factor 1.2 for HE depth1
                 if (depth == 1) digi_SF = 1.2;
             }
-            if(samplingFactor == 0) std::cout << "miss-match samplingFactor" << std::endl;
+            if(samplingFactor == 0) std::cout << "Error! miss-match samplingFactor" << std::endl;
             //std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;
             sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * digi_SF);
             sum_energy_per_rawId(id_time_map, rawId, time);
@@ -278,15 +278,13 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         //const HcalCalibrations& calibrations = conditions->getHcalCalibrations(rawId);
         //RespCorr = calibrations.respcorr();
         HcalDetId hid(rawId);
+        auto subdet = hid.subdet();
         auto depth = hid.depth();
         auto ieta = hid.ieta();
         auto iphi = hid.iphi();
 
         auto energy_vec = iter.second;
         float energy_sum = std::accumulate(energy_vec.begin(), energy_vec.end(), 0.0);
-
-        if(abs(ieta) >= 19 && abs(ieta) <= 25)
-        {ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = energy_sum;}
 
         auto time_vec = id_time_map.at(rawId);
         int vec_size = time_vec.size();
@@ -296,7 +294,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             float simHit_energy = energy_vec.at(i);
             if (simHit_energy > min_simHit_energy)
             {weighted_time += time_vec.at(i) * simHit_energy / energy_sum;}
-            //==============a test for sigHit time, to be comment out===========
+            //==============a test for simHit time, to be comment out===========
             /*
             if (energy_sum > 500)
             {
@@ -314,6 +312,18 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         std::sort(time_vec.begin(), time_vec.end());
         float median_time = time_vec.at(vec_size/2);
 
+        if(subdet == 2)
+        {ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = energy_sum;}
+
+        //============= test un-reconstructed channels =========================
+        /*
+        if(depth == 1 && ieta == -19 && (iphi == 24 || iphi == 23))
+        {
+            std::cout << "find channel " << rawId << ", depth " << depth << ", ieta " << ieta << ", iphi " << iphi << ", energy " << energy_sum << ", time " << weighted_time << std::endl;
+        }
+        */
+        //============= test end ===============================================
+
         if(print_1d)
         {
             if(do_PU) std::cout << rawId << ", " << energy_sum << ", " << median_time << ", " << weighted_time << ", " << obs_npu << std::endl;
@@ -323,7 +333,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     if(print_2d)
     {
-        std::cout << "gen: ieta, iphi, d1 raw truth energy, d2 raw truth energy, d3 raw truth energy, d4 raw truth energy, d5 raw truth energy, d6 raw truth energy" << std::endl;
+        std::cout << "gen: ieta, iphi, d1 raw truth energy, d2 raw truth energy, d3 raw truth energy, d4 raw truth energy, d5 raw truth energy, d6 raw truth energy, d7 raw truth energy" << std::endl;
         for(auto iter : ieta_iphi_energy_map)
         {
             auto key = iter.first;
@@ -350,8 +360,7 @@ void HCALTestAna::endJob()
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
-void
-HCALTestAna::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+void HCALTestAna::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     //The following says we do not know what parameters are allowed so do no validation
     // Please change this to state exactly what you do use, even if it is no parameters
     edm::ParameterSetDescription desc;

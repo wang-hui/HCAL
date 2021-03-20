@@ -10,7 +10,9 @@ gen_list = glob.glob("split_file/gen_*.txt")
 reco_list.sort()
 gen_list.sort()
 reco_list_tmp = [item.replace("reco", "gen") for item in reco_list]
-if reco_list_tmp != gen_list: print "gen and reco list do not match"
+if reco_list_tmp != gen_list:
+    print "gen and reco list do not match"
+    quit()
 
 print "read the first file and change float64 to float 32"
 reco_test = pd.read_csv(reco_list[0], sep=',', skipinitialspace = True, header=0)

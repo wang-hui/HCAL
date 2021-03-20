@@ -1,17 +1,18 @@
 int plot_HCAL()
 {
     bool plot_reco_vs_gen_ieta = false;
-    bool plot_reco_vs_gen = false;
+    bool plot_reco_vs_gen = true;
     bool plot_ratio = false;
     bool plot_1d = false;
-    bool plot_1d_fit = true;
+    bool plot_1d_fit = false;
 
+    float x_scale = 0.1;
     bool do_profile_study = false;
 
     std::vector<TString> hist_list =
     {
         //"gen", "genG0",
-        "genG0",
+        //"genG0",
 
         //"reco_vs_gen",
         //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthE1_HE", "reco_vs_gen_depthG1_HB", "reco_vs_gen_depthE1_HB"
@@ -21,19 +22,19 @@ int plot_HCAL()
         //"reco_vs_gen_depthE1_HB_ietaS15",
         //"reco_vs_gen_depthE1_HB", "reco_vs_gen_depthE1_HB_1_pulse", "reco_vs_gen_depthE1_HB_8_pulse",
 
-        //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
+        "reco_vs_gen_depthG1_HE", //"reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
         //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_PUL", "reco_vs_gen_depthE1_HE_PUH",
         //"reco_vs_gen_HB", "reco_vs_gen_HB_PUL", "reco_vs_gen_HB_PUH",
 
         //"aux_vs_gen",
         //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthE1_HE", "aux_vs_gen_depthG1_HB", "aux_vs_gen_depthE1_HB",
 
-        //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
+        //"aux_vs_gen_depthG1_HE", //"aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
         //"aux_vs_gen_depthE1_HE", "aux_vs_gen_depthE1_HE_PUL", "aux_vs_gen_depthE1_HE_PUH",
         //"aux_vs_gen_HB", "aux_vs_gen_HB_PUL", "aux_vs_gen_HB_PUH",
 
         //"DLPHIN_vs_gen",
-        //"DLPHIN_vs_gen_depthG1_HE", "DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
+        //"DLPHIN_vs_gen_depthG1_HE", //"DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
         //"reco_err",
         //"aux_err",
 
@@ -66,8 +67,8 @@ int plot_HCAL()
         //"DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genM",
     };
 
-    //TFile *f1 = new TFile("results_temp/result_origin.root");
-    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU.root");
+    //TFile *f1 = new TFile("results/result_LLP_noPU.root");
+    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
@@ -91,9 +92,9 @@ int plot_HCAL()
             h1->SetTitle(hist_name);
             //h1->SetTitle("");
             h1->GetXaxis()->SetTitle("truth energy [GeV]");
-            //h1->GetXaxis()->SetRangeUser(xmin, xmax * 0.8);
+            h1->GetXaxis()->SetRangeUser(xmin, xmax * x_scale);
             h1->GetYaxis()->SetTitle("reco energy [GeV]");
-            //h1->GetYaxis()->SetRangeUser(ymin, ymax * 0.8);
+            h1->GetYaxis()->SetRangeUser(ymin, ymax * x_scale);
             gPad->SetLogz();
 
             mycanvas->SetLeftMargin(0.15);
@@ -106,8 +107,8 @@ int plot_HCAL()
             px->SetTitle(hist_name);
             //px->SetTitle("");
             //px->GetYaxis()->SetNdivisions(512);
-            px->GetXaxis()->SetRangeUser(xmin, xmax * 0.8);
-            px->GetYaxis()->SetRangeUser(ymin, ymax * 0.8);
+            px->GetXaxis()->SetRangeUser(xmin, xmax * x_scale);
+            px->GetYaxis()->SetRangeUser(ymin, ymax * x_scale);
             px->SetLineColor(kRed);
             //px->SetLineWidth(2);
             //px->SetMarkerStyle(8);
@@ -124,7 +125,7 @@ int plot_HCAL()
                 f->SetLineStyle(2); // 2 = "- - -"
             }
 
-            TLine *l=new TLine(xmin, ymin, xmax * 0.8, ymax * 0.8);
+            TLine *l=new TLine(xmin, ymin, xmax * x_scale, ymax * x_scale);
             l->SetLineColor(kBlack);
             if(!hist_name.Contains("err"))
             {l->Draw("same");}
@@ -152,7 +153,7 @@ int plot_HCAL()
             //SD_h->SetTitle("");
             SD_h->GetXaxis()->SetTitle("truth energy [GeV]");
             SD_h->GetYaxis()->SetTitle("#sigma_{reco energy} / reco energy");
-            SD_h->GetXaxis()->SetRangeUser(xmin, xmax * 0.8);
+            SD_h->GetXaxis()->SetRangeUser(xmin, xmax * x_scale);
             SD_h->GetYaxis()->SetRangeUser(0, 1);
             SD_h->Draw();
             mycanvas->SaveAs("plots_temp/" + hist_name + "_SD.png");
