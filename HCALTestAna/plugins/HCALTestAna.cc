@@ -158,17 +158,21 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     //HcalSimParameterMap* theParameterMap;
     //theParameterMap(new HcalSimParameterMap(iConfig)),
 
+    const int HE_depth_max = 7; 
+    const int HE_ieta_min = 16;
+    const int HE_ieta_max = 29;
+
     typedef std::pair<int, int> ieta_iphi_pair;
     std::map <ieta_iphi_pair, std::vector<float>> ieta_iphi_energy_map;
-    std::vector<float> depth_vec(7,0.0);
-    for(int ieta = -29; ieta <= -16; ieta ++)
+    std::vector<float> depth_vec(HE_depth_max,0.0);
+    for(int ieta = -HE_ieta_max; ieta <= -HE_ieta_min; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
             ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
         }
     }
-    for(int ieta = 16; ieta <= 29; ieta ++)
+    for(int ieta = HE_ieta_min; ieta <= HE_ieta_max; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
@@ -210,15 +214,19 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         {
             float samplingFactor = 0;
             float digi_SF = 1;
-            if(subdet == 1 && ietaAbs-1 < (int)samplingFactors_hb.size())
+
+            int ietaAbs_HB = ietaAbs - 1;
+            int ietaAbs_HE = ietaAbs - HE_ieta_min;
+
+            if(subdet == 1 && ietaAbs_HB < (int)samplingFactors_hb.size())
             {
-                samplingFactor = samplingFactors_hb.at(ietaAbs-1);
+                samplingFactor = samplingFactors_hb.at(ietaAbs_HB);
                 //factor 0.5 for HB depth1, except for |ieta|=16 depth1
                 if (is_run3_relVal && depth == 1 && ietaAbs != 16) digi_SF = 0.5;
             }
-            if(subdet == 2 && ietaAbs-16 < (int)samplingFactors_he.size())
+            if(subdet == 2 && ietaAbs_HE < (int)samplingFactors_he.size())
             {
-                samplingFactor = samplingFactors_he.at(ietaAbs-16);
+                samplingFactor = samplingFactors_he.at(ietaAbs_HE);
                 //factor 1.2 for HE depth1
                 if (depth == 1) digi_SF = 1.2;
             }
