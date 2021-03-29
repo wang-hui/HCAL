@@ -53,6 +53,7 @@ for i in range (len(reco_list)):
     next_pd["raw truth energy"].fillna(0, inplace=True)
     next_pd["median time"].fillna(0, inplace=True)
     next_pd["weighted time"].fillna(0, inplace=True)
+    next_pd["arrival time"].fillna(0, inplace=True)
     next_pd["PU"].fillna(PU, inplace=True)
     result = result.append(next_pd)
 

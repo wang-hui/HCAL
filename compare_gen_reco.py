@@ -45,8 +45,12 @@ def chi2loss(y_true, y_pred):
 #==============global hist =======================
 weighted_time_h = rt.TH1F("weighted_time_h", "weighted simHit time", 100, 0.0, 500.0)
 TS45_time_h = rt.TH1F("TS45_time_h", "TS45 time", 100, 75.0, 100.0)
+arrival_time_h = rt.TH1F("arrival_time_h", "arrival time", 100, 75.0, 100.0)
 weighted_time_vs_gen_h = rt.TH2F("weighted_time_vs_gen_h", "weighted time vs gen", Ebins, Emin, Emax, 100, 0.0, 500.0)
 TS45_time_vs_gen_h = rt.TH2F("TS45_time_vs_gen_h", "TS45 time vs gen", Ebins, Emin, Emax, 100, 75.0, 100.0)
+arrival_time_vs_gen_h = rt.TH2F("arrival_time_vs_gen_h", "arrival time vs gen", Ebins, Emin, Emax, 100, 75.0, 100.0)
+charge_vs_TS_h = rt.TH2F("charge_vs_TS_h", "charge_vs_TS_h", 8, 0, 8, 100, 0, 1)
+abnormal_charge_vs_TS_h = rt.TH2F("abnormal_charge_vs_TS_h", "abnormal_charge_vs_TS_h", 8, 0, 8, 100, 0, 1)
 median_time_h = rt.TH1F("median_time_h", "median simHit time", 100, 0.0, 500.0)
 fcByPE_h = rt.TH1F("fcByPE_h", "fcByPE for each TS", 100, 0.0, 1000.0)
 PU_h = rt.TH1F("PU_h", "pileup", 100, 0.0, 100.0)
@@ -215,6 +219,7 @@ DLPHIN_loss_depthE1_HE_genL_h = rt.TH1F("DLPHIN_loss_depthE1_HE_genL_h", "DLPHIN
 #============loop ieta hist for HB ====================
 weighted_time_HB_ieta_list = []
 TS45_time_HB_ieta_list = []
+arrival_time_HB_ieta_list = []
 reco_vs_gen_depthE1_HB_list = []
 reco_vs_gen_depthG1_HB_list = []
 for i in range(1,17):
@@ -225,17 +230,22 @@ for i in range(1,17):
 
     weighted_time_hist_list = []
     TS45_time_hist_list = []
+    arrival_time_hist_list = []
     for j in range(1,6):
         weighted_time_hist = rt.TH1F("weighted_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
         TS45_time_hist = rt.TH1F("TS45_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "TS45 time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
+        arrival_time_hist = rt.TH1F("arrival_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "arrival time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
         weighted_time_hist_list.append(weighted_time_hist)
         TS45_time_hist_list.append(TS45_time_hist)
+        arrival_time_hist_list.append(arrival_time_hist)
     weighted_time_HB_ieta_list.append(weighted_time_hist_list)
     TS45_time_HB_ieta_list.append(TS45_time_hist_list)
+    arrival_time_HB_ieta_list.append(arrival_time_hist_list)
 
 #============loop ieta hist for HE ====================
 weighted_time_HE_ieta_list = []
 TS45_time_HE_ieta_list = []
+arrival_time_HE_ieta_list = []
 reco_vs_gen_depthE1_HE_list = []
 reco_vs_gen_depthG1_HE_list = []
 for i in range(16,30):
@@ -246,13 +256,17 @@ for i in range(16,30):
 
     weighted_time_hist_list = []
     TS45_time_hist_list = []
+    arrival_time_hist_list = []
     for j in range(1,9):
         weighted_time_hist = rt.TH1F("weighted_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
         TS45_time_hist = rt.TH1F("TS45_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "TS45 time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
+        arrival_time_hist = rt.TH1F("arrival_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "arrival time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
         weighted_time_hist_list.append(weighted_time_hist)
         TS45_time_hist_list.append(TS45_time_hist)
+        arrival_time_hist_list.append(arrival_time_hist)
     weighted_time_HE_ieta_list.append(weighted_time_hist_list)
     TS45_time_HE_ieta_list.append(TS45_time_hist_list)
+    arrival_time_HE_ieta_list.append(arrival_time_hist_list)
 
 Nrows = result.shape[0]
 print "total rows: ", Nrows
@@ -393,19 +407,40 @@ for i in range(Nrows):
     else: print "strange sub_det: ", sub_det
 
     if gen_energy > 0:
-        weighted_time = result["weighted time"] [i]
         median_time = result["median time"] [i]
+        weighted_time = result["weighted time"] [i]
+        arrival_time = result["arrival time"] [i]
         TS4_charge = max(result["TS4 raw charge"] [i] - result["TS4 ped noise"] [i], 0)
         TS5_charge = max(result["TS5 raw charge"] [i] - result["TS5 ped noise"] [i], 0)
+
         TS45_time = 0
         if TS4_charge + TS5_charge > 0:
             TS45_time = (TS4_charge * 75 + TS5_charge * 100) / (TS4_charge + TS5_charge)
 
+        if gen_energy > 50:
+            TS_list = []
+            for TS in range(8):
+                TS_string = str(TS + 1)
+                TS_charge = max(result["TS" + TS_string + " raw charge"] [i] - result["TS" + TS_string + " ped noise"] [i], 0)
+                TS_list.append(TS_charge)
+
+            sum_TS = sum(TS_list)
+            for TS in range(8):
+                weight = TS_list[TS] / sum_TS
+                charge_vs_TS_h.Fill(TS, weight)
+
+            if reco_energy < 1:
+                for TS in range(8):
+                    weight = TS_list[TS] / sum_TS
+                    abnormal_charge_vs_TS_h.Fill(TS, weight)
+
         genG0_h.Fill(gen_energy)
         weighted_time_h.Fill(weighted_time)
         TS45_time_h.Fill(TS45_time)
+        arrival_time_h.Fill(arrival_time)
         weighted_time_vs_gen_h.Fill(gen_energy, weighted_time)
         TS45_time_vs_gen_h.Fill(gen_energy, TS45_time)
+        arrival_time_vs_gen_h.Fill(gen_energy, arrival_time)
         median_time_h.Fill(median_time)
 
         reco_err_vs_gen_h.Fill(gen_energy, abs(reco_energy-gen_energy)/gen_energy)
@@ -428,6 +463,7 @@ for i in range(Nrows):
         if sub_det == 1:
             weighted_time_HB_ieta_list[ieta - 1][depth - 1].Fill(weighted_time)
             TS45_time_HB_ieta_list[ieta - 1][depth - 1].Fill(TS45_time)
+            arrival_time_HB_ieta_list[ieta - 1][depth - 1].Fill(arrival_time)
             reco_ratio_HB_h.Fill(reco_ratio)
             aux_ratio_HB_h.Fill(aux_ratio)
             raw_ratio_HB_h.Fill(raw_ratio)
@@ -461,6 +497,7 @@ for i in range(Nrows):
         else:
             weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
             TS45_time_HE_ieta_list[ieta - 16][depth - 1].Fill(TS45_time)
+            arrival_time_HE_ieta_list[ieta - 16][depth - 1].Fill(arrival_time)
             if depth == 1:
                 reco_ratio_depthE1_HE_h.Fill(reco_ratio)
                 aux_ratio_depthE1_HE_h.Fill(aux_ratio)

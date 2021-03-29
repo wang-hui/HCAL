@@ -32,9 +32,13 @@ Implementation:
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "DataFormats/HcalDetId/interface/HcalTestNumbering.h"
 #include "Geometry/HcalCommonData/interface/HcalDDDRecConstants.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/HcalCommonData/interface/HcalHitRelabeller.h"
 #include "Geometry/Records/interface/HcalRecNumberingRecord.h"
 #include "SimCalorimetry/HcalSimAlgos/interface/HcalSimParameters.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+//#include "SimCalorimetry/CaloSimAlgos/interface/CaloHitResponse.h"
+#include "CLHEP/Units/GlobalPhysicalConstants.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
 //#include "CondFormats/HcalObjects/interface/HcalRespCorr.h"
@@ -151,6 +155,13 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     edm::ESHandle<HcalDDDRecConstants> pHRNDC;
     iSetup.get<HcalRecNumberingRecord>().get(pHRNDC);
     const HcalDDDRecConstants *hcons = &(*pHRNDC);
+
+    edm::ESHandle<CaloGeometry> geometry;
+    iSetup.get<CaloGeometryRecord>().get(geometry);
+    const CaloGeometry* theGeometry = &(*geometry);
+
+    //CaloHitResponse* theResponse;
+    //theResponse->setGeometry(theGeometry);
 
     edm::ESHandle<HcalDbService> conditions;
     iSetup.get<HcalDbRecord>().get(conditions);
@@ -275,9 +286,9 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
                 break;
             }
         }
-        if(print_1d) std::cout << "gen: id, raw truth energy, median time, weighted time, PU" << std::endl;
+        if(print_1d) std::cout << "gen: id, raw truth energy, median time, weighted time, arrival time, PU" << std::endl;
     }
-    else if(print_1d) std::cout << "gen: id, raw truth energy, median time, weighted time" << std::endl;
+    else if(print_1d) std::cout << "gen: id, raw truth energy, median time, weighted time, arrival time" << std::endl;
 
     for(auto iter : id_energy_map)
     {
@@ -290,6 +301,10 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         auto depth = hid.depth();
         auto ieta = hid.ieta();
         auto iphi = hid.iphi();
+
+        //auto TOF = theResponse->timeOfFlight(hid);
+        auto distance = theGeometry->getPosition(hid).mag();
+        auto TOF = distance * cm / c_light;  // Units of c_light: mm/ns
 
         auto energy_vec = iter.second;
         float energy_sum = std::accumulate(energy_vec.begin(), energy_vec.end(), 0.0);
@@ -317,6 +332,8 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             //====================end of test====================================
         }
         channel_energy_vs_time_h->Fill(energy_sum, weighted_time);
+        float arrival_time = weighted_time - TOF + 75;
+
         std::sort(time_vec.begin(), time_vec.end());
         float median_time = time_vec.at(vec_size/2);
 
@@ -334,8 +351,8 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
         if(print_1d)
         {
-            if(do_PU) std::cout << rawId << ", " << energy_sum << ", " << median_time << ", " << weighted_time << ", " << obs_npu << std::endl;
-            else std::cout << rawId << ", " << energy_sum << ", " << median_time << ", " << weighted_time << ", " << std::endl;
+            if(do_PU) std::cout << rawId << ", " << energy_sum << ", " << median_time << ", " << weighted_time << ", " << arrival_time << ", " << obs_npu << std::endl;
+            else std::cout << rawId << ", " << energy_sum << ", " << median_time << ", " << weighted_time << ", " << arrival_time << ", " << std::endl;
         }
     }
 
