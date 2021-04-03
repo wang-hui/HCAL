@@ -1,15 +1,19 @@
 int plot_time()
 {
-    //TFile *f1 = new TFile("results/result_LLP_noPU.root");
+    //TFile *f1 = new TFile("results/result_UL_LLP_noPU.root");
     TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
 
     bool plot_weighted_time_vs_gen = false;
-    bool plot_TS45_time_vs_gen = true;
+    bool plot_TS45_time_vs_gen = false;
+    bool plot_arrival_time_vs_gen = false;
+    bool plot_charge_vs_TS = false;
+    bool plot_abnormal_charge_vs_TS = false;
     bool plot_weighted_time_vs_ieta = false;
     bool plot_TS45_time_vs_ieta = false;
+    bool plot_arrival_time_vs_ieta = true;
 
-    TString sub_det = "HB";
-    //TString sub_det = "HE";
+    //TString sub_det = "HB";
+    TString sub_det = "HE";
     TString hist_name = "weighted_time_vs_gen";
     TString x_title = "weighted time [ns]";
     TString y_title = "weighted time [ns]";
@@ -27,6 +31,9 @@ int plot_time()
         plot_time_vs_gen = true;
         hist_name = "weighted_time_vs_gen";
         y_title = "weighted time [ns]";
+        x_title = "truth energy [GeV]";
+        x_min = 0;
+        x_max = 100;
     }
 
     if(plot_TS45_time_vs_gen)
@@ -34,6 +41,39 @@ int plot_time()
         plot_time_vs_gen = true;
         hist_name = "TS45_time_vs_gen";
         y_title = "TS45 time [ns]";
+        x_title = "truth energy [GeV]";
+        x_min = 0;
+        x_max = 100;
+    }
+
+    if(plot_arrival_time_vs_gen)
+    {
+        plot_time_vs_gen = true;
+        hist_name = "arrival_time_vs_gen";
+        y_title = "arrival time [ns]";
+        x_title = "truth energy [GeV]";
+        x_min = 0;
+        x_max = 1000;
+    }
+
+    if(plot_charge_vs_TS)
+    {
+        plot_time_vs_gen = true;
+        hist_name = "charge_vs_TS";
+        y_title = "charge distribution";
+        x_title = "TS";
+        x_min = 0;
+        x_max = 8;
+    }
+
+    if(plot_abnormal_charge_vs_TS)
+    {
+        plot_time_vs_gen = true;
+        hist_name = "abnormal_charge_vs_TS";
+        y_title = "charge distribution";
+        x_title = "TS";
+        x_min = 0;
+        x_max = 8;
     }
 
     if(plot_weighted_time_vs_ieta)
@@ -54,6 +94,17 @@ int plot_time()
         y_max = 90;
     }
 
+    if(plot_arrival_time_vs_ieta)
+    {
+        plot_time_vs_ieta = true;
+        hist_name = "arrival_time_";
+        x_title = "arrival time [ns]";
+        x_min = 76;
+        x_max = 99;
+        y_min = 75;
+        y_max = 90;
+    }
+
     if(plot_time_vs_gen)
     {
         TString h1_folder = "";
@@ -66,19 +117,19 @@ int plot_time()
 
         h1->Draw("colz");
         h1->SetTitle(hist_name);
-        h1->GetXaxis()->SetRangeUser(0,100);
-        h1->GetXaxis()->SetTitle("truth energy [GeV]");
+        h1->GetXaxis()->SetRangeUser(x_min,x_max);
+        h1->GetXaxis()->SetTitle(x_title);
         h1->GetYaxis()->SetTitle(y_title);
         gPad->SetLogz();
 
         TProfile *px = h1->ProfileX();
         //px->BuildOptions(0, 0, "s");
         px->SetLineColor(kRed);
-        px->Draw("same");
+        px->Draw("histsame");
 
         float test_energy = 90;
-        std::cout << px->GetXaxis()->FindBin(test_energy) << std::endl;
-        std::cout << px->FindBin(test_energy) << std::endl;
+        //std::cout << px->GetXaxis()->FindBin(test_energy) << std::endl;
+        //std::cout << px->FindBin(test_energy) << std::endl;
         std::cout << "profile time at " << test_energy << " is " << px->GetBinContent(px->GetXaxis()->FindBin(test_energy)) << std::endl;
 
         mycanvas->SetLeftMargin(0.12);

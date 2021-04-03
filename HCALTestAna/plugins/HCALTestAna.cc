@@ -174,8 +174,9 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     const int HE_ieta_max = 29;
 
     typedef std::pair<int, int> ieta_iphi_pair;
-    std::map <ieta_iphi_pair, std::vector<float>> ieta_iphi_energy_map;
-    std::vector<float> depth_vec(HE_depth_max,0.0);
+    typedef std::pair<float, float> energy_time_pair;
+    std::map <ieta_iphi_pair, std::vector<energy_time_pair>> ieta_iphi_energy_map;
+    std::vector<energy_time_pair> depth_vec(HE_depth_max, std::make_pair(0.0, 0.0));
     for(int ieta = -HE_ieta_max; ieta <= -HE_ieta_min; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
@@ -286,9 +287,14 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
                 break;
             }
         }
-        if(print_1d) std::cout << "gen: id, raw truth energy, median time, weighted time, arrival time, PU" << std::endl;
     }
-    else if(print_1d) std::cout << "gen: id, raw truth energy, median time, weighted time, arrival time" << std::endl;
+
+    if(print_1d)
+    {
+        std::string title_string = "gen: id, raw truth energy, median time, weighted time, arrival time";
+        if(do_PU) std::cout << title_string << ", PU" << std::endl;
+        else std::cout << title_string << std::endl;
+    }
 
     for(auto iter : id_energy_map)
     {
@@ -338,7 +344,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         float median_time = time_vec.at(vec_size/2);
 
         if(subdet == 2)
-        {ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = energy_sum;}
+        {ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = std::make_pair(energy_sum, weighted_time);}
 
         //============= test un-reconstructed channels =========================
         /*
@@ -358,7 +364,14 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     if(print_2d)
     {
-        std::cout << "gen: ieta, iphi, d1 raw truth energy, d2 raw truth energy, d3 raw truth energy, d4 raw truth energy, d5 raw truth energy, d6 raw truth energy, d7 raw truth energy" << std::endl;
+        std::string title_string = "gen: ieta, iphi";
+        for (int depth = 1; depth <= HE_depth_max; depth++)
+        {
+            std::string depth_string = "d" + std::to_string(depth);
+            title_string = title_string + ", " + depth_string + " raw truth energy, " + depth_string + " weighted time";
+        }
+
+        std::cout << title_string << std::endl;
         for(auto iter : ieta_iphi_energy_map)
         {
             auto key = iter.first;
@@ -366,7 +379,7 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             std::cout << key.first << ", " << key.second;
             for(int i = 0; i < (int)value.size(); i++)
             {
-                std::cout << ", " << value.at(i);
+                std::cout << ", " << value.at(i).first << ", " << value.at(i).second;
             }
             std::cout << std::endl;
         }

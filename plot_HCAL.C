@@ -29,12 +29,16 @@ int plot_HCAL()
         //"aux_vs_gen",
         //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthE1_HE", "aux_vs_gen_depthG1_HB", "aux_vs_gen_depthE1_HB",
 
-        //"aux_vs_gen_depthG1_HE", //"aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
+        "aux_vs_gen_depthG1_HE", //"aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
         //"aux_vs_gen_depthE1_HE", "aux_vs_gen_depthE1_HE_PUL", "aux_vs_gen_depthE1_HE_PUH",
         //"aux_vs_gen_HB", "aux_vs_gen_HB_PUL", "aux_vs_gen_HB_PUH",
 
+        "raw_vs_gen_depthG1_HE", //"raw_vs_gen_depthG1_HE_PUL", "raw_vs_gen_depthG1_HE_PUH",
+        //"raw_vs_gen_depthE1_HE", "raw_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUH",
+        //"raw_vs_gen_HB", "raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUH",
+
         //"DLPHIN_vs_gen",
-        //"DLPHIN_vs_gen_depthG1_HE", //"DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
+        "DLPHIN_vs_gen_depthG1_HE", //"DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
         //"reco_err",
         //"aux_err",
 
@@ -65,10 +69,11 @@ int plot_HCAL()
         //"DLPHIN_ratio_depthG1_HE_genL", "DLPHIN_ratio_depthG1_HE_genM",
         //"DLPHIN_ratio_depthE1_HE",
         //"DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genM",
+        //"weighted_time", "TS45_time", "arrival_time"
     };
 
-    //TFile *f1 = new TFile("results/result_LLP_noPU.root");
-    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
+    TFile *f1 = new TFile("results/result_UL_LLP_noPU.root");
+    //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
@@ -99,7 +104,7 @@ int plot_HCAL()
 
             mycanvas->SetLeftMargin(0.15);
             mycanvas->SetRightMargin(0.15);
-            mycanvas->SaveAs("plots_temp/" + hist_name + ".png");
+            //mycanvas->SaveAs("plots_temp/" + hist_name + ".png");
             //mycanvas->SaveAs("plots_temp/" + hist_name + ".pdf");
 
             TProfile *px = h1->ProfileX("px", 1, -1, "os");
@@ -114,7 +119,7 @@ int plot_HCAL()
             //px->SetMarkerStyle(8);
             px->GetXaxis()->SetTitle("truth energy [GeV]");
             px->GetYaxis()->SetTitle("reco energy [GeV]");
-            px->Draw();
+            px->Draw("same");
             gPad->SetGrid();
             px->Fit("pol1", "w");
             TF1 *f = (TF1*)px->GetListOfFunctions()->FindObject("pol1");
@@ -281,18 +286,18 @@ int plot_HCAL()
             TCanvas* mycanvas = new TCanvas("mycanvas", "mycanvas", 600, 600);
             //gStyle->SetOptStat(kFALSE);
 
-            h1->GetXaxis()->SetTitle("truth energy [GeV]");
+            h1->GetXaxis()->SetTitle("time [GeV]");
             h1->GetXaxis()->SetRangeUser(0,100);
             h1->SetTitle(hist_name);
-            //h1->GetYaxis()->SetTitle("|reco-truth|/truth");
+            h1->GetYaxis()->SetTitle("number of channels");
 
             //h1->Rebin(4);
             //h1->Scale(1.0/h1->GetEntries());
             h1->SetLineColor(kRed);
             h1->Draw("hist");
 
-            gPad-> SetLogy();
-            gPad->SetGrid();
+            //gPad->SetLogy();
+            //gPad->SetGrid();
 
             mycanvas->SetLeftMargin(0.15);
             mycanvas->SetRightMargin(0.1);
