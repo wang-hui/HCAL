@@ -52,6 +52,10 @@ arrival_time_vs_gen_h = rt.TH2F("arrival_time_vs_gen_h", "arrival time vs gen", 
 charge_vs_TS_h = rt.TH2F("charge_vs_TS_h", "charge_vs_TS_h", 8, 0, 8, 100, 0, 1)
 abnormal_charge_vs_TS_h = rt.TH2F("abnormal_charge_vs_TS_h", "abnormal_charge_vs_TS_h", 8, 0, 8, 100, 0, 1)
 median_time_h = rt.TH1F("median_time_h", "median simHit time", 100, 0.0, 500.0)
+
+TS45_vs_arrival_HB_h = rt.TH2F("TS45_vs_arrival_HB_h", "TS45_vs_arrival_HB_h", 100, 75.0, 100.0, 100, 75.0, 100.0)
+TS45_vs_arrival_HE_h = rt.TH2F("TS45_vs_arrival_HE_h", "TS45_vs_arrival_HE_h", 100, 75.0, 100.0, 100, 75.0, 100.0)
+
 fcByPE_h = rt.TH1F("fcByPE_h", "fcByPE for each TS", 100, 0.0, 1000.0)
 PU_h = rt.TH1F("PU_h", "pileup", 100, 0.0, 100.0)
 reco_h = rt.TH1F("reco_h", "reco energy", Ebins, Emin, Emax)
@@ -433,6 +437,12 @@ for i in range(Nrows):
                 for TS in range(8):
                     weight = TS_list[TS] / sum_TS
                     abnormal_charge_vs_TS_h.Fill(TS, weight)
+
+        if gen_energy > 5:
+            if sub_det == 1:
+                TS45_vs_arrival_HB_h.Fill(arrival_time, TS45_time)
+            else:
+                TS45_vs_arrival_HE_h.Fill(arrival_time, TS45_time)
 
         genG0_h.Fill(gen_energy)
         weighted_time_h.Fill(weighted_time)

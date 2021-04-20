@@ -317,7 +317,7 @@ private:
     bool setPulseShapeFlagsQIE11_;
 
     // DLPHIN parameters
-    std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_;
+    std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_, DLPHIN_pb_2dHE_;
     bool DLPHIN_scale_, DLPHIN_save_, DLPHIN_print_1d_, DLPHIN_print_2d_;
 
     // Other members
@@ -329,6 +329,7 @@ private:
 
     // Struct for DLPHIN
     tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
+    tensorflow::Session *session_2dHE;
     TProfile2D *ratio_HB, *ratio_HE;
     struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
@@ -399,6 +400,7 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
       DLPHIN_pb_d1HE_(conf.getParameter<std::string>("DLPHIN_pb_d1HE")),
       DLPHIN_pb_dg1HE_(conf.getParameter<std::string>("DLPHIN_pb_dg1HE")),
       DLPHIN_pb_SF_(conf.getParameter<std::string>("DLPHIN_pb_SF")),
+      DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
       DLPHIN_scale_(conf.getParameter<bool>("DLPHIN_scale")),
       DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
       DLPHIN_print_1d_(conf.getParameter<bool>("DLPHIN_print_1d")),
@@ -459,6 +461,9 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
 
     tensorflow::GraphDef *graphDef_dg1HE = tensorflow::loadGraphDef(DLPHIN_pb_dg1HE_);
     session_dg1HE = tensorflow::createSession(graphDef_dg1HE);
+
+    tensorflow::GraphDef *graphDef_2dHE = tensorflow::loadGraphDef(DLPHIN_pb_2dHE_);
+    session_2dHE = tensorflow::createSession(graphDef_2dHE);
 
     if(DLPHIN_scale_)
     {
@@ -851,6 +856,7 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<std::string>("DLPHIN_pb_d1HE");
     desc.add<std::string>("DLPHIN_pb_dg1HE");
     desc.add<std::string>("DLPHIN_pb_SF");
+    desc.add<std::string>("DLPHIN_pb_2dHE");
     desc.add<bool>("DLPHIN_scale");
     desc.add<bool>("DLPHIN_save");
     desc.add<bool>("DLPHIN_print_1d");
@@ -870,16 +876,43 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     const int HE_depth_max = 7;
     const int HE_ieta_min = 16;
     const int HE_ieta_max = 29;
+    const int HE_tot_rows = (HE_ieta_max - HE_ieta_min + 1) * 2 * 72;
+
+    tensorflow::Tensor ch_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, 56});
+    for (int i = 0; i < HE_tot_rows * 56; i++) {ch_input_2d.flat<float>()(i) = 0.0;}
+    tensorflow::Tensor ty_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, 1});
+    for (int i = 0; i < HE_tot_rows; i++) {ty_input_2d.flat<float>()(i) = 0.0;}
+    tensorflow::Tensor ma_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, HE_depth_max});
+    for (int i = 0; i < HE_tot_rows * HE_depth_max; i++) {ma_input_2d.flat<float>()(i) = 0.0;}
+
+    //=========== a test for 2d tensor, to be commented out ===================
+    /*
+    tensorflow::Tensor test_2d(tensorflow::DT_FLOAT, {2, 10});
+    for (int i = 0; i < 20; i++)
+    {
+        test_2d.flat<float>()(i) = float(i);
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        for(int j = 0; j < 10; j++)
+        {std::cout << i << ", " << j << ": " << test_2d.tensor<float, 2>()(i,j) << std::endl;}
+    }
+    */
+    //======================== end of test ====================================
 
     typedef std::pair<int, int> ieta_iphi_pair;
     std::map <ieta_iphi_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map;
     std::vector<float> channel_vec(22, 0.0);
     std::vector<std::vector<float>> depth_vec(HE_depth_max, channel_vec);
+    std::map <ieta_iphi_pair, int> ieta_iphi_row_map;
+    int row = 0;
     for(int ieta = -HE_ieta_max; ieta <= -HE_ieta_min; ieta ++)
     {   
         for(int iphi = 1; iphi <= 72; iphi ++)
         {   
             ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
+            ieta_iphi_row_map[std::make_pair(ieta, iphi)] = row;
+            row++;
         }
     }
     for(int ieta = HE_ieta_min; ieta <= HE_ieta_max; ieta ++)
@@ -887,8 +920,19 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
             ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
+            ieta_iphi_row_map[std::make_pair(ieta, iphi)] = row;
+            row++;
         }
     }
+
+    /*
+    for(auto iter : ieta_iphi_row_map)
+    {
+        auto key = iter.first;
+        auto value = iter.second;
+        std::cout << key.first << ", " << key.second << ", " << value << std::endl;
+    }
+    */
 
     if(DLPHIN_print_1d_)
     {
@@ -927,11 +971,9 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         auto resp_corr = iter.resp_corr;
         float rawgain = gain / resp_corr;
 
-        tensorflow::Tensor ch_input(tensorflow::DT_FLOAT, {1, 8}); // template for charge input
-        auto ch_input_tensor = ch_input.tensor<float, 2>(); // place holder for taking in values
+        tensorflow::Tensor ch_input(tensorflow::DT_FLOAT, {1, 8}); //2d tensor of [[TS1, ..., TS8]]
+        tensorflow::Tensor ty_input(tensorflow::DT_FLOAT, {1, 2}); //2d tensor of [[depth, ieta]]
 
-        tensorflow::Tensor ty_input(tensorflow::DT_FLOAT, {1, 2}); // template for charge input
-        auto ty_input_tensor = ty_input.tensor<float, 2>(); // place holder for taking in values
         //============= test un-reconstructed channels =========================
         /*
         if(depth == 1 && ieta == -19 && (iphi == 24 || iphi == 23))
@@ -940,6 +982,17 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         }
         */
         //============= test end ===============================================
+
+        int HE_row = -1;
+        int HE_col = -1;
+        if(subdet == 2)
+        {
+            HE_row = ieta_iphi_row_map.at(std::make_pair(ieta, iphi));
+            HE_col = (depth - 1) * 8; 
+            ty_input_2d.tensor<float, 2>()(HE_row, 0) = fabs(ieta);
+            ma_input_2d.tensor<float, 2>()(HE_row, depth - 1) = 1.0;
+        }
+
         std::vector<float> channel_vec_temp(22, 0.0);
 
         for (int iTS = 0; iTS < nSamples; ++iTS)
@@ -947,15 +1000,18 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             auto charge = channel_info.tsRawCharge(iTS);
             auto ped = channel_info.tsPedestal(iTS);
             //auto rise_time = channel_info.tsRiseTime(iTS);
-            ch_input_tensor(0, iTS) = (charge - ped) * rawgain;
+            float ch_input_TS = (charge - ped) * rawgain;
 
-            if(DLPHIN_print_1d_)std::cout << charge << ", " << ped << ", ";
+            ch_input.tensor<float, 2>()(0, iTS) = ch_input_TS;
+
+            //if(DLPHIN_print_1d_)std::cout << charge << ", " << ped << ", ";
             //if(DLPHIN_print_1d_)std::cout << rise_time << ", ";
 
             if(subdet == 2)
             {
                 channel_vec_temp.at(2*iTS) = charge;
                 channel_vec_temp.at(2*iTS + 1) = ped;
+                ch_input_2d.tensor<float, 2>()(HE_row, HE_col + iTS) = ch_input_TS;
             }
             //================ test total uncertainty ==================
             /*
@@ -984,30 +1040,95 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = channel_vec_temp;
         }
 
-        // ty_input_tensor(0,0) = hid.subdet();
-        ty_input_tensor(0,0) = depth;
-        ty_input_tensor(0,1) = ieta;
+        ty_input.tensor<float, 2>()(0, 0) = depth;
+        ty_input.tensor<float, 2>()(0, 1) = ieta;
 
-        float DLPHIN_SF = 1.0;          //SF dirived from MAHI / DLPHIN
-        std::vector<tensorflow::Tensor> outputs;
+        //float DLPHIN_SF = 1.0;                          //SF dirived from MAHI / DLPHIN
+        std::vector<tensorflow::Tensor> outputs;        //vector size 1; 2d tensor of [[pred]]
         if(subdet == 1)
         {
-            if(DLPHIN_scale_) DLPHIN_SF = ratio_HB->GetBinContent(ratio_HB->GetXaxis()->FindBin(abs(ieta)), ratio_HB->GetYaxis()->FindBin(depth));
+            //if(DLPHIN_scale_) DLPHIN_SF = ratio_HB->GetBinContent(ratio_HB->GetXaxis()->FindBin(abs(ieta)), ratio_HB->GetYaxis()->FindBin(depth));
             if(depth == 1) {tensorflow::run(session_d1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
             else {tensorflow::run(session_dg1HB, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
         }
 
         else if(subdet == 2)
         {
-            if(DLPHIN_scale_) DLPHIN_SF = ratio_HE->GetBinContent(ratio_HE->GetXaxis()->FindBin(abs(ieta)), ratio_HE->GetYaxis()->FindBin(depth));
+            //if(DLPHIN_scale_) DLPHIN_SF = ratio_HE->GetBinContent(ratio_HE->GetXaxis()->FindBin(abs(ieta)), ratio_HE->GetYaxis()->FindBin(depth));
             if(depth == 1) {tensorflow::run(session_d1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
             else {tensorflow::run(session_dg1HE, {{"net_charges",ch_input},{"types_input",ty_input}}, {"dense/Relu"}, &outputs);}
         }
 
-        float temp = float(outputs[0].matrix<float>()(0));
-        Doutput.push_back(temp * resp_corr / DLPHIN_SF);
+        //std::cout << "outputs.size() " << outputs.size() << ", tensor.shape().dim_size(0) " << outputs[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << outputs[0].shape().dim_size(1) << std::endl;
+        auto temp = outputs[0].tensor<float, 2>()(0,0);
+        Doutput.push_back(temp);
 
-        if(DLPHIN_print_1d_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << temp << ", " << DLPHIN_SF << std::endl;
+        //if(DLPHIN_print_1d_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << temp << ", " << DLPHIN_SF << std::endl;
+    }
+
+    std::vector<tensorflow::Tensor> outputs_2d;        //vector size 1; 2d tensor of [[pred]]
+    tensorflow::run(session_2dHE, {{"net_charges",ch_input_2d},{"types_input",ty_input_2d},{"mask_input",ma_input_2d}}, {"reshape_1/Reshape"}, &outputs_2d);
+    //std::cout << "outputs_2d.size() " << outputs_2d.size() << ", tensor.shape().dim_size(0) " << outputs_2d[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << outputs_2d[0].shape().dim_size(1) << ", tensor.shape().dim_size(2) " << outputs_2d[0].shape().dim_size(2) << std::endl;
+    /*
+    for(int i = 0; i < HE_tot_rows; i++)
+    {
+        for(int j = 0; j < 56; j++)
+        {
+            std::cout << ch_input_2d.tensor<float, 2>()(i,j) << ", ";
+        }
+        for(int j = 0; j < HE_depth_max; j++)
+        {
+            auto pred = outputs_2d[0].tensor<float, 3>()(i,0,j);
+            auto mask = outputs_2d[0].tensor<float, 3>()(i,1,j);
+            std::cout << ma_input_2d.tensor<float, 2>()(i,j) << ", " << mask << ", " << mask * pred << ", ";
+        }
+        std::cout << ty_input_2d.tensor<float, 2>()(i,0) << std::endl;
+    }
+    */
+
+    for(int i = 0; i < (int)Dinput_vec.size(); i++)
+    {
+        auto rec_hit = Dinput_vec.at(i).rec_hit;
+        auto eraw = rec_hit.eraw();     //m0
+        auto eaux = rec_hit.eaux();     //m3 by default
+        auto energy = rec_hit.energy(); //mahi
+        auto flags = rec_hit.flags();
+
+        auto hid = rec_hit.id();
+        auto rawId = hid.rawId();
+        auto subdet = hid.subdet();
+        auto depth = hid.depth();
+        auto ieta = hid.ieta();
+        auto iphi = hid.iphi();
+
+        auto channel_info = Dinput_vec.at(i).channel_info;
+        int nSamples = channel_info.nSamples();
+        auto gain = channel_info.tsGain(0);
+
+        auto resp_corr = Dinput_vec.at(i).resp_corr;
+        float rawgain = gain / resp_corr;
+
+        float DLPHIN_SF = 1.0;                          //SF dirived from MAHI / DLPHIN
+
+        if(subdet == 2)
+        {
+            auto HE_row = ieta_iphi_row_map.at(std::make_pair(ieta, iphi));
+            auto pred = outputs_2d[0].tensor<float, 3>()(HE_row,0,depth-1);
+            auto mask = outputs_2d[0].tensor<float, 3>()(HE_row,1,depth-1);
+
+            if(mask != 1) std::cout << "Error! A real channel is masked" << std::endl;
+            Doutput.at(i) = pred;
+        }
+
+        for (int iTS = 0; iTS < nSamples; ++iTS)
+        {
+            auto charge = channel_info.tsRawCharge(iTS);
+            auto ped = channel_info.tsPedestal(iTS);
+
+            if(DLPHIN_print_1d_)std::cout << charge << ", " << ped << ", ";
+        }
+
+        if(DLPHIN_print_1d_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << Doutput.at(i) << ", " << DLPHIN_SF << std::endl;
     }
 
     if(DLPHIN_print_2d_)

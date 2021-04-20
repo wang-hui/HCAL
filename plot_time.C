@@ -1,16 +1,19 @@
 int plot_time()
 {
     //TFile *f1 = new TFile("results/result_UL_LLP_noPU.root");
-    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
+    //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
+    TFile *f1 = new TFile("results_temp/result_pion_gun_noPU_origin.root");
 
     bool plot_weighted_time_vs_gen = false;
     bool plot_TS45_time_vs_gen = false;
     bool plot_arrival_time_vs_gen = false;
+    bool plot_TS45_vs_arrival = true;
+
     bool plot_charge_vs_TS = false;
     bool plot_abnormal_charge_vs_TS = false;
     bool plot_weighted_time_vs_ieta = false;
     bool plot_TS45_time_vs_ieta = false;
-    bool plot_arrival_time_vs_ieta = true;
+    bool plot_arrival_time_vs_ieta = false;
 
     //TString sub_det = "HB";
     TString sub_det = "HE";
@@ -43,6 +46,16 @@ int plot_time()
         y_title = "TS45 time [ns]";
         x_title = "truth energy [GeV]";
         x_min = 0;
+        x_max = 100;
+    }
+
+    if(plot_TS45_vs_arrival)
+    {
+        plot_time_vs_gen = true;
+        hist_name = "TS45_vs_arrival_HB";
+        y_title = "TS45 time [ns]";
+        x_title = "arrival [ns]";
+        x_min = 75;
         x_max = 100;
     }
 
