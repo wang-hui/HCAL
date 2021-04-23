@@ -1,7 +1,14 @@
 import glob
+import sys
 
-eos_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL_ML_test_samples/UL_1TeV_pion_gun_PU_2d"
-post_fix = "csv"
+if len(sys.argv) != 3:
+    print "Require 2 argv"
+    print "argv[1] = EOS dir"
+    print "argv[2] = file postfix"
+    quit()
+
+eos_dir = sys.argv[1]
+post_fix = sys.argv[2]
 
 file_name_list = glob.glob(eos_dir + "/*." + post_fix)
 for file_name in file_name_list:

@@ -24,11 +24,13 @@ int plot_HCAL_compare()
         //"raw_vs_gen_HB",
         //"raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUM", "raw_vs_gen_HB_PUH",
 
-        "reco_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUL", "DLPHIN_vs_gen_depthE1_HE_PUL",
+        //"reco_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUL", "DLPHIN_vs_gen_depthE1_HE_PUL",
         //"reco_vs_gen_depthE1_HE_PUH", "raw_vs_gen_depthE1_HE_PUH", "DLPHIN_vs_gen_depthE1_HE_PUH",
+        //"reco_vs_gen_depthG1_HE_PUL", "raw_vs_gen_depthG1_HE_PUL", "DLPHIN_vs_gen_depthG1_HE_PUL",
+        "reco_vs_gen_depthG1_HE_PUH", "raw_vs_gen_depthG1_HE_PUH", "DLPHIN_vs_gen_depthG1_HE_PUH",
     };
 
-    std::vector<TString> file_list = {"result_UL_1TeV_pion_gun_PU", "result_UL_1TeV_pion_gun_PU", "result_UL_1TeV_pion_gun_PU"};
+    std::vector<TString> file_list = {"result_UL_QCD_HT2000toInf_reco_1dHB_2dHE_test", "result_UL_QCD_HT2000toInf_reco_1dHB_2dHE_test", "result_UL_QCD_HT2000toInf_reco_1dHB_2dHE_test"};
     std::vector<TString> leg_list = {"MAHI", "M0", "DLPHIN"};
     //std::vector<TString> leg_list = {"low PU", "med PU", "high PU"};
     std::vector<int> color_list = {kBlack, kRed, kBlue};
@@ -36,7 +38,7 @@ int plot_HCAL_compare()
     std::vector<TH1F*> SD_list;
 
     int rebin_x = 1;
-    float px_scale = 0.08;
+    float px_scale = 0.1;
     float px_shift = 0;
 
     for(int i = 0; i < hist_list.size(); i++)
@@ -60,9 +62,9 @@ int plot_HCAL_compare()
         //h1->SetTitle("");
         h1->RebinX(rebin_x);
         h1->GetXaxis()->SetTitle("truth energy [GeV]");
-        h1->GetXaxis()->SetRangeUser(xmin, xmax * 0.2);
+        h1->GetXaxis()->SetRangeUser(xmin, xmax);
         h1->GetYaxis()->SetTitle("reco energy [GeV]");
-        h1->GetYaxis()->SetRangeUser(ymin, ymax * 0.2);
+        h1->GetYaxis()->SetRangeUser(ymin, ymax);
         gPad->SetLogz();
 
         mycanvas->SetLeftMargin(0.15);

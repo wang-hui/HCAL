@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: reco_MC --filein file:step2.root --fileout file:RECO.root --mc --eventcontent AOD --runUnscheduled --conditions 106X_upgrade2018_realistic_v11_L1v1 --step RAW2DIGI,RECO --nThreads 4 --geometry DB:Extended --era Run2_2018 -n 10 --no_exec
+# with command line options: reco_MC --filein file:step2.root --mc --eventcontent RECOSIM --conditions 106X_upgrade2018_realistic_v11_L1v1 --step RAW2DIGI,RECO --nThreads 4 --geometry DB:Extended --era Run2_2018 -n 100 --no_exec
 import FWCore.ParameterSet.Config as cms
 import sys
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
@@ -33,9 +33,10 @@ f.close()
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-    #'root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_PU-2020-12-20/UL_1TeV_pion_gun_RAW_PU_0.root'
-    my_list
-),
+        #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_PU-2020-12-20/UL_1TeV_pion_gun_RAW_PU_0.root"
+        my_list
+    ),
+    #skipEvents = cms.untracked.uint32(516),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -45,23 +46,21 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('reco_MC nevts:10'),
+    annotation = cms.untracked.string('reco_MC nevts:100'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
 
 # Output definition
 
-process.AODoutput = cms.OutputModule("PoolOutputModule",
-    compressionAlgorithm = cms.untracked.string('LZMA'),
-    compressionLevel = cms.untracked.int32(4),
+process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
         dataTier = cms.untracked.string(''),
         filterName = cms.untracked.string('')
     ),
-    eventAutoFlushCompressedSize = cms.untracked.int32(31457280),
-    fileName = cms.untracked.string('file:results_temp/RECO_MC.root'),
-    outputCommands = process.AODEventContent.outputCommands
+    fileName = cms.untracked.string('results_temp/RECO_MC.root'),
+    outputCommands = process.RECOSIMEventContent.outputCommands,
+    splitLevel = cms.untracked.int32(0)
 )
 
 # Additional output definition
@@ -74,20 +73,19 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11
 # Path and EndPath definitions
 process.myAna = cms.EDAnalyzer(
     "HCALTestAna",
-    print_1d = cms.untracked.bool(False),
-    print_2d = cms.untracked.bool(True),
+    print_1d = cms.untracked.bool(True),
+    print_2d = cms.untracked.bool(False),
     do_PU = cms.untracked.bool(True),
     is_run3_relVal = cms.untracked.bool(False),
     min_simHit_energy = cms.untracked.double(0.0))
 
-# Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.myAna + process.RawToDigi)
 process.reconstruction_step = cms.Path(process.reconstruction)
 process.endjob_step = cms.EndPath(process.endOfProcess)
-process.AODoutput_step = cms.EndPath(process.AODoutput)
+process.RECOSIMoutput_step = cms.EndPath(process.RECOSIMoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.raw2digi_step,process.reconstruction_step,process.endjob_step,process.AODoutput_step)
+process.schedule = cms.Schedule(process.raw2digi_step,process.reconstruction_step,process.endjob_step,process.RECOSIMoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
@@ -95,10 +93,6 @@ associatePatAlgosToolsTask(process)
 process.options.numberOfThreads=cms.untracked.uint32(1)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 process.options.numberOfConcurrentLuminosityBlocks=cms.untracked.uint32(1)
-
-#do not add changes to your config after this point (unless you know what you are doing)
-from FWCore.ParameterSet.Utilities import convertToUnscheduled
-process=convertToUnscheduled(process)
 
 
 # Customisation from command line
