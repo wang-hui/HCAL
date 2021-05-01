@@ -22,23 +22,23 @@ int plot_HCAL()
         //"reco_vs_gen_depthE1_HB_ietaS15",
         //"reco_vs_gen_depthE1_HB", "reco_vs_gen_depthE1_HB_1_pulse", "reco_vs_gen_depthE1_HB_8_pulse",
 
-        "reco_vs_gen_depthG1_HE", //"reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
+        //"reco_vs_gen_depthG1_HE", //"reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
         //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_PUL", "reco_vs_gen_depthE1_HE_PUH",
         //"reco_vs_gen_HB", "reco_vs_gen_HB_PUL", "reco_vs_gen_HB_PUH",
 
         //"aux_vs_gen",
         //"aux_vs_gen_depthG1_HE", "aux_vs_gen_depthE1_HE", "aux_vs_gen_depthG1_HB", "aux_vs_gen_depthE1_HB",
 
-        "aux_vs_gen_depthG1_HE", //"aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
+        //"aux_vs_gen_depthG1_HE", //"aux_vs_gen_depthG1_HE_PUL", "aux_vs_gen_depthG1_HE_PUH",
         //"aux_vs_gen_depthE1_HE", "aux_vs_gen_depthE1_HE_PUL", "aux_vs_gen_depthE1_HE_PUH",
         //"aux_vs_gen_HB", "aux_vs_gen_HB_PUL", "aux_vs_gen_HB_PUH",
 
-        "raw_vs_gen_depthG1_HE", //"raw_vs_gen_depthG1_HE_PUL", "raw_vs_gen_depthG1_HE_PUH",
+        //"raw_vs_gen_depthG1_HE", //"raw_vs_gen_depthG1_HE_PUL", "raw_vs_gen_depthG1_HE_PUH",
         //"raw_vs_gen_depthE1_HE", "raw_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUH",
         //"raw_vs_gen_HB", "raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUH",
 
         //"DLPHIN_vs_gen",
-        "DLPHIN_vs_gen_depthG1_HE", //"DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
+        //"DLPHIN_vs_gen_depthG1_HE", //"DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
         //"reco_err",
         //"aux_err",
 
@@ -70,9 +70,11 @@ int plot_HCAL()
         //"DLPHIN_ratio_depthE1_HE",
         //"DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genM",
         //"weighted_time", "TS45_time", "arrival_time"
+ 
+        "DLPHIN_vs_gen_sum"
     };
 
-    TFile *f1 = new TFile("results/result_UL_LLP_noPU.root");
+    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU_2d_1dHB_2dHE.root");
     //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
 
     for(int i = 0; i < hist_list.size(); i++)
@@ -152,14 +154,14 @@ int plot_HCAL()
                 float center = px->GetBinContent(i);
                 float rel_error = 0;
                 if (center > 0) rel_error = error/center;
-                SD_h->SetBinContent(i, rel_error);
+                SD_h->SetBinContent(i, error);
                 //std::cout << i << ", " << error << ", " << center << ", " << SD_h->GetBinContent(i) << std::endl;
             }
             //SD_h->SetTitle("");
             SD_h->GetXaxis()->SetTitle("truth energy [GeV]");
-            SD_h->GetYaxis()->SetTitle("#sigma_{reco energy} / reco energy");
+            SD_h->GetYaxis()->SetTitle("#sigma_{reco energy}");
             SD_h->GetXaxis()->SetRangeUser(xmin, xmax * x_scale);
-            SD_h->GetYaxis()->SetRangeUser(0, 1);
+            //SD_h->GetYaxis()->SetRangeUser(0, 1);
             SD_h->Draw();
             mycanvas->SaveAs("plots_temp/" + hist_name + "_SD.png");
             //mycanvas->SaveAs("plots_temp/" + hist_name + "_SD.pdf");

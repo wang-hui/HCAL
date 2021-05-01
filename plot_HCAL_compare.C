@@ -19,7 +19,6 @@ int plot_HCAL_compare()
 
         //"raw_vs_gen_depthG1_HE",
         //"raw_vs_gen_depthG1_HE_PUL", "raw_vs_gen_depthG1_HE_PUM", "raw_vs_gen_depthG1_HE_PUH",
-        //"raw_vs_gen_depthE1_HE",
         //"raw_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUM", "raw_vs_gen_depthE1_HE_PUH",
         //"raw_vs_gen_HB",
         //"raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUM", "raw_vs_gen_HB_PUH",
@@ -27,18 +26,23 @@ int plot_HCAL_compare()
         //"reco_vs_gen_depthE1_HE_PUL", "raw_vs_gen_depthE1_HE_PUL", "DLPHIN_vs_gen_depthE1_HE_PUL",
         //"reco_vs_gen_depthE1_HE_PUH", "raw_vs_gen_depthE1_HE_PUH", "DLPHIN_vs_gen_depthE1_HE_PUH",
         //"reco_vs_gen_depthG1_HE_PUL", "raw_vs_gen_depthG1_HE_PUL", "DLPHIN_vs_gen_depthG1_HE_PUL",
-        "reco_vs_gen_depthG1_HE_PUH", "raw_vs_gen_depthG1_HE_PUH", "DLPHIN_vs_gen_depthG1_HE_PUH",
+        //"reco_vs_gen_depthG1_HE_PUH", "raw_vs_gen_depthG1_HE_PUH", "DLPHIN_vs_gen_depthG1_HE_PUH",
+
+        //"reco_vs_gen_depthE1_HE", "raw_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthE1_HE",
+        "mahi_vs_gen_sum", "raw_vs_gen_sum", //"DLPHIN_vs_gen_sum",
+        //"mahi_vs_gen_depth_1", "raw_vs_gen_depth_1", "DLPHIN_vs_gen_depth_1",
     };
 
-    std::vector<TString> file_list = {"result_UL_QCD_HT2000toInf_reco_1dHB_2dHE_test", "result_UL_QCD_HT2000toInf_reco_1dHB_2dHE_test", "result_UL_QCD_HT2000toInf_reco_1dHB_2dHE_test"};
-    std::vector<TString> leg_list = {"MAHI", "M0", "DLPHIN"};
+    std::vector<TString> file_list = {"result_UL_1TeV_pion_gun_PU_2d_1dHB_2dHE", "result_UL_1TeV_pion_gun_PU_2d_1dHB_2dHE"};
+    //std::vector<TString> file_list = {"result_UL_1TeV_pion_gun_PU_1dHB_2dHE", "result_UL_1TeV_pion_gun_PU_1dHB_2dHE", "result_UL_1TeV_pion_gun_PU_1dHB_2dHE"};
+    std::vector<TString> leg_list = {"MAHI", "M0"};
     //std::vector<TString> leg_list = {"low PU", "med PU", "high PU"};
-    std::vector<int> color_list = {kBlack, kRed, kBlue};
+    std::vector<int> color_list = {kRed, kBlue};
 
     std::vector<TH1F*> SD_list;
 
     int rebin_x = 1;
-    float px_scale = 0.1;
+    float px_scale = 0.8;
     float px_shift = 0;
 
     for(int i = 0; i < hist_list.size(); i++)
@@ -111,14 +115,15 @@ int plot_HCAL_compare()
             float center = px->GetBinContent(i);
             float rel_error = 0;
             if (center > 0) rel_error = error/center;
-            SD_h->SetBinContent(i, rel_error);
+            SD_h->SetBinContent(i, error);
             //std::cout << i << ", " << error << ", " << center << ", " << SD_h->GetBinContent(i) << std::endl;
         }
-        //SD_h->SetTitle("");
+        SD_h->SetTitle("");
         SD_h->GetXaxis()->SetTitle("truth energy [GeV]");
-        SD_h->GetYaxis()->SetTitle("#sigma_{reco energy} / reco energy");
+        SD_h->GetYaxis()->SetTitle("#sigma_{reco energy}");
         SD_h->GetXaxis()->SetRangeUser(xmin + px_shift, xmax * px_scale);
-        SD_h->GetYaxis()->SetRangeUser(0, 1.0);
+        //SD_h->GetYaxis()->SetRangeUser(0, 5.0);
+        SD_h->SetMaximum(50.0);
         SD_h->Draw();
         SD_list.push_back(SD_h);
         mycanvas->SaveAs("plots_temp/" + file_name + "_"  + hist_name + "_SD.png");

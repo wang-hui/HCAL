@@ -318,7 +318,7 @@ private:
 
     // DLPHIN parameters
     std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_, DLPHIN_pb_2dHE_;
-    bool DLPHIN_scale_, DLPHIN_save_, DLPHIN_print_1d_, DLPHIN_print_2d_;
+    bool DLPHIN_scale_, DLPHIN_save_, DLPHIN_apply_respCorr_, DLPHIN_print_1d_, DLPHIN_print_2d_;
 
     // Other members
     edm::EDGetTokenT<HBHEDigiCollection> tok_qie8_;
@@ -403,6 +403,7 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
       DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
       DLPHIN_scale_(conf.getParameter<bool>("DLPHIN_scale")),
       DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
+      DLPHIN_apply_respCorr_(conf.getParameter<bool>("DLPHIN_apply_respCorr")),
       DLPHIN_print_1d_(conf.getParameter<bool>("DLPHIN_print_1d")),
       DLPHIN_print_2d_(conf.getParameter<bool>("DLPHIN_print_2d")),
       reco_(parseHBHEPhase1AlgoDescription(conf.getParameter<edm::ParameterSet>("algorithm"))),
@@ -859,6 +860,7 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<std::string>("DLPHIN_pb_2dHE");
     desc.add<bool>("DLPHIN_scale");
     desc.add<bool>("DLPHIN_save");
+    desc.add<bool>("DLPHIN_apply_respCorr");
     desc.add<bool>("DLPHIN_print_1d");
     desc.add<bool>("DLPHIN_print_2d");
 
@@ -1038,6 +1040,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
         //std::cout << "outputs.size() " << outputs.size() << ", tensor.shape().dim_size(0) " << outputs[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << outputs[0].shape().dim_size(1) << std::endl;
         auto temp = outputs[0].tensor<float, 2>()(0,0);
+        if(DLPHIN_apply_respCorr_) {temp = temp * resp_corr;}
         Doutput.push_back(temp);
     }
 
@@ -1109,7 +1112,8 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             auto pred = outputs_2d[0].tensor<float, 3>()(HE_row,0,depth-1);
             auto mask = outputs_2d[0].tensor<float, 3>()(HE_row,1,depth-1);
 
-            if(mask != 1) std::cout << "Error! A real channel is masked" << std::endl;
+            if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
+            if(DLPHIN_apply_respCorr_) {pred = pred * resp_corr;}
             Doutput.at(i) = pred;
 
             channel_vec_temp.at(16) = rawgain;

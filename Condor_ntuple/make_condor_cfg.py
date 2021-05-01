@@ -2,7 +2,7 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "EGamma_Run2018B_Run_317392_RECO_DLPHIN_1dHB_2dHE"        #folder name for the result files in EOS
+folder_name = "EGamma_Run2018B_Run_317392_RECO_DLPHIN_1dHB_2dHE_respCorr"        #folder name for the result files in EOS
 result_path = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/"          #EOS dir for the above folder
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"        #Local dir for condor log files
 file_list = "../FileList/EGamma_Run2018B_Run_317392_raw_1M_events.list"
