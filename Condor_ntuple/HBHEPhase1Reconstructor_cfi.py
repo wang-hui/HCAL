@@ -106,7 +106,8 @@ hbheprereco = cms.EDProducer(
     DLPHIN_pb_2dHE = cms.string(DLPHIN_pb_folder + "model_2dHE.pb"),
     DLPHIN_scale = cms.bool(False),
     DLPHIN_save = cms.bool(True),
-    DLPHIN_apply_respCorr = cms.bool(True),
+    DLPHIN_apply_respCorr = cms.bool(False),
+    DLPHIN_truncate = cms.bool(True),
     DLPHIN_print_1d = cms.bool(False),
     DLPHIN_print_2d = cms.bool(False),
 

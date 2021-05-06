@@ -107,6 +107,7 @@ hbheprereco = cms.EDProducer(
     DLPHIN_scale = cms.bool(False),
     DLPHIN_save = cms.bool(True),
     DLPHIN_apply_respCorr = cms.bool(True),
+    DLPHIN_truncate cms.bool(True),
     DLPHIN_print_1d = cms.bool(False),
     DLPHIN_print_2d = cms.bool(False),
 

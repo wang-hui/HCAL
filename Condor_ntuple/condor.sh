@@ -29,10 +29,10 @@ pwd
 
 #cmsRun miniAOD_data_RAW2DIGI_L1Reco_RECO_EI_PAT.py $1
 #cmsRun nanoAOD_data_NANO.py
-cmsRun reco_data_RAW2DIGI_RECO.py $1
-#cmsRun reco_MC_RAW2DIGI_RECO.py $1
+#cmsRun reco_data_RAW2DIGI_RECO.py $1
+cmsRun reco_MC_RAW2DIGI_RECO.py $1
 
 #xrdcp data_AOD_RAW2DIGI_L1Reco_RECO_EI_PAT.root root://cmseos.fnal.gov//${2}/data_AOD_${3}.root
 #xrdcp data_NANO.root root://cmseos.fnal.gov//${2}/data_nanoAOD_${3}.root
-xrdcp data_RECO.root root://cmseos.fnal.gov//${2}/data_RECO_${3}.root
-#xrdcp RECO_MC.root root://cmseos.fnal.gov//${2}/MC_RECO_${3}.root
+#xrdcp data_RECO.root root://cmseos.fnal.gov//${2}/data_RECO_${3}.root
+xrdcp RECO_MC.root root://cmseos.fnal.gov//${2}/MC_RECO_${3}.root
