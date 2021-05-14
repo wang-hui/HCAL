@@ -332,7 +332,7 @@ private:
     tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
     tensorflow::Session *session_2dHE;
     TProfile2D *ratio_HB, *ratio_HE;
-    TF1 *DLPHIN_rand;
+    //TF1 *DLPHIN_rand;
     struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
     std::vector<float> DLPHIN_output;
@@ -469,7 +469,7 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
     tensorflow::GraphDef *graphDef_2dHE = tensorflow::loadGraphDef(DLPHIN_pb_2dHE_);
     session_2dHE = tensorflow::createSession(graphDef_2dHE);
 
-    DLPHIN_rand = new TF1("DLPHIN_rand", "1", 0.5, 2);
+    //DLPHIN_rand = new TF1("DLPHIN_rand", "1", 0.5, 2);
     
     if(DLPHIN_scale_)
     {
@@ -1052,7 +1052,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             temp = temp - 0.25;
             if(temp < 0) {temp = 0.0;}
         }
-        temp = temp * DLPHIN_rand->GetRandom();
+        //temp = temp * DLPHIN_rand->GetRandom();
         Doutput.push_back(temp);
     }
 
@@ -1131,7 +1131,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
                 pred = pred - 0.25;
                 if(pred < 0) {pred = 0.0;}
             }
-            pred = pred * DLPHIN_rand->GetRandom();
+            //pred = pred * DLPHIN_rand->GetRandom();
             Doutput.at(i) = pred;
 
             channel_vec_temp.at(16) = rawgain;
