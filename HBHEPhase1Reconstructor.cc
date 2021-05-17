@@ -331,7 +331,7 @@ private:
     // Struct for DLPHIN
     tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
     tensorflow::Session *session_2dHE;
-    TProfile2D *ratio_HB, *ratio_HE;
+    std::vector<TProfile *> ratio_HB, ratio_HE;
     //TF1 *DLPHIN_rand;
     struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
@@ -470,12 +470,38 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
     session_2dHE = tensorflow::createSession(graphDef_2dHE);
 
     //DLPHIN_rand = new TF1("DLPHIN_rand", "1", 0.5, 2);
-    
+
     if(DLPHIN_scale_)
     {
         TFile *ratio_file = new TFile(DLPHIN_pb_SF_.c_str());
-        ratio_HB = (TProfile2D*)ratio_file->Get("ratio_ieta_depth_HB_h_pyx");
-        ratio_HE = (TProfile2D*)ratio_file->Get("ratio_ieta_depth_HE_h_pyx");
+
+        for (auto sub_det : std::vector<TString>{"HB", "HE"})
+        {
+            int ieta_first, ieta_last, depth_first, depth_last;
+            if (sub_det == "HB")
+            {
+                ieta_first = 1;
+                ieta_last = 16;
+                depth_first = 1;
+                depth_last = 2;
+            }
+            else if (sub_det == "HE")
+            {
+                ieta_first = 16;
+                ieta_last = 29;
+                depth_first = 1;
+                depth_last = 7;
+            }
+            for (int i = ieta_first; i <= ieta_last; i++)
+            {
+                for (int j = depth_first; j <= depth_last; j++)
+                {
+                    TString hist_name = "mahi_over_DLPHIN_" + sub_det + "_iEta_" + std::to_string(i) + "_depth_" + std::to_string(j) + "_h_pfx";
+                    if(sub_det == "HB") ratio_HB.push_back((TProfile*)ratio_file->Get(hist_name));
+                    else if(sub_det == "HE") ratio_HE.push_back((TProfile*)ratio_file->Get(hist_name));
+                }
+            }
+        }
     }
 }
 
@@ -563,7 +589,7 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
         const RawChargeFromSample<DFrame> rcfs(sipmQTSShift_, sipmQNTStoSum_, 
                                                cond, cell, cs, soi, frame, maxTS);
         int soiCapid = 4;
-        
+
         // Use only 8 TSs when there are 10 TSs 
         const int shiftOneTS = use8ts_ && maxTS == static_cast<int>(HBHEChannelInfo::MAXSAMPLES) ? 1 : 0;
         const int nCycles = maxTS - shiftOneTS;
@@ -915,9 +941,9 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     std::map <ieta_iphi_pair, int> ieta_iphi_row_map;
     int row = 0;
     for(int ieta = -HE_ieta_max; ieta <= -HE_ieta_min; ieta ++)
-    {   
+    {
         for(int iphi = 1; iphi <= 72; iphi ++)
-        {   
+        {
             ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
             ieta_iphi_row_map[std::make_pair(ieta, iphi)] = row;
             row++;
@@ -948,7 +974,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         for (int TS = 1; TS <= 8; TS++)
         {
             std::string TS_string = "TS" + std::to_string(TS);
-            title_string = title_string + TS_string + " raw charge, " + TS_string + " ped noise, "; 
+            title_string = title_string + TS_string + " raw charge, " + TS_string + " ped noise, ";
         }
 
         title_string = title_string + "raw gain, gain, raw energy, aux energy, mahi energy, flags,";
@@ -994,7 +1020,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         if(subdet == 2)
         {
             HE_row = ieta_iphi_row_map.at(std::make_pair(ieta, iphi));
-            HE_col = (depth - 1) * 8; 
+            HE_col = (depth - 1) * 8;
             ty_input_2d.tensor<float, 2>()(HE_row, 0) = fabs(ieta);
             ma_input_2d.tensor<float, 2>()(HE_row, depth - 1) = 1.0;
         }
@@ -1101,8 +1127,6 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         auto resp_corr = Dinput_vec.at(i).resp_corr;
         float rawgain = gain / resp_corr;
 
-        float DLPHIN_SF = 1.0;                          //SF dirived from MAHI / DLPHIN
-
         std::vector<float> channel_vec_temp(23, 0.0);
 
         for (int iTS = 0; iTS < nSamples; ++iTS)
@@ -1144,6 +1168,26 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = channel_vec_temp;
         }
 
+        float DLPHIN_SF = 1.0;                          //SF dirived from MAHI / DLPHIN
+        if(DLPHIN_scale_)
+        {
+            if(subdet == 1)
+            {
+                int hist_index = (abs(ieta) - 1) * 2 + depth - 1;
+                auto hist_temp = ratio_HB.at(hist_index);
+                auto SF_temp = hist_temp->GetBinContent(hist_temp->FindBin(Doutput.at(i)));
+                if(SF_temp > 0) DLPHIN_SF = SF_temp;
+            }
+            else if(subdet == 2)
+            {
+                int hist_index = (abs(ieta) - HE_ieta_min) * HE_depth_max + depth - 1;
+                auto hist_temp = ratio_HE.at(hist_index);
+                auto SF_temp = hist_temp->GetBinContent(hist_temp->FindBin(Doutput.at(i)));
+                if(SF_temp > 0) DLPHIN_SF = SF_temp;
+            }
+        }
+        Doutput.at(i) = Doutput.at(i) * DLPHIN_SF;
+
         if(DLPHIN_print_1d_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << Doutput.at(i) << ", " << DLPHIN_SF << std::endl;
     }
 
@@ -1156,7 +1200,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             for (int TS = 1; TS <= 8; TS++)
             {
                 std::string TS_string = depth_string + " TS" + std::to_string(TS);
-                title_string = title_string + TS_string + " raw charge, " + TS_string + " ped noise, "; 
+                title_string = title_string + TS_string + " raw charge, " + TS_string + " ped noise, ";
             }
             title_string = title_string + depth_string + " raw gain, " + depth_string + " gain, " + depth_string + " raw energy, " + depth_string + " aux energy, " + depth_string + " mahi energy, " + depth_string + " is real channel, " + depth_string + " DLPHIN energy, ";
         }

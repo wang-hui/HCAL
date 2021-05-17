@@ -2,10 +2,13 @@ import ROOT as rt
 import pandas as pd
 import sys
 import math
+import array
 import numpy as np
 
 result_dir = "results_temp/"
 result_file = "result"
+result_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_1TeV_pion_gun_1dHB_2dHE-2021-04-19/"
+result_file = "result_0"
 
 tot_rows = None
 #tot_rows = 100000
@@ -36,12 +39,14 @@ if add_weight:
     HE_depth1_weight_file = rt.TFile.Open("HE_depth1_weight.root")
     HE_depth1_weight_hist = HE_depth1_weight_file.Get("HE_depth1_weight")
 
-out_file = rt.TFile(result_dir + result_file + "_" + run_mod + ".root","RECREATE")
+out_file = rt.TFile("results_temp/" + result_file + "_" + run_mod + ".root","RECREATE")
 
 def chi2loss(y_true, y_pred):
     loss = math.pow((y_pred - y_true)/(math.sqrt(1+(y_true/32))), 2)
     return loss
 
+x_edges = array.array('d',[1 * (x*x*x) for x in range(11)])
+x_bins = len(x_edges) - 1
 #==============global hist =======================
 weighted_time_h = rt.TH1F("weighted_time_h", "weighted simHit time", 100, 0.0, 500.0)
 TS45_time_h = rt.TH1F("TS45_time_h", "TS45 time", 100, 75.0, 100.0)
@@ -60,7 +65,8 @@ fcByPE_h = rt.TH1F("fcByPE_h", "fcByPE for each TS", 100, 0.0, 1000.0)
 PU_h = rt.TH1F("PU_h", "pileup", 100, 0.0, 100.0)
 reco_h = rt.TH1F("reco_h", "reco energy", Ebins, Emin, Emax)
 gen_h = rt.TH1F("gen_h", "truth energy", Ebins, Emin, Emax)
-genG0_h = rt.TH1F("genG0_h", "truth energy > 0 GeV", 400, 0, 100)
+genG0_h = rt.TH1F("genG0_h", "truth energy > 0 GeV", Ebins, Emin, Emax)
+genG0_ieta_h = rt.TH1F("genG0_ieta_h", "genG0_ieta_h", 30, 0, 30)
 use_8_pulse_h = rt.TH1F("use_8_pulse_h", "use 8 pulses", 2, 0, 2)
 
 #==============reco vs gen 2d hist ==================
@@ -226,6 +232,8 @@ TS45_time_HB_ieta_list = []
 arrival_time_HB_ieta_list = []
 reco_vs_gen_depthE1_HB_list = []
 reco_vs_gen_depthG1_HB_list = []
+mahi_over_DLPHIN_HB_ieta_list = []
+
 for i in range(1,17):
     E1_hist = rt.TH2F("reco_vs_gen_depthE1_HB_iEta_" + str(i) + "_h", "reco vs gen, depth = 1, HB |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthE1_HB_list.append(E1_hist)
@@ -235,16 +243,20 @@ for i in range(1,17):
     weighted_time_hist_list = []
     TS45_time_hist_list = []
     arrival_time_hist_list = []
+    mahi_over_DLPHIN_hist_list = []
     for j in range(1,6):
         weighted_time_hist = rt.TH1F("weighted_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
         TS45_time_hist = rt.TH1F("TS45_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "TS45 time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
         arrival_time_hist = rt.TH1F("arrival_time_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "arrival time, HB |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
+        mahi_over_DLPHIN_hist = rt.TH2F("mahi_over_DLPHIN_HB_iEta_" + str(i) + "_depth_" + str(j) + "_h", "mahi_over_DLPHIN_HB_iEta_" + str(i) + "_depth_" + str(j), x_bins, x_edges, 100, 0.0, 10.0)
         weighted_time_hist_list.append(weighted_time_hist)
         TS45_time_hist_list.append(TS45_time_hist)
         arrival_time_hist_list.append(arrival_time_hist)
+        mahi_over_DLPHIN_hist_list.append(mahi_over_DLPHIN_hist)
     weighted_time_HB_ieta_list.append(weighted_time_hist_list)
     TS45_time_HB_ieta_list.append(TS45_time_hist_list)
     arrival_time_HB_ieta_list.append(arrival_time_hist_list)
+    mahi_over_DLPHIN_HB_ieta_list.append(mahi_over_DLPHIN_hist_list)
 
 #============loop ieta hist for HE ====================
 weighted_time_HE_ieta_list = []
@@ -252,6 +264,8 @@ TS45_time_HE_ieta_list = []
 arrival_time_HE_ieta_list = []
 reco_vs_gen_depthE1_HE_list = []
 reco_vs_gen_depthG1_HE_list = []
+mahi_over_DLPHIN_HE_ieta_list = []
+
 for i in range(16,30):
     E1_hist = rt.TH2F("reco_vs_gen_depthE1_HE_iEta_" + str(i) + "_h", "reco vs gen, depth = 1, HE |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthE1_HE_list.append(E1_hist)
@@ -261,16 +275,20 @@ for i in range(16,30):
     weighted_time_hist_list = []
     TS45_time_hist_list = []
     arrival_time_hist_list = []
+    mahi_over_DLPHIN_hist_list = []
     for j in range(1,9):
         weighted_time_hist = rt.TH1F("weighted_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "weighted simHit time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 0.0, 500.0)
         TS45_time_hist = rt.TH1F("TS45_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "TS45 time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
         arrival_time_hist = rt.TH1F("arrival_time_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "arrival time, HE |ieta| " + str(i) + ", depth " + str(j), 100, 75.0, 100.0)
+        mahi_over_DLPHIN_hist = rt.TH2F("mahi_over_DLPHIN_HE_iEta_" + str(i) + "_depth_" + str(j) + "_h", "mahi_over_DLPHIN_HE_iEta_" + str(i) + "_depth_" + str(j), x_bins, x_edges, 100, 0.0, 10.0)
         weighted_time_hist_list.append(weighted_time_hist)
         TS45_time_hist_list.append(TS45_time_hist)
         arrival_time_hist_list.append(arrival_time_hist)
+        mahi_over_DLPHIN_hist_list.append(mahi_over_DLPHIN_hist)
     weighted_time_HE_ieta_list.append(weighted_time_hist_list)
     TS45_time_HE_ieta_list.append(TS45_time_hist_list)
     arrival_time_HE_ieta_list.append(arrival_time_hist_list)
+    mahi_over_DLPHIN_HE_ieta_list.append(mahi_over_DLPHIN_hist_list)
 
 Nrows = result.shape[0]
 print "total rows: ", Nrows
@@ -289,7 +307,8 @@ for i in range(Nrows):
     gain = result["gain"] [i]
     respCorr = gain / raw_gain
     gen_energy = result["raw truth energy"][i]
-    reco_energy = (result["mahi energy"][i] / respCorr) / reco_corr
+    mahi_energy = result["mahi energy"][i]
+    reco_energy = (mahi_energy / respCorr) / reco_corr
     aux_energy = (result["aux energy"][i] / respCorr) / aux_corr
     raw_energy = (result["raw energy"][i] / respCorr) / raw_corr
     DLPHIN_energy = result["DLPHIN energy"][i]
@@ -299,6 +318,9 @@ for i in range(Nrows):
     PU = result["PU"] [i]
     flags = result["flags"] [i]
     use_8_pulse = ((flags & use_8_pulse_bit) == use_8_pulse_bit)
+
+    mahi_over_DLPHIN = 1
+    if DLPHIN_energy > 0: mahi_over_DLPHIN = mahi_energy / DLPHIN_energy
 
     if study_gain:
         sum_amplitude = 0
@@ -328,6 +350,7 @@ for i in range(Nrows):
         aux_vs_gen_HB_h.Fill(gen_energy, aux_energy)
         raw_vs_gen_HB_h.Fill(gen_energy, raw_energy)
         DLPHIN_vs_gen_HB_h.Fill(gen_energy, DLPHIN_energy)
+        mahi_over_DLPHIN_HB_ieta_list[ieta - 1][depth - 1].Fill(DLPHIN_energy, mahi_over_DLPHIN)
         if PU <= 23:
             aux_vs_gen_HB_PUL_h.Fill(gen_energy, aux_energy)
             raw_vs_gen_HB_PUL_h.Fill(gen_energy, raw_energy)
@@ -361,6 +384,7 @@ for i in range(Nrows):
             if use_8_pulse: reco_vs_gen_depthG1_HB_8_pulse_h.Fill(gen_energy, reco_energy)
             else: reco_vs_gen_depthG1_HB_1_pulse_h.Fill(gen_energy, reco_energy)
     elif sub_det == 2:
+        mahi_over_DLPHIN_HE_ieta_list[ieta - 16][depth - 1].Fill(DLPHIN_energy, mahi_over_DLPHIN)
         if depth == 1:
             reco_vs_gen_depthE1_HE_h.Fill(gen_energy, reco_energy)
             aux_vs_gen_depthE1_HE_h.Fill(gen_energy, aux_energy)
@@ -445,6 +469,7 @@ for i in range(Nrows):
                 TS45_vs_arrival_HE_h.Fill(arrival_time, TS45_time)
 
         genG0_h.Fill(gen_energy)
+        genG0_ieta_h.Fill(ieta)
         weighted_time_h.Fill(weighted_time)
         TS45_time_h.Fill(TS45_time)
         arrival_time_h.Fill(arrival_time)
