@@ -7,8 +7,8 @@ import numpy as np
 
 result_dir = "results_temp/"
 result_file = "result"
-result_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_1TeV_pion_gun_1dHB_2dHE-2021-04-19/"
-result_file = "result_0"
+#result_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_1TeV_pion_gun_1dHB_2dHE-2021-04-19/"
+#result_file = "result_0"
 
 tot_rows = None
 #tot_rows = 100000
