@@ -150,6 +150,11 @@ DLPHIN_vs_gen_depthE1_HE_PUL_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HE_PUL_h", "DLPH
 DLPHIN_vs_gen_depthE1_HE_PUM_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HE_PUM_h", "DLPHIN_vs_gen_depthE1_HE_PUM_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_depthE1_HE_PUH_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HE_PUH_h", "DLPHIN_vs_gen_depthE1_HE_PUH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 
+#==============DLPHIN vs mahi 2d hist ==================
+DLPHIN_vs_mahi_HB_h = rt.TH2F("DLPHIN_vs_mahi_HB_h", "DLPHIN_vs_mahi_HB_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_mahi_depthE1_HE_h = rt.TH2F("DLPHIN_vs_mahi_depthE1_HE_h", "DLPHIN_vs_mahi_depthE1_HE_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_mahi_depthG1_HE_h = rt.TH2F("DLPHIN_vs_mahi_depthG1_HE_h", "DLPHIN_vs_mahi_depthG1_HE_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+
 #==============ratio 1d hist ==========================
 sum_amp_over_gen_h = rt.TH1F("sum_amp_over_gen_h", "sum 8 amplitudes / gen for gen > 10 GeV", 100, 0.0, 2500.0)
 inv_gain_h = rt.TH1F("inv_gain_h", "1/gain for gen > 10 GeV", 100, 0.0, 2500.0)
@@ -350,6 +355,7 @@ for i in range(Nrows):
         aux_vs_gen_HB_h.Fill(gen_energy, aux_energy)
         raw_vs_gen_HB_h.Fill(gen_energy, raw_energy)
         DLPHIN_vs_gen_HB_h.Fill(gen_energy, DLPHIN_energy)
+        DLPHIN_vs_mahi_HB_h.Fill(mahi_energy, DLPHIN_energy)
         mahi_over_DLPHIN_HB_ieta_list[ieta - 1][depth - 1].Fill(DLPHIN_energy, mahi_over_DLPHIN)
         if PU <= 23:
             aux_vs_gen_HB_PUL_h.Fill(gen_energy, aux_energy)
@@ -390,6 +396,7 @@ for i in range(Nrows):
             aux_vs_gen_depthE1_HE_h.Fill(gen_energy, aux_energy)
             raw_vs_gen_depthE1_HE_h.Fill(gen_energy, raw_energy)
             DLPHIN_vs_gen_depthE1_HE_h.Fill(gen_energy, DLPHIN_energy)
+            DLPHIN_vs_mahi_depthE1_HE_h.Fill(mahi_energy, DLPHIN_energy)
             if PU < 23:
                 reco_vs_gen_depthE1_HE_PUL_h.Fill(gen_energy, reco_energy)
                 aux_vs_gen_depthE1_HE_PUL_h.Fill(gen_energy, aux_energy)
@@ -414,6 +421,7 @@ for i in range(Nrows):
             aux_vs_gen_depthG1_HE_h.Fill(gen_energy, aux_energy)
             raw_vs_gen_depthG1_HE_h.Fill(gen_energy, raw_energy)
             DLPHIN_vs_gen_depthG1_HE_h.Fill(gen_energy, DLPHIN_energy)
+            DLPHIN_vs_mahi_depthG1_HE_h.Fill(mahi_energy, DLPHIN_energy)
             if PU < 23:
                 reco_vs_gen_depthG1_HE_PUL_h.Fill(gen_energy, reco_energy)
                 aux_vs_gen_depthG1_HE_PUL_h.Fill(gen_energy, aux_energy)
