@@ -28,7 +28,7 @@ gen32_cols = {c: np.float32 for c in gen64_cols}
 
 result = pd.DataFrame()
 for i in range (len(reco_list)):
-#for i in range (1):
+#for i in range (2000):
     if i%50 == 0: print "processing %d file" %i
     #print "reco file: ", reco_list[i]
     #print "gen file: ", gen_list[i]

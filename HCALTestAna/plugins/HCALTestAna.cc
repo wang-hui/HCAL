@@ -83,7 +83,7 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
         bool print_2d;
         bool do_PU;
         bool is_run3_relVal;
-        float min_simHit_energy;
+        float min_simHit_energy, max_simHit_time;
         edm::EDGetTokenT<std::vector<PCaloHit>> hcalhitsToken_;
         edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
 
@@ -107,8 +107,8 @@ HCALTestAna::HCALTestAna(const edm::ParameterSet& iConfig):
     print_2d(iConfig.getUntrackedParameter<bool>("print_2d")),
     do_PU(iConfig.getUntrackedParameter<bool>("do_PU")),
     is_run3_relVal(iConfig.getUntrackedParameter<bool>("is_run3_relVal")),
-    min_simHit_energy(iConfig.getUntrackedParameter<double>("min_simHit_energy"))
-
+    min_simHit_energy(iConfig.getUntrackedParameter<double>("min_simHit_energy")),
+    max_simHit_time(iConfig.getUntrackedParameter<double>("max_simHit_time"))
 {
     //now do what ever initialization is needed
     hcalhitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
@@ -166,9 +166,6 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     edm::ESHandle<HcalDbService> conditions;
     iSetup.get<HcalDbRecord>().get(conditions);
 
-    //HcalSimParameterMap* theParameterMap;
-    //theParameterMap(new HcalSimParameterMap(iConfig)),
-
     const int HE_depth_max = 7; 
     const int HE_ieta_min = 16;
     const int HE_ieta_max = 29;
@@ -194,8 +191,11 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     std::map <int, std::vector<float>> id_energy_map, id_time_map;
     //int Nhb = 0, Nhe = 0, Nho = 0, Nhf = 0;
+    //std::cout << "rawId, simHit.id(), iter.energy(), iter.time()" << std::endl;
     for(auto iter : *SimHits)
     {
+        auto time = iter.time();
+        if(time > max_simHit_time) {continue;}
         HcalDetId hid(iter.id());
         hid = HcalDetId(HcalHitRelabeller::relabel(iter.id(), hcons));
         auto rawId = hid.rawId();
@@ -206,21 +206,15 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         //auto iphi = hid.iphi();
 
         auto energy = iter.energy();
-        auto time = iter.time();
 
+        //=========== a test of too many simHit in one channel================
         /*
-        float samplingFactor;
-        if (subdet == HcalForward)
+        if(rawId == 1161323579)
         {
-            const HFSimParameters& pars = dynamic_cast<const HFSimParameters&>(theParameterMap->simParameters(hid));
-            samplingFactor = pars.samplingFactor();
-        }
-        else
-        {
-            const HcalSimParameters& pars = dynamic_cast<const HcalSimParameters&>(theParameterMap->simParameters(hid));
-            samplingFactor = pars.samplingFactor(hid);
+            std::cout << rawId << ", " << hid << ", " << energy << ", " << time << std::endl;
         }
         */
+        //=========================== end of test ============================
 
         if(subdet == 1 || subdet == 2)
         {
@@ -339,6 +333,19 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         }
         channel_energy_vs_time_h->Fill(energy_sum, weighted_time);
         float arrival_time = weighted_time - TOF + 75;
+
+        //================ test for long arrival time, to be comment out ===============
+        /*
+        if(energy_sum > 5 && arrival_time > 100)
+        {
+            std::cout << "simHit energy, simHit time" << std::endl;
+            for(int i = 0; i < vec_size; i++)
+            {
+                std::cout << energy_vec.at(i) << ", " << time_vec.at(i) << std::endl;
+            }
+        }
+        */
+        //================================end of test====================================
 
         std::sort(time_vec.begin(), time_vec.end());
         float median_time = time_vec.at(vec_size/2);

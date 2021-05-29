@@ -5,6 +5,8 @@ import math
 import array
 import numpy as np
 
+#pd.set_option('display.max_columns', 500)
+
 result_dir = "results_temp/"
 result_file = "result"
 #result_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_1TeV_pion_gun_1dHB_2dHE-2021-04-19/"
@@ -475,6 +477,8 @@ for i in range(Nrows):
                 TS45_vs_arrival_HB_h.Fill(arrival_time, TS45_time)
             else:
                 TS45_vs_arrival_HE_h.Fill(arrival_time, TS45_time)
+            #if gen_energy > 50 and arrival_time > 100 and TS45_time < 85:
+            #    print (result.iloc[[i]])
 
         genG0_h.Fill(gen_energy)
         genG0_ieta_h.Fill(ieta)

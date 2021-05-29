@@ -108,8 +108,8 @@ hbheprereco = cms.EDProducer(
     DLPHIN_save = cms.bool(False),
     DLPHIN_apply_respCorr = cms.bool(False),
     DLPHIN_truncate = cms.bool(False),
-    DLPHIN_print_1d = cms.bool(False),
-    DLPHIN_print_2d = cms.bool(True),
+    DLPHIN_print_1d = cms.bool(True),
+    DLPHIN_print_2d = cms.bool(False),
 
     # Parameter sets configuring rechit status bit setters
     flagParametersQIE8 = cms.PSet(
