@@ -239,13 +239,20 @@ TS45_time_HB_ieta_list = []
 arrival_time_HB_ieta_list = []
 reco_vs_gen_depthE1_HB_list = []
 reco_vs_gen_depthG1_HB_list = []
+DLPHIN_vs_gen_depthE1_HB_list = []
+DLPHIN_vs_gen_depthG1_HB_list = []
 mahi_over_DLPHIN_HB_ieta_list = []
 
 for i in range(1,17):
-    E1_hist = rt.TH2F("reco_vs_gen_depthE1_HB_iEta_" + str(i) + "_h", "reco vs gen, depth = 1, HB |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    E1_hist = rt.TH2F("reco_vs_gen_depthE1_HB_iEta_" + str(i) + "_h", "reco_vs_gen_depthE1_HB_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthE1_HB_list.append(E1_hist)
-    G1_hist = rt.TH2F("reco_vs_gen_depthG1_HB_iEta_" + str(i) + "_h", "reco vs gen, depth > 1, HB |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    G1_hist = rt.TH2F("reco_vs_gen_depthG1_HB_iEta_" + str(i) + "_h", "reco_vs_gen_depthG1_HB_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthG1_HB_list.append(G1_hist)
+
+    E1_hist = rt.TH2F("DLPHIN_vs_gen_depthE1_HB_iEta_" + str(i) + "_h", "DLPHIN_vs_gen_depthE1_HB_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    DLPHIN_vs_gen_depthE1_HB_list.append(E1_hist)
+    G1_hist = rt.TH2F("DLPHIN_vs_gen_depthG1_HB_iEta_" + str(i) + "_h", "DLPHIN_vs_gen_depthG1_HB_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    DLPHIN_vs_gen_depthG1_HB_list.append(G1_hist)
 
     weighted_time_hist_list = []
     TS45_time_hist_list = []
@@ -271,13 +278,20 @@ TS45_time_HE_ieta_list = []
 arrival_time_HE_ieta_list = []
 reco_vs_gen_depthE1_HE_list = []
 reco_vs_gen_depthG1_HE_list = []
+DLPHIN_vs_gen_depthE1_HE_list = []
+DLPHIN_vs_gen_depthG1_HE_list = []
 mahi_over_DLPHIN_HE_ieta_list = []
 
 for i in range(16,30):
-    E1_hist = rt.TH2F("reco_vs_gen_depthE1_HE_iEta_" + str(i) + "_h", "reco vs gen, depth = 1, HE |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    E1_hist = rt.TH2F("reco_vs_gen_depthE1_HE_iEta_" + str(i) + "_h", "reco_vs_gen_depthE1_HE_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthE1_HE_list.append(E1_hist)
-    G1_hist = rt.TH2F("reco_vs_gen_depthG1_HE_iEta_" + str(i) + "_h", "reco vs gen, depth > 1, HE |ieta| " + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    G1_hist = rt.TH2F("reco_vs_gen_depthG1_HE_iEta_" + str(i) + "_h", "reco_vs_gen_depthG1_HE_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
     reco_vs_gen_depthG1_HE_list.append(G1_hist)
+
+    E1_hist = rt.TH2F("DLPHIN_vs_gen_depthE1_HE_iEta_" + str(i) + "_h", "DLPHIN_vs_gen_depthE1_HE_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    DLPHIN_vs_gen_depthE1_HE_list.append(E1_hist)
+    G1_hist = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_iEta_" + str(i) + "_h", "DLPHIN_vs_gen_depthG1_HE_iEta_" + str(i), Ebins, Emin, Emax, Ebins, Emin, Emax)
+    DLPHIN_vs_gen_depthG1_HE_list.append(G1_hist)
 
     weighted_time_hist_list = []
     TS45_time_hist_list = []
@@ -380,6 +394,7 @@ for i in range(Nrows):
             raw_vs_gen_depthE1_HB_h.Fill(gen_energy, raw_energy)
             DLPHIN_vs_gen_depthE1_HB_h.Fill(gen_energy, DLPHIN_energy)
             reco_vs_gen_depthE1_HB_list[ieta - 1].Fill(gen_energy, reco_energy)
+            DLPHIN_vs_gen_depthE1_HB_list[ieta - 1].Fill(gen_energy, DLPHIN_energy)
             if use_8_pulse: reco_vs_gen_depthE1_HB_8_pulse_h.Fill(gen_energy, reco_energy)
             else: reco_vs_gen_depthE1_HB_1_pulse_h.Fill(gen_energy, reco_energy)
         else:
@@ -389,6 +404,7 @@ for i in range(Nrows):
             raw_vs_gen_depthG1_HB_h.Fill(gen_energy, raw_energy)
             DLPHIN_vs_gen_depthG1_HB_h.Fill(gen_energy, DLPHIN_energy)
             reco_vs_gen_depthG1_HB_list[ieta - 1].Fill(gen_energy, reco_energy)
+            DLPHIN_vs_gen_depthG1_HB_list[ieta - 1].Fill(gen_energy, DLPHIN_energy)
             if use_8_pulse: reco_vs_gen_depthG1_HB_8_pulse_h.Fill(gen_energy, reco_energy)
             else: reco_vs_gen_depthG1_HB_1_pulse_h.Fill(gen_energy, reco_energy)
     elif sub_det == 2:
@@ -415,6 +431,7 @@ for i in range(Nrows):
                 raw_vs_gen_depthE1_HE_PUH_h.Fill(gen_energy, raw_energy)
                 DLPHIN_vs_gen_depthE1_HE_PUH_h.Fill(gen_energy, DLPHIN_energy)
             reco_vs_gen_depthE1_HE_list[ieta - 16].Fill(gen_energy, reco_energy)
+            DLPHIN_vs_gen_depthE1_HE_list[ieta - 16].Fill(gen_energy, DLPHIN_energy)
             if use_8_pulse: reco_vs_gen_depthE1_HE_8_pulse_h.Fill(gen_energy, reco_energy)
             else: reco_vs_gen_depthE1_HE_1_pulse_h.Fill(gen_energy, reco_energy)
         else:
@@ -440,6 +457,7 @@ for i in range(Nrows):
                 raw_vs_gen_depthG1_HE_PUH_h.Fill(gen_energy, raw_energy)
                 DLPHIN_vs_gen_depthG1_HE_PUH_h.Fill(gen_energy, DLPHIN_energy)
             reco_vs_gen_depthG1_HE_list[ieta - 16].Fill(gen_energy, reco_energy)
+            DLPHIN_vs_gen_depthG1_HE_list[ieta - 16].Fill(gen_energy, DLPHIN_energy)
             if use_8_pulse: reco_vs_gen_depthG1_HE_8_pulse_h.Fill(gen_energy, reco_energy)
             else: reco_vs_gen_depthG1_HE_1_pulse_h.Fill(gen_energy, reco_energy)
     else: print "strange sub_det: ", sub_det
