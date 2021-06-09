@@ -98,16 +98,16 @@ hbheprereco = cms.EDProducer(
     setLegacyFlagsQIE11 = cms.bool(False),
 
     # DLPHIN parameters
-    DLPHIN_pb_d1HB = cms.string(DLPHIN_pb_folder + "model_d1HB_R2.pb"),
-    DLPHIN_pb_dg1HB = cms.string(DLPHIN_pb_folder + "model_dg1HB_R2.pb"),
+    DLPHIN_pb_d1HB = cms.string(DLPHIN_pb_folder + "model_d1HB_p1TeV_cut0_epoch50.pb"),
+    DLPHIN_pb_dg1HB = cms.string(DLPHIN_pb_folder + "model_dg1HB_p1TeV_cut0_epoch50.pb"),
     DLPHIN_pb_d1HE = cms.string(DLPHIN_pb_folder + "model_d1HE_R2.pb"),
     DLPHIN_pb_dg1HE = cms.string(DLPHIN_pb_folder + "model_dg1HE_R2.pb"),
-    DLPHIN_pb_SF = cms.string(DLPHIN_pb_folder + "DLPHIN_MAHI_ratio.root"),
-    DLPHIN_pb_2dHE = cms.string(DLPHIN_pb_folder + "model_2dHE.pb"),
+    DLPHIN_pb_SF = cms.string(DLPHIN_pb_folder + "mahi_over_DLPHIN.root"),
+    DLPHIN_pb_2dHE = cms.string(DLPHIN_pb_folder + "model_2dHE_p1TeV_cut1_epoch100.pb"),
     DLPHIN_scale = cms.bool(False),
     DLPHIN_save = cms.bool(True),
     DLPHIN_apply_respCorr = cms.bool(False),
-    DLPHIN_truncate = cms.bool(True),
+    DLPHIN_truncate = cms.bool(False),
     DLPHIN_print_1d = cms.bool(False),
     DLPHIN_print_2d = cms.bool(False),
 

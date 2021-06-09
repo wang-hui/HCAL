@@ -23,7 +23,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(2000)
+    input = cms.untracked.int32(-1)
 )
 
 f = open(sys.argv[2], "r")
@@ -51,6 +51,13 @@ process.configurationMetadata = cms.untracked.PSet(
 )
 
 # Output definition
+#RAW content
+SimG4CoreRAW = cms.PSet(
+    outputCommands = cms.untracked.vstring('keep *_g4SimHits_*_*',
+        'keep edmHepMCProduct_source_*_*')
+)
+outputCommands_temp = process.RECOSIMEventContent.outputCommands
+outputCommands_temp.extend(SimG4CoreRAW.outputCommands)
 
 process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
@@ -58,7 +65,7 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string('RECO_MC.root'),
-    outputCommands = process.RECOSIMEventContent.outputCommands,
+    outputCommands = outputCommands_temp,
     splitLevel = cms.untracked.int32(0)
 )
 
