@@ -61,7 +61,7 @@
 #include "RecoLocalCalo/HcalRecAlgos/interface/fetchHcalAlgoData.h"
 
 #include "TFile.h"
-#include "TProfile2D.h"
+#include "TH1.h"
 #include "TF1.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 // Some helper functions
@@ -331,7 +331,7 @@ private:
     // Struct for DLPHIN
     tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
     tensorflow::Session *session_2dHE;
-    std::vector<TProfile *> ratio_HB, ratio_HE;
+    std::vector<TH1F *> ratio_HB, ratio_HE;
     //TF1 *DLPHIN_rand;
     struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
@@ -496,9 +496,10 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
             {
                 for (int j = depth_first; j <= depth_last; j++)
                 {
-                    TString hist_name = "mahi_over_DLPHIN_" + sub_det + "_iEta_" + std::to_string(i) + "_depth_" + std::to_string(j) + "_h_pfx";
-                    if(sub_det == "HB") ratio_HB.push_back((TProfile*)ratio_file->Get(hist_name));
-                    else if(sub_det == "HE") ratio_HE.push_back((TProfile*)ratio_file->Get(hist_name));
+                    //TString hist_name = "mahi_over_DLPHIN_" + sub_det + "_iEta_" + std::to_string(i) + "_depth_" + std::to_string(j) + "_h_pfx";
+                    TString hist_name = "DLPHIN_respCorr_" + sub_det + "_iEta_" + std::to_string(i) + "_depth_" + std::to_string(j) + "_h";
+                    if(sub_det == "HB") ratio_HB.push_back((TH1F*)ratio_file->Get(hist_name));
+                    else if(sub_det == "HE") ratio_HE.push_back((TH1F*)ratio_file->Get(hist_name));
                 }
             }
         }
