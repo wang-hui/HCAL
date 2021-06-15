@@ -319,7 +319,7 @@ private:
 
     // DLPHIN parameters
     std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_, DLPHIN_pb_2dHE_;
-    bool DLPHIN_scale_, DLPHIN_save_, DLPHIN_apply_respCorr_, DLPHIN_truncate_, DLPHIN_print_1d_, DLPHIN_print_2d_;
+    bool DLPHIN_scale_, DLPHIN_save_, DLPHIN_truncate_, DLPHIN_print_1d_, DLPHIN_print_2d_;
 
     // Other members
     edm::EDGetTokenT<HBHEDigiCollection> tok_qie8_;
@@ -331,7 +331,8 @@ private:
     // Struct for DLPHIN
     tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
     tensorflow::Session *session_2dHE;
-    std::vector<TH1F *> ratio_HB, ratio_HE;
+    typedef std::pair<int, int> int_int_pair;
+    std::map<int_int_pair, TH1F *> DLPHIN_respCorr_HB, DLPHIN_respCorr_HE;
     //TF1 *DLPHIN_rand;
     struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
     std::vector<DLPHIN_input> DLPHIN_input_vec;
@@ -405,7 +406,6 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
       DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
       DLPHIN_scale_(conf.getParameter<bool>("DLPHIN_scale")),
       DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
-      DLPHIN_apply_respCorr_(conf.getParameter<bool>("DLPHIN_apply_respCorr")),
       DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
       DLPHIN_print_1d_(conf.getParameter<bool>("DLPHIN_print_1d")),
       DLPHIN_print_2d_(conf.getParameter<bool>("DLPHIN_print_2d")),
@@ -473,19 +473,15 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
 
     if(DLPHIN_scale_)
     {
-        TFile *ratio_file = new TFile(DLPHIN_pb_SF_.c_str());
+        TFile * DLPHIN_respCorr_file = new TFile(DLPHIN_pb_SF_.c_str());
 
         for (auto sub_det : std::vector<TString>{"HB", "HE"})
         {
-            int ieta_first, ieta_last, depth_first, depth_last;
-            if (sub_det == "HB")
-            {
-                ieta_first = 1;
-                ieta_last = 16;
-                depth_first = 1;
-                depth_last = 2;
-            }
-            else if (sub_det == "HE")
+            int ieta_first = 1;
+            int ieta_last = 16;
+            int depth_first = 1;
+            int depth_last = 2;
+            if (sub_det == "HE")
             {
                 ieta_first = 16;
                 ieta_last = 29;
@@ -496,10 +492,18 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
             {
                 for (int j = depth_first; j <= depth_last; j++)
                 {
-                    //TString hist_name = "mahi_over_DLPHIN_" + sub_det + "_iEta_" + std::to_string(i) + "_depth_" + std::to_string(j) + "_h_pfx";
                     TString hist_name = "DLPHIN_respCorr_" + sub_det + "_iEta_" + std::to_string(i) + "_depth_" + std::to_string(j) + "_h";
-                    if(sub_det == "HB") ratio_HB.push_back((TH1F*)ratio_file->Get(hist_name));
-                    else if(sub_det == "HE") ratio_HE.push_back((TH1F*)ratio_file->Get(hist_name));
+                    if(sub_det == "HB") DLPHIN_respCorr_HB[std::make_pair(i, j)] = (TH1F*)DLPHIN_respCorr_file->Get(hist_name);
+                    else if(sub_det == "HE") DLPHIN_respCorr_HE[std::make_pair(i, j)] = (TH1F*)DLPHIN_respCorr_file->Get(hist_name);
+                }
+            }
+            for (int i = - ieta_last; i <= - ieta_first; i++)
+            {
+                for (int j = depth_first; j <= depth_last; j++)
+                {
+                    TString hist_name = "DLPHIN_respCorr_" + sub_det + "_iEta_" + std::to_string(i) + "_depth_" + std::to_string(j) + "_h";
+                    if(sub_det == "HB") DLPHIN_respCorr_HB[std::make_pair(i, j)] = (TH1F*)DLPHIN_respCorr_file->Get(hist_name);
+                    else if(sub_det == "HE") DLPHIN_respCorr_HE[std::make_pair(i, j)] = (TH1F*)DLPHIN_respCorr_file->Get(hist_name);
                 }
             }
         }
@@ -892,7 +896,6 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<std::string>("DLPHIN_pb_2dHE");
     desc.add<bool>("DLPHIN_scale");
     desc.add<bool>("DLPHIN_save");
-    desc.add<bool>("DLPHIN_apply_respCorr");
     desc.add<bool>("DLPHIN_truncate");
     desc.add<bool>("DLPHIN_print_1d");
     desc.add<bool>("DLPHIN_print_2d");
@@ -935,11 +938,10 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     */
     //======================== end of test ====================================
 
-    typedef std::pair<int, int> ieta_iphi_pair;
-    std::map <ieta_iphi_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map;
+    std::map <int_int_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map;
     std::vector<float> channel_vec(23, 0.0);
     std::vector<std::vector<float>> depth_vec(HE_depth_max, channel_vec);
-    std::map <ieta_iphi_pair, int> ieta_iphi_row_map;
+    std::map <int_int_pair, int> ieta_iphi_row_map;
     int row = 0;
     for(int ieta = -HE_ieta_max; ieta <= -HE_ieta_min; ieta ++)
     {
@@ -1073,7 +1075,6 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
         //std::cout << "outputs.size() " << outputs.size() << ", tensor.shape().dim_size(0) " << outputs[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << outputs[0].shape().dim_size(1) << std::endl;
         auto temp = outputs[0].tensor<float, 2>()(0,0);
-        if(DLPHIN_apply_respCorr_) {temp = temp * resp_corr;}
         if(DLPHIN_truncate_)
         {
             temp = temp - 0.25;
@@ -1150,7 +1151,6 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             auto mask = outputs_2d[0].tensor<float, 3>()(HE_row,1,depth-1);
 
             if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
-            if(DLPHIN_apply_respCorr_) {pred = pred * resp_corr;}
             if(DLPHIN_truncate_)
             {
                 pred = pred - 0.25;
@@ -1174,15 +1174,13 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         {
             if(subdet == 1)
             {
-                int hist_index = (abs(ieta) - 1) * 2 + depth - 1;
-                auto hist_temp = ratio_HB.at(hist_index);
+                auto hist_temp = DLPHIN_respCorr_HB.at(std::make_pair(ieta, depth));
                 auto SF_temp = hist_temp->GetBinContent(hist_temp->FindBin(Doutput.at(i)));
                 if(SF_temp > 0) DLPHIN_SF = SF_temp;
             }
             else if(subdet == 2)
             {
-                int hist_index = (abs(ieta) - HE_ieta_min) * HE_depth_max + depth - 1;
-                auto hist_temp = ratio_HE.at(hist_index);
+                auto hist_temp = DLPHIN_respCorr_HE.at(std::make_pair(ieta, depth));
                 auto SF_temp = hist_temp->GetBinContent(hist_temp->FindBin(Doutput.at(i)));
                 if(SF_temp > 0) DLPHIN_SF = SF_temp;
             }
