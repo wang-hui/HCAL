@@ -1075,12 +1075,6 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
         //std::cout << "outputs.size() " << outputs.size() << ", tensor.shape().dim_size(0) " << outputs[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << outputs[0].shape().dim_size(1) << std::endl;
         auto temp = outputs[0].tensor<float, 2>()(0,0);
-        if(DLPHIN_truncate_)
-        {
-            temp = temp - 0.25;
-            if(temp < 0) {temp = 0.0;}
-        }
-        //temp = temp * DLPHIN_rand->GetRandom();
         Doutput.push_back(temp);
     }
 
@@ -1151,12 +1145,6 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             auto mask = outputs_2d[0].tensor<float, 3>()(HE_row,1,depth-1);
 
             if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
-            if(DLPHIN_truncate_)
-            {
-                pred = pred - 0.25;
-                if(pred < 0) {pred = 0.0;}
-            }
-            //pred = pred * DLPHIN_rand->GetRandom();
             Doutput.at(i) = pred;
 
             channel_vec_temp.at(16) = rawgain;
@@ -1169,7 +1157,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = channel_vec_temp;
         }
 
-        float DLPHIN_SF = 1.0;                          //SF dirived from MAHI / DLPHIN
+        float DLPHIN_SF = 1.0;
         if(DLPHIN_scale_)
         {
             if(subdet == 1)
@@ -1184,8 +1172,15 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
                 auto SF_temp = hist_temp->GetBinContent(hist_temp->FindBin(Doutput.at(i)));
                 if(SF_temp > 0) DLPHIN_SF = SF_temp;
             }
+
+            Doutput.at(i) = Doutput.at(i) * DLPHIN_SF;
         }
-        Doutput.at(i) = Doutput.at(i) * DLPHIN_SF;
+
+        if(DLPHIN_truncate_)
+        {
+            if(energy <= 0 || Doutput.at(i) < 0)
+            {Doutput.at(i) = 0;}
+        }
 
         if(DLPHIN_print_1d_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << Doutput.at(i) << ", " << DLPHIN_SF << std::endl;
     }
