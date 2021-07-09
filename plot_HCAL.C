@@ -6,7 +6,8 @@ int plot_HCAL()
     bool plot_1d = false;
     bool plot_1d_fit = false;
 
-    float x_scale = 0.1;
+    int rebin_x = 1;
+    float x_scale = 0.12;
     bool do_profile_study = false;
 
     std::vector<TString> hist_list =
@@ -19,7 +20,6 @@ int plot_HCAL()
         //"reco_vs_gen_depthG1_HE", "reco_vs_gen_depthG1_HE_1_pulse", "reco_vs_gen_depthG1_HE_8_pulse",
         //"reco_vs_gen_depthE1_HE", "reco_vs_gen_depthE1_HE_1_pulse", "reco_vs_gen_depthE1_HE_8_pulse",
         //"reco_vs_gen_depthG1_HB", "reco_vs_gen_depthG1_HB_1_pulse", "reco_vs_gen_depthG1_HB_8_pulse",
-        //"reco_vs_gen_depthE1_HB_ietaS15",
         //"reco_vs_gen_depthE1_HB", "reco_vs_gen_depthE1_HB_1_pulse", "reco_vs_gen_depthE1_HB_8_pulse",
 
         //"reco_vs_gen_depthG1_HE", //"reco_vs_gen_depthG1_HE_PUL", "reco_vs_gen_depthG1_HE_PUH",
@@ -38,6 +38,8 @@ int plot_HCAL()
         //"raw_vs_gen_HB", "raw_vs_gen_HB_PUL", "raw_vs_gen_HB_PUH",
 
         //"DLPHIN_vs_gen",
+        //"DLPHIN_vs_mahi_HB", "DLPHIN_vs_mahi_depthG1_HE"
+        //"DLPHIN_vs_mahi_depthE1_HE"
         //"DLPHIN_vs_gen_depthG1_HE", //"DLPHIN_vs_gen_depthE1_HE", "DLPHIN_vs_gen_depthG1_HB", "DLPHIN_vs_gen_depthE1_HB",
         //"reco_err",
         //"aux_err",
@@ -71,11 +73,18 @@ int plot_HCAL()
         //"DLPHIN_ratio_depthE1_HE_genL", "DLPHIN_ratio_depthE1_HE_genM",
         //"weighted_time", "TS45_time", "arrival_time"
  
-        "DLPHIN_vs_gen_sum"
+        "reco_vs_gen_depthE1_HB_iEta_15", "reco_vs_gen_depthG1_HB_iEta_15",
+        "reco_vs_gen_depthE1_HB_iEta_16", "reco_vs_gen_depthG1_HB_iEta_16",
+        "DLPHIN_vs_gen_depthE1_HB_iEta_15", "DLPHIN_vs_gen_depthG1_HB_iEta_15",
+        "DLPHIN_vs_gen_depthE1_HB_iEta_16", "DLPHIN_vs_gen_depthG1_HB_iEta_16",
+
+        //"DLPHIN_vs_gen_sum"
+        //"depthE1_HB"
     };
 
-    TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU_2d_1dHB_2dHE.root");
-    //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
+    TFile *f1 = new TFile("results/UL_p1TeV_pion_gun_1d_training.root");
+    //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU_1dHB_2dHE.root");
+    //TFile *f1 = new TFile("results/UL_RSGravitonToQuarkQuark_kMpl01_M_2000_RECO_DLPHIN_scaled_unfinished.root");
 
     for(int i = 0; i < hist_list.size(); i++)
     {
@@ -98,6 +107,7 @@ int plot_HCAL()
             h1->Draw("colz");
             h1->SetTitle(hist_name);
             //h1->SetTitle("");
+            h1->RebinX(rebin_x);
             h1->GetXaxis()->SetTitle("truth energy [GeV]");
             h1->GetXaxis()->SetRangeUser(xmin, xmax * x_scale);
             h1->GetYaxis()->SetTitle("reco energy [GeV]");

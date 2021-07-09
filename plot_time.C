@@ -2,7 +2,8 @@ int plot_time()
 {
     //TFile *f1 = new TFile("results/result_UL_LLP_noPU.root");
     //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_noPU.root");
-    TFile *f1 = new TFile("results_temp/result_pion_gun_noPU_origin.root");
+    //TFile *f1 = new TFile("results/result_UL_1TeV_pion_gun_PU_1dHB_2dHE.root");
+    TFile *f1 = new TFile("results/UL_p1TeV_pion_gun_1d_training.root");
 
     bool plot_weighted_time_vs_gen = false;
     bool plot_TS45_time_vs_gen = false;
@@ -15,8 +16,8 @@ int plot_time()
     bool plot_TS45_time_vs_ieta = false;
     bool plot_arrival_time_vs_ieta = false;
 
-    //TString sub_det = "HB";
-    TString sub_det = "HE";
+    TString sub_det = "HB";
+    //TString sub_det = "HE";
     TString hist_name = "weighted_time_vs_gen";
     TString x_title = "weighted time [ns]";
     TString y_title = "weighted time [ns]";
@@ -52,7 +53,7 @@ int plot_time()
     if(plot_TS45_vs_arrival)
     {
         plot_time_vs_gen = true;
-        hist_name = "TS45_vs_arrival_HB";
+        hist_name = "TS45_vs_arrival_" + sub_det;
         y_title = "TS45 time [ns]";
         x_title = "arrival [ns]";
         x_min = 75;

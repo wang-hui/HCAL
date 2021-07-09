@@ -2,11 +2,11 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "UL_DYJetsToEE_M-50_RECO_PU_DLPHIN_respCorr_PNieta"        #folder name for the result files in EOS
+folder_name = "DYJetsToMuMu_M-50_Zpt-150toInf_RECO_mahi_energy"        #folder name for the result files in EOS
 result_path = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/"          #EOS dir for the above folder
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"        #Local dir for condor log files
-file_list = "../FileList/UL_DYJetsToEE_M-50_RAW_PU.list"
-tot_jobs = 2000
+file_list = "../FileList/DYJetsToMuMu_M-50_Zpt-150toInf_GEN-SIM-RAW.list"
+tot_jobs = 100
 
 today = str(date.today())
 folder_name_full = folder_name + "-" + today
