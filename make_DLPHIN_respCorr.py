@@ -1,42 +1,44 @@
 import ROOT as rt
-import pandas as pd
 
-DLPHIN_respCorr_pd = pd.read_csv("results/dlphin_corr0.txt", sep=' ', skipinitialspace = True, header=0)
-#print DLPHIN_respCorr_pd
-#print DLPHIN_respCorr_pd.dtypes
-
-out_file = rt.TFile("DLPHIN_respCorr.root", "recreate")
+in_file = rt.TFile.Open("results/JP_respCorr_noPU.root")
+out_file = rt.TFile("DLPHIN_JP_respCorr.root", "recreate")
 SubDetList = ["HB", "HE"]
 
+HB_ieta_list = []
+for i in range(1, 17): HB_ieta_list.append(i)
+for i in range(-16, 0): HB_ieta_list.append(i)
+HB_depth_list = range(1,3)
+
+HE_ieta_list = []
+for i in range(16, 30): HE_ieta_list.append(i)
+for i in range(-29, -15): HE_ieta_list.append(i)
+HE_depth_list = range(1,8)
+
 for SubDet in SubDetList:
-    ieta_first = 1
-    ieta_last = 16
-    depth_first = 1
-    depth_last = 2
+    ieta_list = []
+    depth_list = []
+    if SubDet == "HB":
+        ieta_list = HB_ieta_list
+        depth_list = HB_depth_list
     if SubDet == "HE":
-        ieta_first = 16
-        ieta_last = 29
-        depth_first = 1
-        depth_last = 7
+        ieta_list = HE_ieta_list
+        depth_list = HE_depth_list
+    #print SubDet
+    #print ieta_list
+    #print depth_list
 
-    for i in range(ieta_first, ieta_last+1):
-        for j in range(depth_first, depth_last+1):
+    for i in ieta_list:
+        for j in depth_list:
+            in_hist = in_file.Get("D" + str(j))
+            respCorr_temp = in_hist.GetBinContent(in_hist.FindBin(i))
+            unc_temp = in_hist.GetBinError(in_hist.FindBin(i))
+
             h1_name = "DLPHIN_respCorr_" + SubDet + "_iEta_" + str(i) + "_depth_" + str(j) + "_h"
-
             respCorr = 1.0
             unc = 0.0
-
-            Nrows = DLPHIN_respCorr_pd.shape[0]
-            for row in range(Nrows):
-                ieta = DLPHIN_respCorr_pd["ieta"][row]
-                depth = DLPHIN_respCorr_pd["depth"][row]
-                respCorr_temp = DLPHIN_respCorr_pd["respCorr"][row]
-                unc_temp = DLPHIN_respCorr_pd["unc"][row]
-
-                if ieta == i and depth == j:
-                    respCorr = respCorr_temp
-                    unc = unc_temp
-                    break
+            if respCorr_temp != 0:
+                respCorr = respCorr_temp
+                unc = unc_temp
 
             print h1_name, "respCorr ", respCorr, "+-", unc
             h1 = rt.TH1F(h1_name, h1_name, 1, 0, 9999)
@@ -45,32 +47,5 @@ for SubDet in SubDetList:
                 h1.SetBinError(h1_bin, unc)
             h1.Write()
 
-    for i in range(-ieta_last, -ieta_first+1):
-        for j in range(depth_first, depth_last+1):
-            h1_name = "DLPHIN_respCorr_" + SubDet + "_iEta_" + str(i) + "_depth_" + str(j) + "_h"
-
-            respCorr = 1.0
-            unc = 0.0
-
-            Nrows = DLPHIN_respCorr_pd.shape[0]
-            for row in range(Nrows):
-                ieta = DLPHIN_respCorr_pd["ieta"][row]
-                depth = DLPHIN_respCorr_pd["depth"][row]
-                respCorr_temp = DLPHIN_respCorr_pd["respCorr"][row]
-                unc_temp = DLPHIN_respCorr_pd["unc"][row]
-
-                if ieta == i and depth == j:
-                    respCorr = respCorr_temp
-                    unc = unc_temp
-                    break
-
-            print h1_name, "respCorr ", respCorr, "+-", unc
-            h1 = rt.TH1F(h1_name, h1_name, 1, 0, 9999)
-            for h1_bin in range(3):
-                h1.SetBinContent(h1_bin, respCorr)
-                h1.SetBinError(h1_bin, unc)
-            h1.Write()
-
-#out_file.cd()
-#out_file.Write()
 out_file.Close()
+
