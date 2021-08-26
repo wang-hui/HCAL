@@ -1079,7 +1079,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     }
 
     std::vector<tensorflow::Tensor> outputs_2d;        //vector size 1; 2d tensor of [[pred]]
-    tensorflow::run(session_2dHE, {{"net_charges",ch_input_2d},{"types_input",ty_input_2d},{"mask_input",ma_input_2d}}, {"output/Reshape"}, &outputs_2d);
+    tensorflow::run(session_2dHE, {{"net_charges",ch_input_2d},{"types_input",ty_input_2d},{"mask_input",ma_input_2d}}, {"reshape_5/Reshape"}, &outputs_2d);
     //std::cout << "outputs_2d.size() " << outputs_2d.size() << ", tensor.shape().dim_size(0) " << outputs_2d[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << outputs_2d[0].shape().dim_size(1) << ", tensor.shape().dim_size(2) " << outputs_2d[0].shape().dim_size(2) << std::endl;
     /*
     for(int i = 0; i < HE_tot_rows; i++)
