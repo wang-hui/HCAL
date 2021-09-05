@@ -1,6 +1,6 @@
 universe = vanilla
 Executable = condor.sh
-transfer_input_files = FileList.tar, HBHEPhase1Reconstructor_cfi.py, reco_MC_RAW2DIGI_RECO_ALCARECO.py
+transfer_input_files = FileList.tar, HBHEPhase1Reconstructor_cfi.py, reco_MC_RAW2DIGI_RECO_ALCARECO.py, reco_data_RAW2DIGI_ALCARECO_NoHLT.py, SimpleHBHEPhase1Algo.cc 
 should_transfer_files = YES 
 when_to_transfer_output = ON_EXIT
 x509userproxy = $ENV(X509_USER_PROXY)
