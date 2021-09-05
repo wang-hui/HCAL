@@ -26,6 +26,7 @@ mv ${_CONDOR_SCRATCH_DIR}/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecPr
 scram b -j 4
 cd HCAL
 mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_RECO_ALCARECO.py .
+mv ${_CONDOR_SCRATCH_DIR}/reco_data_RAW2DIGI_ALCARECO_NoHLT.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
 pwd
