@@ -17,7 +17,8 @@ git cms-addpkg Calibration/HcalAlCaRecoProducers
 git clone -b CMSSW_10_6_x https://github.com/wang-hui/HCAL.git
 mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
 mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
-mv HCAL/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src
+#mv HCAL/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src
+mv ${_CONDOR_SCRATCH_DIR}/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src
 mv HCAL/parseHBHEPhase1AlgoDescription.cc RecoLocalCalo/HcalRecAlgos/src
 mv HCAL/AlCaRecoStreams_cff.py Configuration/StandardSequences/python
 mv HCAL/ALCARECOHcalCalIsoTrkFilterNoHLT_cff.py  Calibration/HcalAlCaRecoProducers/python
@@ -29,6 +30,8 @@ mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar
 pwd
 
-cmsRun reco_MC_RAW2DIGI_RECO_ALCARECO.py $1
+#cmsRun reco_MC_RAW2DIGI_RECO_ALCARECO.py $1
+cmsRun reco_data_RAW2DIGI_ALCARECO_NoHLT.py $1
 
-xrdcp ALCARECO_MC.root root://cmseos.fnal.gov//${2}/ALCARECO_MC__${3}.root
+#xrdcp ALCARECO_MC.root root://cmseos.fnal.gov//${2}/ALCARECO_MC_${3}.root
+xrdcp ALCARECO_NoHLT_data.root root://cmseos.fnal.gov//${2}/ALCARECO_NoHLT_data_${3}.root
