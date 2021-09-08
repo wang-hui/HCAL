@@ -2,7 +2,7 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "DYJetsToMuMu_M-50_Zpt-150toInf_RECO_mahi_energy"        #folder name for the result files in EOS
+folder_name = "DYJetsToMuMu_M-50_Zpt-150toInf_RECO_DLPHIN_dedicate_respCorr_zeroOut"        #folder name for the result files in EOS
 result_path = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/"          #EOS dir for the above folder
 condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"        #Local dir for condor log files
 file_list = "../FileList/DYJetsToMuMu_M-50_Zpt-150toInf_GEN-SIM-RAW.list"

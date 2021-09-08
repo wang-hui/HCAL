@@ -12,10 +12,10 @@ git cms-init --upstream-only
 git cms-addpkg RecoLocalCalo/HcalRecProducers
 git cms-addpkg RecoLocalCalo/HcalRecAlgos
 git clone -b CMSSW_10_6_x https://github.com/wang-hui/HCAL.git
-mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
-mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
-mv HCAL/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src
-mv HCAL/parseHBHEPhase1AlgoDescription.cc RecoLocalCalo/HcalRecAlgos/src
+mv HCAL/Modified_files/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
+mv HCAL/Modified_files/BuildFile.xml RecoLocalCalo/HcalRecProducers
+mv HCAL/Modified_files/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src
+mv HCAL/Modified_files/parseHBHEPhase1AlgoDescription.cc RecoLocalCalo/HcalRecAlgos/src
 mv ${_CONDOR_SCRATCH_DIR}/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecProducers/python
 scram b -j 4
 cd HCAL
