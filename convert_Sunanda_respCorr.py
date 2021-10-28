@@ -1,11 +1,11 @@
 import ROOT as rt
 import pandas as pd
 
-DLPHIN_respCorr_pd = pd.read_csv("results/dlphin_corr0.txt", sep=' ', skipinitialspace = True, header=0)
+DLPHIN_respCorr_pd = pd.read_csv("results/dlphin_zeroout_PU_ieta26.txt", sep=' ', skipinitialspace = True, header=0)
 #print DLPHIN_respCorr_pd
 #print DLPHIN_respCorr_pd.dtypes
 
-out_file = rt.TFile("Sunanda_respCorr.root", "recreate")
+out_file = rt.TFile("My_zeroOut_PU_respCorr_ieta26.root", "recreate")
 HistList = [rt.TH1D("D" + str(d+1), "D" + str(d+1), 59, -29.5, 29.5) for d in range(7)]
 
 Nrows = DLPHIN_respCorr_pd.shape[0]
