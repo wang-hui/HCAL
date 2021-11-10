@@ -5,10 +5,10 @@
 // 
 /**\class HBHEPhase1Reconstructor HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/plugins/HBHEPhase1Reconstructor.cc
 
- Description: Phase 1 reconstruction module for HB/HE
+Description: Phase 1 reconstruction module for HB/HE
 
- Implementation:
-     [Notes on implementation]
+Implementation:
+[Notes on implementation]
 */
 //
 // Original Author:  Igor Volobouev
@@ -64,6 +64,12 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
+
+#include "SimDataFormats/CaloHit/interface/PCaloHit.h"
+#include "Geometry/HcalCommonData/interface/HcalDDDRecConstants.h"
+#include "Geometry/HcalCommonData/interface/HcalHitRelabeller.h"
+#include "samplingFactor.h"
+
 // Some helper functions
 namespace {
     // Class for making SiPM/QIE11 look like HPD/QIE8. HPD/QIE8
@@ -75,76 +81,76 @@ namespace {
     // to retrieve DB contents stored by channel for every time slice.
     // Because of this, we look things up only once, in the constructor.
     template<class DFrame>
-    class RawChargeFromSample
-    {
-    public:
-        inline RawChargeFromSample(const int sipmQTSShift,
-                                   const int sipmQNTStoSum,
-                                   const HcalDbService& cond,
-                                   const HcalDetId id,
-                                   const CaloSamples& cs,
-                                   const int soi,
-                                   const DFrame& frame,
-                                   const int maxTS) {}
+        class RawChargeFromSample
+        {
+            public:
+                inline RawChargeFromSample(const int sipmQTSShift,
+                        const int sipmQNTStoSum,
+                        const HcalDbService& cond,
+                        const HcalDetId id,
+                        const CaloSamples& cs,
+                        const int soi,
+                        const DFrame& frame,
+                        const int maxTS) {}
 
-        inline double getRawCharge(const double decodedCharge,
-                                   const double pedestal) const
-            {return decodedCharge;}
-    };
+                inline double getRawCharge(const double decodedCharge,
+                        const double pedestal) const
+                {return decodedCharge;}
+        };
 
     template<>
-    class RawChargeFromSample<QIE11DataFrame>
-    {
-    public:
-        inline RawChargeFromSample(const int sipmQTSShift,
-                                   const int sipmQNTStoSum,
-                                   const HcalDbService& cond,
-                                   const HcalDetId id,
-                                   const CaloSamples& cs,
-                                   const int soi,
-                                   const QIE11DataFrame& frame,
-                                   const int maxTS)
-            : siPMParameter_(*cond.getHcalSiPMParameter(id)),
-              fcByPE_(siPMParameter_.getFCByPE()),
-              corr_(cond.getHcalSiPMCharacteristics()->getNonLinearities(siPMParameter_.getType()))
+        class RawChargeFromSample<QIE11DataFrame>
         {
-            if (fcByPE_ <= 0.0)
-                throw cms::Exception("HBHEPhase1BadDB")
-                    << "Invalid fC/PE conversion factor for SiPM " << id
-                    << std::endl;
-
-            const HcalCalibrations& calib = cond.getHcalCalibrations(id);
-            const int firstTS = std::max(soi + sipmQTSShift, 0);
-            const int lastTS = std::min(firstTS + sipmQNTStoSum, maxTS);
-            double sipmQ = 0.0;
-
-            for (int ts = firstTS; ts < lastTS; ++ts)
+            public:
+                inline RawChargeFromSample(const int sipmQTSShift,
+                        const int sipmQNTStoSum,
+                        const HcalDbService& cond,
+                        const HcalDetId id,
+                        const CaloSamples& cs,
+                        const int soi,
+                        const QIE11DataFrame& frame,
+                        const int maxTS)
+                    : siPMParameter_(*cond.getHcalSiPMParameter(id)),
+                    fcByPE_(siPMParameter_.getFCByPE()),
+                    corr_(cond.getHcalSiPMCharacteristics()->getNonLinearities(siPMParameter_.getType()))
             {
-                const double pedestal = calib.pedestal(frame[ts].capid());
-                sipmQ += (cs[ts] - pedestal);
+                if (fcByPE_ <= 0.0)
+                    throw cms::Exception("HBHEPhase1BadDB")
+                        << "Invalid fC/PE conversion factor for SiPM " << id
+                        << std::endl;
+
+                const HcalCalibrations& calib = cond.getHcalCalibrations(id);
+                const int firstTS = std::max(soi + sipmQTSShift, 0);
+                const int lastTS = std::min(firstTS + sipmQNTStoSum, maxTS);
+                double sipmQ = 0.0;
+
+                for (int ts = firstTS; ts < lastTS; ++ts)
+                {
+                    const double pedestal = calib.pedestal(frame[ts].capid());
+                    sipmQ += (cs[ts] - pedestal);
+                }
+
+                const double effectivePixelsFired = sipmQ/fcByPE_;
+                factor_ = corr_.getRecoCorrectionFactor(effectivePixelsFired);
             }
 
-            const double effectivePixelsFired = sipmQ/fcByPE_;
-            factor_ = corr_.getRecoCorrectionFactor(effectivePixelsFired);
-        }
+                inline double getRawCharge(const double decodedCharge,
+                        const double pedestal) const
+                {
+                    return (decodedCharge - pedestal)*factor_ + pedestal;
 
-        inline double getRawCharge(const double decodedCharge,
-                                   const double pedestal) const
-        {
-            return (decodedCharge - pedestal)*factor_ + pedestal;
+                    // Old version of TS-by-TS corrections looked as follows:
+                    // const double sipmQ = decodedCharge - pedestal;
+                    // const double nPixelsFired = sipmQ/fcByPE_;
+                    // return sipmQ*corr_.getRecoCorrectionFactor(nPixelsFired) + pedestal;
+                }
 
-            // Old version of TS-by-TS corrections looked as follows:
-            // const double sipmQ = decodedCharge - pedestal;
-            // const double nPixelsFired = sipmQ/fcByPE_;
-            // return sipmQ*corr_.getRecoCorrectionFactor(nPixelsFired) + pedestal;
-       }
-
-    private:
-        const HcalSiPMParameter& siPMParameter_;
-        double fcByPE_;
-        HcalSiPMnonlinearity corr_;
-        double factor_;
-    };
+            private:
+                const HcalSiPMParameter& siPMParameter_;
+                double fcByPE_;
+                HcalSiPMnonlinearity corr_;
+                double factor_;
+        };
 
     float getTDCTimeFromSample(const QIE11DataFrame::Sample& s)
     {
@@ -157,10 +163,10 @@ namespace {
     }
 
     float getDifferentialChargeGain(const HcalQIECoder& coder,
-                                    const HcalQIEShape& shape,
-                                    const unsigned adc,
-                                    const unsigned capid,
-                                    const bool isQIE11)
+            const HcalQIEShape& shape,
+            const unsigned adc,
+            const unsigned capid,
+            const bool isQIE11)
     {
         // We have 5-bit ADC mantissa in QIE8 and 6-bit in QIE11
         static const unsigned mantissaMaskQIE8 = 0x1f;
@@ -209,7 +215,7 @@ namespace {
     // The first element of the pair indicates presence of optical
     // link errors. The second indicated presence of capid errors.
     std::pair<bool,bool> findHWErrors(const HBHEDataFrame& df,
-                                      const unsigned len)
+            const unsigned len)
     {
         bool linkErr = false;
         bool capidErr = false;
@@ -229,51 +235,51 @@ namespace {
     }
 
     std::pair<bool,bool> findHWErrors(const QIE11DataFrame& df,
-                                      const unsigned /* len */)
+            const unsigned /* len */)
     {
         return std::pair<bool,bool>(df.linkError(), df.capidError());
     }
 
     std::unique_ptr<HBHEStatusBitSetter> parse_HBHEStatusBitSetter(
-        const edm::ParameterSet& psdigi)
+            const edm::ParameterSet& psdigi)
     {
         return std::make_unique<HBHEStatusBitSetter>(
-            psdigi.getParameter<double>("nominalPedestal"),
-            psdigi.getParameter<double>("hitEnergyMinimum"),
-            psdigi.getParameter<int>("hitMultiplicityThreshold"),
-            psdigi.getParameter<std::vector<edm::ParameterSet> >("pulseShapeParameterSets"));
+                psdigi.getParameter<double>("nominalPedestal"),
+                psdigi.getParameter<double>("hitEnergyMinimum"),
+                psdigi.getParameter<int>("hitMultiplicityThreshold"),
+                psdigi.getParameter<std::vector<edm::ParameterSet> >("pulseShapeParameterSets"));
     }
 
     std::unique_ptr<HBHEPulseShapeFlagSetter> parse_HBHEPulseShapeFlagSetter(
-        const edm::ParameterSet& psPulseShape, const bool setLegacyFlags)
+            const edm::ParameterSet& psPulseShape, const bool setLegacyFlags)
     {
         return std::make_unique<HBHEPulseShapeFlagSetter>(
-            psPulseShape.getParameter<double>("MinimumChargeThreshold"),
-            psPulseShape.getParameter<double>("TS4TS5ChargeThreshold"),
-            psPulseShape.getParameter<double>("TS3TS4ChargeThreshold"),
-            psPulseShape.getParameter<double>("TS3TS4UpperChargeThreshold"),
-            psPulseShape.getParameter<double>("TS5TS6ChargeThreshold"),
-            psPulseShape.getParameter<double>("TS5TS6UpperChargeThreshold"),
-            psPulseShape.getParameter<double>("R45PlusOneRange"),
-            psPulseShape.getParameter<double>("R45MinusOneRange"),
-            psPulseShape.getParameter<unsigned int>("TrianglePeakTS"),
-            psPulseShape.getParameter<std::vector<double> >("LinearThreshold"),
-            psPulseShape.getParameter<std::vector<double> >("LinearCut"),
-            psPulseShape.getParameter<std::vector<double> >("RMS8MaxThreshold"),
-            psPulseShape.getParameter<std::vector<double> >("RMS8MaxCut"),
-            psPulseShape.getParameter<std::vector<double> >("LeftSlopeThreshold"),
-            psPulseShape.getParameter<std::vector<double> >("LeftSlopeCut"),
-            psPulseShape.getParameter<std::vector<double> >("RightSlopeThreshold"),
-            psPulseShape.getParameter<std::vector<double> >("RightSlopeCut"),
-            psPulseShape.getParameter<std::vector<double> >("RightSlopeSmallThreshold"),
-            psPulseShape.getParameter<std::vector<double> >("RightSlopeSmallCut"),
-            psPulseShape.getParameter<std::vector<double> >("TS4TS5LowerThreshold"),
-            psPulseShape.getParameter<std::vector<double> >("TS4TS5LowerCut"),
-            psPulseShape.getParameter<std::vector<double> >("TS4TS5UpperThreshold"),
-            psPulseShape.getParameter<std::vector<double> >("TS4TS5UpperCut"),
-            psPulseShape.getParameter<bool>("UseDualFit"),
-            psPulseShape.getParameter<bool>("TriangleIgnoreSlow"),
-            setLegacyFlags);
+                psPulseShape.getParameter<double>("MinimumChargeThreshold"),
+                psPulseShape.getParameter<double>("TS4TS5ChargeThreshold"),
+                psPulseShape.getParameter<double>("TS3TS4ChargeThreshold"),
+                psPulseShape.getParameter<double>("TS3TS4UpperChargeThreshold"),
+                psPulseShape.getParameter<double>("TS5TS6ChargeThreshold"),
+                psPulseShape.getParameter<double>("TS5TS6UpperChargeThreshold"),
+                psPulseShape.getParameter<double>("R45PlusOneRange"),
+                psPulseShape.getParameter<double>("R45MinusOneRange"),
+                psPulseShape.getParameter<unsigned int>("TrianglePeakTS"),
+                psPulseShape.getParameter<std::vector<double> >("LinearThreshold"),
+                psPulseShape.getParameter<std::vector<double> >("LinearCut"),
+                psPulseShape.getParameter<std::vector<double> >("RMS8MaxThreshold"),
+                psPulseShape.getParameter<std::vector<double> >("RMS8MaxCut"),
+                psPulseShape.getParameter<std::vector<double> >("LeftSlopeThreshold"),
+                psPulseShape.getParameter<std::vector<double> >("LeftSlopeCut"),
+                psPulseShape.getParameter<std::vector<double> >("RightSlopeThreshold"),
+                psPulseShape.getParameter<std::vector<double> >("RightSlopeCut"),
+                psPulseShape.getParameter<std::vector<double> >("RightSlopeSmallThreshold"),
+                psPulseShape.getParameter<std::vector<double> >("RightSlopeSmallCut"),
+                psPulseShape.getParameter<std::vector<double> >("TS4TS5LowerThreshold"),
+                psPulseShape.getParameter<std::vector<double> >("TS4TS5LowerCut"),
+                psPulseShape.getParameter<std::vector<double> >("TS4TS5UpperThreshold"),
+                psPulseShape.getParameter<std::vector<double> >("TS4TS5UpperCut"),
+                psPulseShape.getParameter<bool>("UseDualFit"),
+                psPulseShape.getParameter<bool>("TriangleIgnoreSlow"),
+                setLegacyFlags);
     }
 }
 
@@ -283,96 +289,106 @@ namespace {
 //
 class HBHEPhase1Reconstructor : public edm::stream::EDProducer<>
 {
-public:
-    explicit HBHEPhase1Reconstructor(const edm::ParameterSet&);
-    ~HBHEPhase1Reconstructor() override;
+    public:
+        explicit HBHEPhase1Reconstructor(const edm::ParameterSet&);
+        ~HBHEPhase1Reconstructor() override;
 
-    static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+        static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-private:
-    void beginRun(edm::Run const&, edm::EventSetup const&) override;
-    void endRun(edm::Run const&, edm::EventSetup const&) override;
-    void produce(edm::Event&, const edm::EventSetup&) override;
+    private:
+        void beginRun(edm::Run const&, edm::EventSetup const&) override;
+        void endRun(edm::Run const&, edm::EventSetup const&) override;
+        void produce(edm::Event&, const edm::EventSetup&) override;
 
-    // Configuration parameters
-    std::string algoConfigClass_;
-    bool processQIE8_;
-    bool processQIE11_;
-    bool saveInfos_;
-    bool saveDroppedInfos_;
-    bool makeRecHits_;
-    bool dropZSmarkedPassed_;
-    bool tsFromDB_;
-    bool recoParamsFromDB_;
-    bool saveEffectivePedestal_;
-    bool use8ts_;
-    int sipmQTSShift_;
-    int sipmQNTStoSum_;
+        // Configuration parameters
+        std::string algoConfigClass_;
+        bool processQIE8_;
+        bool processQIE11_;
+        bool saveInfos_;
+        bool saveDroppedInfos_;
+        bool makeRecHits_;
+        bool dropZSmarkedPassed_;
+        bool tsFromDB_;
+        bool recoParamsFromDB_;
+        bool saveEffectivePedestal_;
+        bool use8ts_;
+        int sipmQTSShift_;
+        int sipmQNTStoSum_;
 
-    // Parameters for turning status bit setters on/off
-    bool setNegativeFlagsQIE8_;
-    bool setNegativeFlagsQIE11_;
-    bool setNoiseFlagsQIE8_;
-    bool setNoiseFlagsQIE11_;
-    bool setPulseShapeFlagsQIE8_;
-    bool setPulseShapeFlagsQIE11_;
+        // Parameters for turning status bit setters on/off
+        bool setNegativeFlagsQIE8_;
+        bool setNegativeFlagsQIE11_;
+        bool setNoiseFlagsQIE8_;
+        bool setNoiseFlagsQIE11_;
+        bool setPulseShapeFlagsQIE8_;
+        bool setPulseShapeFlagsQIE11_;
 
-    // DLPHIN parameters
-    std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_, DLPHIN_pb_2dHE_;
-    bool DLPHIN_scale_, DLPHIN_save_, DLPHIN_truncate_, DLPHIN_print_1d_, DLPHIN_print_2d_;
+        // DLPHIN parameters
+        std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_, DLPHIN_pb_2dHE_;
+        bool DLPHIN_run_, DLPHIN_scale_, DLPHIN_save_, DLPHIN_truncate_, DLPHIN_print_1d_, DLPHIN_print_2d_;
 
-    // Other members
-    edm::EDGetTokenT<HBHEDigiCollection> tok_qie8_;
-    edm::EDGetTokenT<QIE11DigiCollection> tok_qie11_;
-    std::unique_ptr<AbsHBHEPhase1Algo> reco_;
-    std::unique_ptr<AbsHcalAlgoData> recoConfig_;
-    std::unique_ptr<HcalRecoParams> paramTS_;
+        // simHits parameters
+        bool simHits_run_, simHits_save_;
+        float max_simHit_time_;
+        edm::EDGetTokenT<std::vector<PCaloHit>> hcalhitsToken_;
 
-    // Struct for DLPHIN
-    tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
-    tensorflow::Session *session_2dHE;
-    typedef std::pair<int, int> int_int_pair;
-    std::map<int_int_pair, TH1F *> DLPHIN_respCorr_HB, DLPHIN_respCorr_HE;
-    //TF1 *DLPHIN_rand;
-    struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
-    std::vector<DLPHIN_input> DLPHIN_input_vec;
-    std::vector<float> DLPHIN_output;
+        // Other members
+        edm::EDGetTokenT<HBHEDigiCollection> tok_qie8_;
+        edm::EDGetTokenT<QIE11DigiCollection> tok_qie11_;
+        std::unique_ptr<AbsHBHEPhase1Algo> reco_;
+        std::unique_ptr<AbsHcalAlgoData> recoConfig_;
+        std::unique_ptr<HcalRecoParams> paramTS_;
 
-    // Status bit setters
-    const HBHENegativeEFilter* negEFilter_;    // We don't manage this pointer
-    std::unique_ptr<HBHEStatusBitSetter> hbheFlagSetterQIE8_;
-    std::unique_ptr<HBHEStatusBitSetter> hbheFlagSetterQIE11_;
-    std::unique_ptr<HBHEPulseShapeFlagSetter> hbhePulseShapeFlagSetterQIE8_;
-    std::unique_ptr<HBHEPulseShapeFlagSetter> hbhePulseShapeFlagSetterQIE11_;
+        // Struct for DLPHIN
+        tensorflow::Session *session_d1HB, *session_dg1HB, *session_d1HE, *session_dg1HE;
+        tensorflow::Session *session_2dHE;
+        typedef std::pair<int, int> int_int_pair;
+        std::map<int_int_pair, TH1F *> DLPHIN_respCorr_HB, DLPHIN_respCorr_HE;
+        //TF1 *DLPHIN_rand;
+        struct DLPHIN_input {HBHEChannelInfo channel_info; double resp_corr; HBHERecHit rec_hit;};
+        std::vector<DLPHIN_input> DLPHIN_input_vec;
+        std::vector<float> DLPHIN_output;
 
-    // For the function below, arguments "infoColl" and/or "rechits"
-    // are allowed to be null.
-    template<class DataFrame, class Collection>
-    void processData(const Collection& coll,
-                     const HcalDbService& cond,
-                     const HcalChannelQuality& qual,
-                     const HcalSeverityLevelComputer& severity,
-                     const bool isRealData,
-                     HBHEChannelInfo* info,
-                     HBHEChannelInfoCollection* infoColl,
-                     HBHERecHitCollection* rechits,
-                     const bool use8ts);
+        // Status bit setters
+        const HBHENegativeEFilter* negEFilter_;    // We don't manage this pointer
+        std::unique_ptr<HBHEStatusBitSetter> hbheFlagSetterQIE8_;
+        std::unique_ptr<HBHEStatusBitSetter> hbheFlagSetterQIE11_;
+        std::unique_ptr<HBHEPulseShapeFlagSetter> hbhePulseShapeFlagSetterQIE8_;
+        std::unique_ptr<HBHEPulseShapeFlagSetter> hbhePulseShapeFlagSetterQIE11_;
 
-    // Function to run DLPHIN
-    void run_dlphin(std::vector<DLPHIN_input> Dinput_vec, std::vector<float>& Doutput);
-    void save_dlphin(std::vector<float> Doutput, HBHERecHitCollection* rechits);
+        // For the function below, arguments "infoColl" and/or "rechits"
+        // are allowed to be null.
+        template<class DataFrame, class Collection>
+            void processData(const Collection& coll,
+                    const HcalDbService& cond,
+                    const HcalChannelQuality& qual,
+                    const HcalSeverityLevelComputer& severity,
+                    const bool isRealData,
+                    HBHEChannelInfo* info,
+                    HBHEChannelInfoCollection* infoColl,
+                    HBHERecHitCollection* rechits,
+                    const bool use8ts);
 
-    // Methods for setting rechit status bits
-    void setAsicSpecificBits(const HBHEDataFrame& frame, const HcalCoder& coder,
-                             const HBHEChannelInfo& info, const HcalCalibrations& calib,
-                             HBHERecHit* rh);
-    void setAsicSpecificBits(const QIE11DataFrame& frame, const HcalCoder& coder,
-                             const HBHEChannelInfo& info, const HcalCalibrations& calib,
-                             HBHERecHit* rh);
-    void setCommonStatusBits(const HBHEChannelInfo& info, const HcalCalibrations& calib,
-                             HBHERecHit* rh);
+        // Function for DLPHIN
+        void run_dlphin(std::vector<DLPHIN_input> Dinput_vec, std::vector<float>& Doutput);
+        void save_dlphin(std::vector<float> Doutput, HBHERecHitCollection* rechits);
 
-    void runHBHENegativeEFilter(const HBHEChannelInfo& info, HBHERecHit* rh);
+        // Functions for simHits
+        std::map <int, std::vector<float>> run_simHits(const std::vector<PCaloHit> * SimHits, const HcalDDDRecConstants *hcons); 
+        void sum_energy_per_rawId(std::map <int, std::vector<float>> & id_energy_map, int id, float energy);
+        void save_simHits(std::map <int, std::vector<float>> id_energy_map, HBHERecHitCollection* rechits);
+
+        // Methods for setting rechit status bits
+        void setAsicSpecificBits(const HBHEDataFrame& frame, const HcalCoder& coder,
+                const HBHEChannelInfo& info, const HcalCalibrations& calib,
+                HBHERecHit* rh);
+        void setAsicSpecificBits(const QIE11DataFrame& frame, const HcalCoder& coder,
+                const HBHEChannelInfo& info, const HcalCalibrations& calib,
+                HBHERecHit* rh);
+        void setCommonStatusBits(const HBHEChannelInfo& info, const HcalCalibrations& calib,
+                HBHERecHit* rh);
+
+        void runHBHENegativeEFilter(const HBHEChannelInfo& info, HBHERecHit* rh);
 };
 
 //
@@ -380,37 +396,44 @@ private:
 //
 HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
     : algoConfigClass_(conf.getParameter<std::string>("algoConfigClass")),
-      processQIE8_(conf.getParameter<bool>("processQIE8")),
-      processQIE11_(conf.getParameter<bool>("processQIE11")),
-      saveInfos_(conf.getParameter<bool>("saveInfos")),
-      saveDroppedInfos_(conf.getParameter<bool>("saveDroppedInfos")),
-      makeRecHits_(conf.getParameter<bool>("makeRecHits")),
-      dropZSmarkedPassed_(conf.getParameter<bool>("dropZSmarkedPassed")),
-      tsFromDB_(conf.getParameter<bool>("tsFromDB")),
-      recoParamsFromDB_(conf.getParameter<bool>("recoParamsFromDB")),
-      saveEffectivePedestal_(conf.getParameter<bool>("saveEffectivePedestal")),
-      use8ts_(conf.getParameter<bool>("use8ts")),
-      sipmQTSShift_(conf.getParameter<int>("sipmQTSShift")),
-      sipmQNTStoSum_(conf.getParameter<int>("sipmQNTStoSum")),
-      setNegativeFlagsQIE8_(conf.getParameter<bool>("setNegativeFlagsQIE8")),
-      setNegativeFlagsQIE11_(conf.getParameter<bool>("setNegativeFlagsQIE11")),
-      setNoiseFlagsQIE8_(conf.getParameter<bool>("setNoiseFlagsQIE8")),
-      setNoiseFlagsQIE11_(conf.getParameter<bool>("setNoiseFlagsQIE11")),
-      setPulseShapeFlagsQIE8_(conf.getParameter<bool>("setPulseShapeFlagsQIE8")),
-      setPulseShapeFlagsQIE11_(conf.getParameter<bool>("setPulseShapeFlagsQIE11")),
-      DLPHIN_pb_d1HB_(conf.getParameter<std::string>("DLPHIN_pb_d1HB")),
-      DLPHIN_pb_dg1HB_(conf.getParameter<std::string>("DLPHIN_pb_dg1HB")),
-      DLPHIN_pb_d1HE_(conf.getParameter<std::string>("DLPHIN_pb_d1HE")),
-      DLPHIN_pb_dg1HE_(conf.getParameter<std::string>("DLPHIN_pb_dg1HE")),
-      DLPHIN_pb_SF_(conf.getParameter<std::string>("DLPHIN_pb_SF")),
-      DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
-      DLPHIN_scale_(conf.getParameter<bool>("DLPHIN_scale")),
-      DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
-      DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
-      DLPHIN_print_1d_(conf.getParameter<bool>("DLPHIN_print_1d")),
-      DLPHIN_print_2d_(conf.getParameter<bool>("DLPHIN_print_2d")),
-      reco_(parseHBHEPhase1AlgoDescription(conf.getParameter<edm::ParameterSet>("algorithm"))),
-      negEFilter_(nullptr)
+    processQIE8_(conf.getParameter<bool>("processQIE8")),
+    processQIE11_(conf.getParameter<bool>("processQIE11")),
+    saveInfos_(conf.getParameter<bool>("saveInfos")),
+    saveDroppedInfos_(conf.getParameter<bool>("saveDroppedInfos")),
+    makeRecHits_(conf.getParameter<bool>("makeRecHits")),
+    dropZSmarkedPassed_(conf.getParameter<bool>("dropZSmarkedPassed")),
+    tsFromDB_(conf.getParameter<bool>("tsFromDB")),
+    recoParamsFromDB_(conf.getParameter<bool>("recoParamsFromDB")),
+    saveEffectivePedestal_(conf.getParameter<bool>("saveEffectivePedestal")),
+    use8ts_(conf.getParameter<bool>("use8ts")),
+    sipmQTSShift_(conf.getParameter<int>("sipmQTSShift")),
+    sipmQNTStoSum_(conf.getParameter<int>("sipmQNTStoSum")),
+    setNegativeFlagsQIE8_(conf.getParameter<bool>("setNegativeFlagsQIE8")),
+    setNegativeFlagsQIE11_(conf.getParameter<bool>("setNegativeFlagsQIE11")),
+    setNoiseFlagsQIE8_(conf.getParameter<bool>("setNoiseFlagsQIE8")),
+    setNoiseFlagsQIE11_(conf.getParameter<bool>("setNoiseFlagsQIE11")),
+    setPulseShapeFlagsQIE8_(conf.getParameter<bool>("setPulseShapeFlagsQIE8")),
+    setPulseShapeFlagsQIE11_(conf.getParameter<bool>("setPulseShapeFlagsQIE11")),
+
+    DLPHIN_pb_d1HB_(conf.getParameter<std::string>("DLPHIN_pb_d1HB")),
+    DLPHIN_pb_dg1HB_(conf.getParameter<std::string>("DLPHIN_pb_dg1HB")),
+    DLPHIN_pb_d1HE_(conf.getParameter<std::string>("DLPHIN_pb_d1HE")),
+    DLPHIN_pb_dg1HE_(conf.getParameter<std::string>("DLPHIN_pb_dg1HE")),
+    DLPHIN_pb_SF_(conf.getParameter<std::string>("DLPHIN_pb_SF")),
+    DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
+    DLPHIN_run_(conf.getParameter<bool>("DLPHIN_run")),
+    DLPHIN_scale_(conf.getParameter<bool>("DLPHIN_scale")),
+    DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
+    DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
+    DLPHIN_print_1d_(conf.getParameter<bool>("DLPHIN_print_1d")),
+    DLPHIN_print_2d_(conf.getParameter<bool>("DLPHIN_print_2d")),
+
+    simHits_run_(conf.getParameter<bool>("simHits_run")),    
+    simHits_save_(conf.getParameter<bool>("simHits_save")),
+    max_simHit_time_(conf.getParameter<double>("max_simHit_time")),
+ 
+    reco_(parseHBHEPhase1AlgoDescription(conf.getParameter<edm::ParameterSet>("algorithm"))),
+    negEFilter_(nullptr)
 {
     // Check that the reco algorithm has been successfully configured
     if (!reco_.get())
@@ -421,30 +444,30 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
     // Configure the status bit setters that have been turned on
     if (setNoiseFlagsQIE8_)
         hbheFlagSetterQIE8_ = parse_HBHEStatusBitSetter(
-            conf.getParameter<edm::ParameterSet>("flagParametersQIE8"));
+                conf.getParameter<edm::ParameterSet>("flagParametersQIE8"));
 
     if (setNoiseFlagsQIE11_)
         hbheFlagSetterQIE11_ = parse_HBHEStatusBitSetter(
-            conf.getParameter<edm::ParameterSet>("flagParametersQIE11"));
+                conf.getParameter<edm::ParameterSet>("flagParametersQIE11"));
 
     if (setPulseShapeFlagsQIE8_)
         hbhePulseShapeFlagSetterQIE8_ = parse_HBHEPulseShapeFlagSetter(
-            conf.getParameter<edm::ParameterSet>("pulseShapeParametersQIE8"),
-            conf.getParameter<bool>("setLegacyFlagsQIE8"));
+                conf.getParameter<edm::ParameterSet>("pulseShapeParametersQIE8"),
+                conf.getParameter<bool>("setLegacyFlagsQIE8"));
 
     if (setPulseShapeFlagsQIE11_)
         hbhePulseShapeFlagSetterQIE11_ = parse_HBHEPulseShapeFlagSetter(
-            conf.getParameter<edm::ParameterSet>("pulseShapeParametersQIE11"),
-            conf.getParameter<bool>("setLegacyFlagsQIE11"));
+                conf.getParameter<edm::ParameterSet>("pulseShapeParametersQIE11"),
+                conf.getParameter<bool>("setLegacyFlagsQIE11"));
 
     // Consumes and produces statements
     if (processQIE8_)
         tok_qie8_ = consumes<HBHEDigiCollection>(
-            conf.getParameter<edm::InputTag>("digiLabelQIE8"));
+                conf.getParameter<edm::InputTag>("digiLabelQIE8"));
 
     if (processQIE11_)
         tok_qie11_ = consumes<QIE11DigiCollection>(
-            conf.getParameter<edm::InputTag>("digiLabelQIE11"));
+                conf.getParameter<edm::InputTag>("digiLabelQIE11"));
 
     if (saveInfos_)
         produces<HBHEChannelInfoCollection>();
@@ -506,29 +529,31 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
             }
         }
     }
+
+    if(simHits_run_)hcalhitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
 }
 
 
 HBHEPhase1Reconstructor::~HBHEPhase1Reconstructor()
 {
-   // do anything here that needs to be done at destruction time
-   // (e.g. close files, deallocate resources etc.)
+    // do anything here that needs to be done at destruction time
+    // (e.g. close files, deallocate resources etc.)
 }
 
 
 //
 // member functions
 //
-template<class DFrame, class Collection>
+    template<class DFrame, class Collection>
 void HBHEPhase1Reconstructor::processData(const Collection& coll,
-                                          const HcalDbService& cond,
-                                          const HcalChannelQuality& qual,
-                                          const HcalSeverityLevelComputer& severity,
-                                          const bool isRealData,
-                                          HBHEChannelInfo* channelInfo,
-                                          HBHEChannelInfoCollection* infos,
-                                          HBHERecHitCollection* rechits,
-                                          const bool use8ts_)
+        const HcalDbService& cond,
+        const HcalChannelQuality& qual,
+        const HcalSeverityLevelComputer& severity,
+        const bool isRealData,
+        HBHEChannelInfo* channelInfo,
+        HBHEChannelInfoCollection* infos,
+        HBHERecHitCollection* rechits,
+        const bool use8ts_)
 {
     // If "saveDroppedInfos_" flag is set, fill the info with something
     // meaningful even if the database tells us to drop this channel.
@@ -538,7 +563,7 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
 
     // Iterate over the input collection
     for (typename Collection::const_iterator it = coll.begin();
-         it != coll.end(); ++it)
+            it != coll.end(); ++it)
     {
         const DFrame& frame(*it);
         const HcalDetId cell(frame.id());
@@ -548,8 +573,8 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
         // in the laser calibs, etc.
         const HcalSubdetector subdet = cell.subdet();
         if (!(subdet == HcalSubdetector::HcalBarrel ||
-              subdet == HcalSubdetector::HcalEndcap ||
-              subdet == HcalSubdetector::HcalOuter))
+                    subdet == HcalSubdetector::HcalEndcap ||
+                    subdet == HcalSubdetector::HcalOuter))
             continue;
 
         // Check if the database tells us to drop this channel
@@ -590,7 +615,7 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
         const int maxTS = std::min(nRead, static_cast<int>(HBHEChannelInfo::MAXSAMPLES));
         const int soi = tsFromDB_ ? param_ts->firstSample() : frame.presamples();
         const RawChargeFromSample<DFrame> rcfs(sipmQTSShift_, sipmQNTStoSum_, 
-                                               cond, cell, cs, soi, frame, maxTS);
+                cond, cell, cs, soi, frame, maxTS);
         int soiCapid = 4;
 
         // Use only 8 TSs when there are 10 TSs 
@@ -613,11 +638,11 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
             const double rawCharge = rcfs.getRawCharge(cs[inputTS], calib.pedestal(capid));
             const float t = getTDCTimeFromSample(s);
             const float dfc = getDifferentialChargeGain(*channelCoder, *shape, adc,
-                                                        capid, channelInfo->hasTimeInfo()); 
+                    capid, channelInfo->hasTimeInfo()); 
             const int fitTS = inputTS-shiftOneTS;
             channelInfo->setSample(fitTS, adc, dfc, rawCharge,
-                                   pedestal, pedestalWidth,
-                                   gain, gainWidth, t);
+                    pedestal, pedestalWidth,
+                    gain, gainWidth, t);
             if (inputTS == soi)
                 soiCapid = capid;
         }
@@ -628,9 +653,9 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
         const int pulseShapeID = param_ts->pulseShapeID();
         const std::pair<bool,bool> hwerr = findHWErrors(frame, maxTS);
         channelInfo->setChannelInfo(cell, pulseShapeID, maxFitTS, fitSoi, soiCapid,
-                                    darkCurrent, fcByPE, lambda,
-                                    hwerr.first, hwerr.second,
-                                    taggedBadByDb || dropByZS);
+                darkCurrent, fcByPE, lambda,
+                hwerr.first, hwerr.second,
+                taggedBadByDb || dropByZS);
 
         // If needed, add the channel info to the output collection
         const bool makeThisRechit = !channelInfo->isDropped();
@@ -658,15 +683,15 @@ void HBHEPhase1Reconstructor::processData(const Collection& coll,
 }
 
 void HBHEPhase1Reconstructor::setCommonStatusBits(
-    const HBHEChannelInfo& /* info */, const HcalCalibrations& /* calib */,
-    HBHERecHit* /* rh */)
+        const HBHEChannelInfo& /* info */, const HcalCalibrations& /* calib */,
+        HBHERecHit* /* rh */)
 {
 }
 
 void HBHEPhase1Reconstructor::setAsicSpecificBits(
-    const HBHEDataFrame& frame, const HcalCoder& coder,
-    const HBHEChannelInfo& info, const HcalCalibrations& calib,
-    HBHERecHit* rh)
+        const HBHEDataFrame& frame, const HcalCoder& coder,
+        const HBHEChannelInfo& info, const HcalCalibrations& calib,
+        HBHERecHit* rh)
 {
     if (setNoiseFlagsQIE8_)
         hbheFlagSetterQIE8_->rememberHit(*rh);
@@ -679,9 +704,9 @@ void HBHEPhase1Reconstructor::setAsicSpecificBits(
 }
 
 void HBHEPhase1Reconstructor::setAsicSpecificBits(
-    const QIE11DataFrame& frame, const HcalCoder& coder,
-    const HBHEChannelInfo& info, const HcalCalibrations& calib,
-    HBHERecHit* rh)
+        const QIE11DataFrame& frame, const HcalCoder& coder,
+        const HBHEChannelInfo& info, const HcalCalibrations& calib,
+        HBHERecHit* rh)
 {
     if (setNoiseFlagsQIE11_)
         hbheFlagSetterQIE11_->rememberHit(*rh);
@@ -694,7 +719,7 @@ void HBHEPhase1Reconstructor::setAsicSpecificBits(
 }
 
 void HBHEPhase1Reconstructor::runHBHENegativeEFilter(const HBHEChannelInfo& info,
-                                                     HBHERecHit* rh)
+        HBHERecHit* rh)
 {
     double ts[HBHEChannelInfo::MAXSAMPLES];
     const unsigned nRead = info.nSamples();
@@ -706,7 +731,7 @@ void HBHEPhase1Reconstructor::runHBHENegativeEFilter(const HBHEChannelInfo& info
 }
 
 // ------------ method called to produce the data  ------------
-void
+    void
 HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetup)
 {
     using namespace edm;
@@ -722,7 +747,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
 
     ESHandle<HcalChannelQuality> p;
     eventSetup.get<HcalChannelQualityRcd>().get("withTopo", p);
- 
+
     ESHandle<HcalSeverityLevelComputer> mycomputer;
     eventSetup.get<HcalSeverityLevelComputerRcd>().get(mycomputer);
 
@@ -778,7 +803,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
 
         HBHEChannelInfo channelInfo(false,false);
         processData<HBHEDataFrame>(*hbDigis, *conditions, *p, *mycomputer,
-                                   isData, &channelInfo, infos.get(), out.get(), use8ts_);
+                isData, &channelInfo, infos.get(), out.get(), use8ts_);
         if (setNoiseFlagsQIE8_)
             hbheFlagSetterQIE8_->SetFlagsFromRecHits(*out);
     }
@@ -790,14 +815,28 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
 
         HBHEChannelInfo channelInfo(true,saveEffectivePedestal_);
         processData<QIE11DataFrame>(*heDigis, *conditions, *p, *mycomputer,
-                                    isData, &channelInfo, infos.get(), out.get(), use8ts_);
+                isData, &channelInfo, infos.get(), out.get(), use8ts_);
         if (setNoiseFlagsQIE11_)
             hbheFlagSetterQIE11_->SetFlagsFromRecHits(*out);
     }
 
     // Run DLPHIN
-    run_dlphin(DLPHIN_input_vec, DLPHIN_output);
+    if(DLPHIN_run_)run_dlphin(DLPHIN_input_vec, DLPHIN_output);
     if(DLPHIN_save_)save_dlphin(DLPHIN_output, out.get());
+
+    if(simHits_run_)
+    {
+        edm::Handle<std::vector<PCaloHit>> hcalhitsHandle;
+        e.getByToken(hcalhitsToken_, hcalhitsHandle);
+        const std::vector<PCaloHit> * SimHits = hcalhitsHandle.product();
+
+        edm::ESHandle<HcalDDDRecConstants> pHRNDC;
+        eventSetup.get<HcalRecNumberingRecord>().get(pHRNDC);
+        const HcalDDDRecConstants *hcons = &(*pHRNDC);
+
+        std::map <int, std::vector<float>> id_energy_map = run_simHits(SimHits, hcons);
+        if(simHits_save_) save_simHits(id_energy_map, out.get());
+    }
 
     // Add the output collections to the event record
     if (saveInfos_)
@@ -807,7 +846,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
 }
 
 // ------------ method called when starting to processes a run  ------------
-void
+    void
 HBHEPhase1Reconstructor::beginRun(edm::Run const& r, edm::EventSetup const& es)
 {
     edm::ESHandle<HcalRecoParams> p;
@@ -846,7 +885,7 @@ HBHEPhase1Reconstructor::beginRun(edm::Run const& r, edm::EventSetup const& es)
     reco_->beginRun(r, es);
 }
 
-void
+    void
 HBHEPhase1Reconstructor::endRun(edm::Run const&, edm::EventSetup const&)
 {
     reco_->endRun();
@@ -854,11 +893,11 @@ HBHEPhase1Reconstructor::endRun(edm::Run const&, edm::EventSetup const&)
 
 #define add_param_set(name) /**/       \
     edm::ParameterSetDescription name; \
-    name.setAllowAnything();           \
-    desc.add<edm::ParameterSetDescription>(#name, name)
+name.setAllowAnything();           \
+desc.add<edm::ParameterSetDescription>(#name, name)
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
-void
+    void
 HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
 {
     edm::ParameterSetDescription desc;
@@ -892,18 +931,22 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<std::string>("DLPHIN_pb_dg1HE");
     desc.add<std::string>("DLPHIN_pb_SF");
     desc.add<std::string>("DLPHIN_pb_2dHE");
+    desc.add<bool>("DLPHIN_run");
     desc.add<bool>("DLPHIN_scale");
     desc.add<bool>("DLPHIN_save");
     desc.add<bool>("DLPHIN_truncate");
     desc.add<bool>("DLPHIN_print_1d");
     desc.add<bool>("DLPHIN_print_2d");
+    desc.add<bool>("simHits_run");
+    desc.add<bool>("simHits_save");
+    desc.add<double>("max_simHit_time");
 
     desc.add<edm::ParameterSetDescription>("algorithm", fillDescriptionForParseHBHEPhase1Algo());
     add_param_set(flagParametersQIE8);
     add_param_set(flagParametersQIE11);
     add_param_set(pulseShapeParametersQIE8);
     add_param_set(pulseShapeParametersQIE11);
-    
+
     descriptions.addDefault(desc);
 }
 
@@ -923,17 +966,17 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
     //=========== a test for 2d tensor, to be commented out ===================
     /*
-    tensorflow::Tensor test_2d(tensorflow::DT_FLOAT, {2, 10});
-    for (int i = 0; i < 20; i++)
-    {
-        test_2d.flat<float>()(i) = float(i);
-    }
-    for (int i = 0; i < 2; i++)
-    {
-        for(int j = 0; j < 10; j++)
-        {std::cout << i << ", " << j << ": " << test_2d.tensor<float, 2>()(i,j) << std::endl;}
-    }
-    */
+       tensorflow::Tensor test_2d(tensorflow::DT_FLOAT, {2, 10});
+       for (int i = 0; i < 20; i++)
+       {
+       test_2d.flat<float>()(i) = float(i);
+       }
+       for (int i = 0; i < 2; i++)
+       {
+       for(int j = 0; j < 10; j++)
+       {std::cout << i << ", " << j << ": " << test_2d.tensor<float, 2>()(i,j) << std::endl;}
+       }
+       */
     //======================== end of test ====================================
 
     std::map <int_int_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map;
@@ -961,13 +1004,13 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     }
 
     /*
-    for(auto iter : ieta_iphi_row_map)
-    {
-        auto key = iter.first;
-        auto value = iter.second;
-        std::cout << key.first << ", " << key.second << ", " << value << std::endl;
-    }
-    */
+       for(auto iter : ieta_iphi_row_map)
+       {
+       auto key = iter.first;
+       auto value = iter.second;
+       std::cout << key.first << ", " << key.second << ", " << value << std::endl;
+       }
+       */
 
     if(DLPHIN_print_1d_)
     {
@@ -1009,11 +1052,11 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
 
         //============= test un-reconstructed channels =========================
         /*
-        if(depth == 1 && ieta == -19 && (iphi == 24 || iphi == 23))
-        {
-            std::cout << "find channel " << rawId << ", depth " << depth << ", ieta " << ieta << ", iphi " << iphi << std::endl;
-        }
-        */
+           if(depth == 1 && ieta == -19 && (iphi == 24 || iphi == 23))
+           {
+           std::cout << "find channel " << rawId << ", depth " << depth << ", ieta " << ieta << ", iphi " << iphi << std::endl;
+           }
+           */
         //============= test end ===============================================
 
         int HE_row = -1;
@@ -1080,21 +1123,21 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     tensorflow::run(session_2dHE, {{"net_charges",ch_input_2d},{"types_input",ty_input_2d},{"mask_input",ma_input_2d}}, {"output/Reshape"}, &outputs_2d);
     //std::cout << "outputs_2d.size() " << outputs_2d.size() << ", tensor.shape().dim_size(0) " << outputs_2d[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << outputs_2d[0].shape().dim_size(1) << ", tensor.shape().dim_size(2) " << outputs_2d[0].shape().dim_size(2) << std::endl;
     /*
-    for(int i = 0; i < HE_tot_rows; i++)
-    {
-        for(int j = 0; j < 56; j++)
-        {
-            std::cout << ch_input_2d.tensor<float, 2>()(i,j) << ", ";
-        }
-        for(int j = 0; j < HE_depth_max; j++)
-        {
-            auto pred = outputs_2d[0].tensor<float, 3>()(i,0,j);
-            auto mask = outputs_2d[0].tensor<float, 3>()(i,1,j);
-            std::cout << ma_input_2d.tensor<float, 2>()(i,j) << ", " << mask << ", " << mask * pred << ", ";
-        }
-        std::cout << ty_input_2d.tensor<float, 2>()(i,0) << std::endl;
-    }
-    */
+       for(int i = 0; i < HE_tot_rows; i++)
+       {
+       for(int j = 0; j < 56; j++)
+       {
+       std::cout << ch_input_2d.tensor<float, 2>()(i,j) << ", ";
+       }
+       for(int j = 0; j < HE_depth_max; j++)
+       {
+       auto pred = outputs_2d[0].tensor<float, 3>()(i,0,j);
+       auto mask = outputs_2d[0].tensor<float, 3>()(i,1,j);
+       std::cout << ma_input_2d.tensor<float, 2>()(i,j) << ", " << mask << ", " << mask * pred << ", ";
+       }
+       std::cout << ty_input_2d.tensor<float, 2>()(i,0) << std::endl;
+       }
+       */
 
     // second loop over all channels for
     // 1. save DLPHIN 2D CNN
@@ -1220,6 +1263,77 @@ void HBHEPhase1Reconstructor::save_dlphin(std::vector<float> Doutput, HBHERecHit
     for(int i = 0; i < (int)Doutput.size(); i++)
     {
         (*rechits)[i].setEnergy(Doutput.at(i));
+    }
+}
+
+std::map <int, std::vector<float>> HBHEPhase1Reconstructor::run_simHits(const std::vector<PCaloHit> * SimHits, const HcalDDDRecConstants *hcons)
+{
+    const int HE_ieta_min = 16;
+
+    std::map <int, std::vector<float>> id_energy_map;
+    for(auto iter : *SimHits)
+    {
+        auto time = iter.time();
+        if(time > max_simHit_time_) {continue;}
+        HcalDetId hid(iter.id());
+        hid = HcalDetId(HcalHitRelabeller::relabel(iter.id(), hcons));
+        auto rawId = hid.rawId();
+        auto subdet = hid.subdet();
+        auto depth = hid.depth();
+        //auto ieta = hid.ieta();
+        auto ietaAbs = hid.ietaAbs();
+        //auto iphi = hid.iphi();
+
+        auto energy = iter.energy();
+        if(subdet == 1 || subdet == 2)
+        {
+            float samplingFactor = 0;
+            float digi_SF = 1;
+
+            int ietaAbs_HB = ietaAbs - 1;
+            int ietaAbs_HE = ietaAbs - HE_ieta_min;
+
+            if(subdet == 1 && ietaAbs_HB < (int)samplingFactors_hb.size())
+            {
+                samplingFactor = samplingFactors_hb.at(ietaAbs_HB);
+            }
+            if(subdet == 2 && ietaAbs_HE < (int)samplingFactors_he.size())
+            {
+                samplingFactor = samplingFactors_he.at(ietaAbs_HE);
+                //factor 1.2 for HE depth1
+                if (depth == 1) digi_SF = 1.2;
+            }
+            if(samplingFactor == 0) std::cout << "Error! miss-match samplingFactor" << std::endl;
+            //std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;
+            sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * digi_SF);
+        }
+    }
+    return id_energy_map;
+}
+
+void HBHEPhase1Reconstructor::sum_energy_per_rawId(std::map <int, std::vector<float>> & id_energy_map, int id, float energy)
+{
+    std::map<int,std::vector<float>>::iterator it;
+    it = id_energy_map.find(id);
+    if (it != id_energy_map.end()) id_energy_map.at(id).push_back(energy);
+    else id_energy_map[id] = {energy};
+}
+
+void HBHEPhase1Reconstructor::save_simHits(std::map <int, std::vector<float>> id_energy_map, HBHERecHitCollection* rechits)
+{
+    for(int i = 0; i < (int)rechits->size(); i++)
+    {
+        std::vector<float> simHit_energy_vec = {};
+        float simHit_energy = 0.0;
+        int id = (*rechits)[i].id().rawId();
+        std::map<int,std::vector<float>>::iterator it;
+        it = id_energy_map.find(id);
+        if (it != id_energy_map.end())
+        {
+            simHit_energy_vec = id_energy_map.at(id);
+            simHit_energy = std::accumulate(simHit_energy_vec.begin(), simHit_energy_vec.end(), 0.0);
+        }
+        (*rechits)[i].setEnergy(simHit_energy);
     }
 }
 

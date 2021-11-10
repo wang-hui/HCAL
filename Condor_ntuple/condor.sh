@@ -13,6 +13,7 @@ git cms-addpkg RecoLocalCalo/HcalRecProducers
 git cms-addpkg RecoLocalCalo/HcalRecAlgos
 #git cms-addpkg RecoJets/JetProducers
 git clone -b CMSSW_10_6_x https://github.com/wang-hui/HCAL.git
+mv HCAL/Modified_files/samplingFactor.h RecoLocalCalo/HcalRecProducers/src
 mv HCAL/Modified_files/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
 mv HCAL/Modified_files/BuildFile.xml RecoLocalCalo/HcalRecProducers
 mv HCAL/Modified_files/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src

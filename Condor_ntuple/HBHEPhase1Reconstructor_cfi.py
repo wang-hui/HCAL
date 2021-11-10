@@ -112,11 +112,15 @@ hbheprereco = cms.EDProducer(
     #DLPHIN_pb_2dHE = cms.string(DLPHIN_pb_folder + "model_2dHE_p1TeV_cut1_epoch100.pb"),
     DLPHIN_pb_2dHE = cms.string(DLPHIN_pb_folder + "model_2dHE_p1TeV_cut0p1_epoch100_weight_0to1.pb"),
     #DLPHIN_pb_2dHE = cms.string(DLPHIN_pb_folder + "model_ConvLSTM.pb"),
-    DLPHIN_scale = cms.bool(True),
-    DLPHIN_save = cms.bool(True),
-    DLPHIN_truncate = cms.bool(True),
+    DLPHIN_run = cms.bool(False),
+    DLPHIN_scale = cms.bool(False),
+    DLPHIN_save = cms.bool(False),
+    DLPHIN_truncate = cms.bool(False),
     DLPHIN_print_1d = cms.bool(False),
     DLPHIN_print_2d = cms.bool(False),
+    simHits_run = cms.bool(True),
+    simHits_save = cms.bool(True),
+    max_simHit_time = cms.double(125.0),
 
     # Parameter sets configuring rechit status bit setters
     flagParametersQIE8 = cms.PSet(
