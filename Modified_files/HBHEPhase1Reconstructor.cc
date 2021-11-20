@@ -431,7 +431,7 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
     simHits_run_(conf.getParameter<bool>("simHits_run")),    
     simHits_save_(conf.getParameter<bool>("simHits_save")),
     max_simHit_time_(conf.getParameter<double>("max_simHit_time")),
- 
+
     reco_(parseHBHEPhase1AlgoDescription(conf.getParameter<edm::ParameterSet>("algorithm"))),
     negEFilter_(nullptr)
 {
@@ -1280,7 +1280,7 @@ std::map <int, std::vector<float>> HBHEPhase1Reconstructor::run_simHits(const st
         auto rawId = hid.rawId();
         auto subdet = hid.subdet();
         auto depth = hid.depth();
-        //auto ieta = hid.ieta();
+        auto ieta = hid.ieta();
         auto ietaAbs = hid.ietaAbs();
         //auto iphi = hid.iphi();
 
@@ -1304,8 +1304,25 @@ std::map <int, std::vector<float>> HBHEPhase1Reconstructor::run_simHits(const st
                 if (depth == 1) digi_SF = 1.2;
             }
             if(samplingFactor == 0) std::cout << "Error! miss-match samplingFactor" << std::endl;
-            //std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;
-            sum_energy_per_rawId(id_energy_map, rawId, energy * samplingFactor * digi_SF);
+
+            float final_energy = energy * samplingFactor * digi_SF;
+            float DLPHIN_SF = 1.0;
+            if(DLPHIN_scale_)
+            {
+                if(subdet == 1)
+                {
+                    auto hist_temp = DLPHIN_respCorr_HB.at(std::make_pair(ieta, depth));
+                    auto SF_temp = hist_temp->GetBinContent(hist_temp->FindBin(final_energy));
+                    if(SF_temp > 0) DLPHIN_SF = SF_temp;
+                }
+                else if(subdet == 2)
+                {
+                    auto hist_temp = DLPHIN_respCorr_HE.at(std::make_pair(ieta, depth));
+                    auto SF_temp = hist_temp->GetBinContent(hist_temp->FindBin(final_energy));
+                    if(SF_temp > 0) DLPHIN_SF = SF_temp;
+                }
+            }
+            sum_energy_per_rawId(id_energy_map, rawId, final_energy * DLPHIN_SF);
         }
     }
     return id_energy_map;
