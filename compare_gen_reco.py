@@ -71,6 +71,10 @@ genG0_h = rt.TH1F("genG0_h", "truth energy > 0 GeV", Ebins, Emin, Emax)
 genG0_ieta_h = rt.TH1F("genG0_ieta_h", "genG0_ieta_h", 30, 0, 30)
 use_8_pulse_h = rt.TH1F("use_8_pulse_h", "use 8 pulses", 2, 0, 2)
 
+use_8_pulse_vs_arrival_HE_h = rt.TH2F("use_8_pulse_vs_arrival_HE_h", "use_8_pulse_vs_arrival_HE_h", 25, 75, 100,  2, 0, 2)
+use_8_pulse_vs_arrival_HE_depthE1_h = rt.TH2F("use_8_pulse_vs_arrival_HE_depthE1_h", "use_8_pulse_vs_arrival_HE_depthE1_h", 25, 75, 100,  2, 0, 2)
+use_8_pulse_vs_arrival_HE_depthG1_h = rt.TH2F("use_8_pulse_vs_arrival_HE_depthG1_h", "use_8_pulse_vs_arrival_HE_depthG1_h", 25, 75, 100,  2, 0, 2)
+
 #==============reco vs gen 2d hist ==================
 reco_vs_gen_h = rt.TH2F("reco_vs_gen_h", "reco vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_err_vs_gen_h = rt.TH2F("reco_err_vs_gen_h", "|reco - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
@@ -86,6 +90,8 @@ reco_vs_gen_depthG1_HE_h = rt.TH2F("reco_vs_gen_depthG1_HE_h", "reco vs gen, dep
 reco_vs_gen_depthG1_HE_PUL_h = rt.TH2F("reco_vs_gen_depthG1_HE_PUL_h", "reco_vs_gen_depthG1_HE_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HE_PUM_h = rt.TH2F("reco_vs_gen_depthG1_HE_PUM_h", "reco_vs_gen_depthG1_HE_PUM_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HE_PUH_h = rt.TH2F("reco_vs_gen_depthG1_HE_PUH_h", "reco_vs_gen_depthG1_HE_PUH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthG1_HE_ATL_h = rt.TH2F("reco_vs_gen_depthG1_HE_ATL_h", "reco_vs_gen_depthG1_HE_ATL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+reco_vs_gen_depthG1_HE_ATH_h = rt.TH2F("reco_vs_gen_depthG1_HE_ATH_h", "reco_vs_gen_depthG1_HE_ATH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HE_1_pulse_h = rt.TH2F("reco_vs_gen_depthG1_HE_1_pulse_h", "reco vs gen, depth > 1, HE, 1 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthG1_HE_8_pulse_h = rt.TH2F("reco_vs_gen_depthG1_HE_8_pulse_h", "reco vs gen, depth > 1, HE, 8 pulse", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_depthE1_HB_h = rt.TH2F("reco_vs_gen_depthE1_HB_h", "reco vs gen, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -111,6 +117,8 @@ aux_vs_gen_depthG1_HE_h = rt.TH2F("aux_vs_gen_depthG1_HE_h", "aux vs gen, depth 
 aux_vs_gen_depthG1_HE_PUL_h = rt.TH2F("aux_vs_gen_depthG1_HE_PUL_h", "aux_vs_gen_depthG1_HE_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 aux_vs_gen_depthG1_HE_PUM_h = rt.TH2F("aux_vs_gen_depthG1_HE_PUM_h", "aux_vs_gen_depthG1_HE_PUM_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 aux_vs_gen_depthG1_HE_PUH_h = rt.TH2F("aux_vs_gen_depthG1_HE_PUH_h", "aux_vs_gen_depthG1_HE_PUH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_vs_gen_depthG1_HE_ATL_h = rt.TH2F("aux_vs_gen_depthG1_HE_ATL_h", "aux_vs_gen_depthG1_HE_ATL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+aux_vs_gen_depthG1_HE_ATH_h = rt.TH2F("aux_vs_gen_depthG1_HE_ATH_h", "aux_vs_gen_depthG1_HE_ATH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 aux_vs_gen_depthE1_HB_h = rt.TH2F("aux_vs_gen_depthE1_HB_h", "aux vs gen, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 aux_vs_gen_depthE1_HE_h = rt.TH2F("aux_vs_gen_depthE1_HE_h", "aux vs gen, depth = 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
 aux_vs_gen_depthE1_HE_PUL_h = rt.TH2F("aux_vs_gen_depthE1_HE_PUL_h", "aux_vs_gen_depthE1_HE_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -127,6 +135,8 @@ raw_vs_gen_depthG1_HE_h = rt.TH2F("raw_vs_gen_depthG1_HE_h", "raw vs gen, depth 
 raw_vs_gen_depthG1_HE_PUL_h = rt.TH2F("raw_vs_gen_depthG1_HE_PUL_h", "raw_vs_gen_depthG1_HE_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 raw_vs_gen_depthG1_HE_PUM_h = rt.TH2F("raw_vs_gen_depthG1_HE_PUM_h", "raw_vs_gen_depthG1_HE_PUM_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 raw_vs_gen_depthG1_HE_PUH_h = rt.TH2F("raw_vs_gen_depthG1_HE_PUH_h", "raw_vs_gen_depthG1_HE_PUH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+raw_vs_gen_depthG1_HE_ATL_h = rt.TH2F("raw_vs_gen_depthG1_HE_ATL_h", "raw_vs_gen_depthG1_HE_ATL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+raw_vs_gen_depthG1_HE_ATH_h = rt.TH2F("raw_vs_gen_depthG1_HE_ATH_h", "raw_vs_gen_depthG1_HE_ATH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 raw_vs_gen_depthE1_HB_h = rt.TH2F("raw_vs_gen_depthE1_HB_h", "raw vs gen, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 raw_vs_gen_depthE1_HE_h = rt.TH2F("raw_vs_gen_depthE1_HE_h", "raw vs gen, depth = 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
 raw_vs_gen_depthE1_HE_PUL_h = rt.TH2F("raw_vs_gen_depthE1_HE_PUL_h", "raw_vs_gen_depthE1_HE_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -146,6 +156,8 @@ DLPHIN_vs_gen_depthG1_HE_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_h", "DLPHIN vs ge
 DLPHIN_vs_gen_depthG1_HE_PUL_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_PUL_h", "DLPHIN_vs_gen_depthG1_HE_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_depthG1_HE_PUM_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_PUM_h", "DLPHIN_vs_gen_depthG1_HE_PUM_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_depthG1_HE_PUH_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_PUH_h", "DLPHIN_vs_gen_depthG1_HE_PUH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_gen_depthG1_HE_ATL_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_ATL_h", "DLPHIN_vs_gen_depthG1_HE_ATL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
+DLPHIN_vs_gen_depthG1_HE_ATH_h = rt.TH2F("DLPHIN_vs_gen_depthG1_HE_ATH_h", "DLPHIN_vs_gen_depthG1_HE_ATH_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_depthE1_HB_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HB_h", "DLPHIN vs gen, depth = 1, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_depthE1_HE_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HE_h", "DLPHIN vs gen, depth = 1, HE", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_depthE1_HE_PUL_h = rt.TH2F("DLPHIN_vs_gen_depthE1_HE_PUL_h", "DLPHIN_vs_gen_depthE1_HE_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -563,6 +575,7 @@ for i in range(Nrows):
             weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
             TS45_time_HE_ieta_list[ieta - 16][depth - 1].Fill(TS45_time)
             arrival_time_HE_ieta_list[ieta - 16][depth - 1].Fill(arrival_time)
+            if gen_energy > 50: use_8_pulse_vs_arrival_HE_h.Fill(arrival_time, use_8_pulse)
             if depth == 1:
                 reco_ratio_depthE1_HE_h.Fill(reco_ratio)
                 aux_ratio_depthE1_HE_h.Fill(aux_ratio)
@@ -570,6 +583,7 @@ for i in range(Nrows):
                 DLPHIN_ratio_depthE1_HE_h.Fill(DLPHIN_ratio)
                 raw_loss_depthE1_HE_h.Fill(raw_loss)
                 DLPHIN_loss_depthE1_HE_h.Fill(DLPHIN_loss)
+                if gen_energy > 50: use_8_pulse_vs_arrival_HE_depthE1_h.Fill(arrival_time, use_8_pulse)
 
                 if add_weight and gen_energy < 100:
                     HE_depth1_weight = HE_depth1_weight_hist.GetBinContent(HE_depth1_weight_hist.FindBin(gen_energy))
@@ -599,6 +613,18 @@ for i in range(Nrows):
                 aux_ratio_depthG1_HE_h.Fill(aux_ratio)
                 raw_ratio_depthG1_HE_h.Fill(raw_ratio)
                 DLPHIN_ratio_depthG1_HE_h.Fill(DLPHIN_ratio)
+                if gen_energy > 50: use_8_pulse_vs_arrival_HE_depthG1_h.Fill(arrival_time, use_8_pulse)
+                if arrival_time < 80:
+                    reco_vs_gen_depthG1_HE_ATL_h.Fill(gen_energy, reco_energy)
+                    aux_vs_gen_depthG1_HE_ATL_h.Fill(gen_energy, aux_energy)
+                    raw_vs_gen_depthG1_HE_ATL_h.Fill(gen_energy, raw_energy)
+                    DLPHIN_vs_gen_depthG1_HE_ATL_h.Fill(gen_energy, DLPHIN_energy)
+                if arrival_time > 90:
+                    reco_vs_gen_depthG1_HE_ATH_h.Fill(gen_energy, reco_energy)
+                    aux_vs_gen_depthG1_HE_ATH_h.Fill(gen_energy, aux_energy)
+                    raw_vs_gen_depthG1_HE_ATH_h.Fill(gen_energy, raw_energy)
+                    DLPHIN_vs_gen_depthG1_HE_ATH_h.Fill(gen_energy, DLPHIN_energy)
+
                 if gen_energy > 7.5 and gen_energy < 10:
                     reco_ratio_depthG1_HE_genL_h.Fill(reco_ratio)
                     aux_ratio_depthG1_HE_genL_h.Fill(aux_ratio)
@@ -614,6 +640,9 @@ for i in range(Nrows):
                     aux_ratio_depthG1_HE_genH_h.Fill(aux_ratio)
                     raw_ratio_depthG1_HE_genH_h.Fill(raw_ratio)
                     DLPHIN_ratio_depthG1_HE_genH_h.Fill(DLPHIN_ratio)
+
+                #if gen_energy > 50 and use_8_pulse and reco_ratio < 0.7 and aux_ratio > 0.9 and aux_ratio < 1.1: 
+                #    print reco_ratio, gen_energy, reco_energy, aux_energy, arrival_time
 
 out_file.cd()
 out_file.Write()
