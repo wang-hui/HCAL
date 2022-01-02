@@ -325,7 +325,7 @@ class HBHEPhase1Reconstructor : public edm::stream::EDProducer<>
 
         // DLPHIN parameters
         std::string DLPHIN_pb_d1HB_, DLPHIN_pb_dg1HB_, DLPHIN_pb_d1HE_, DLPHIN_pb_dg1HE_, DLPHIN_pb_SF_, DLPHIN_pb_2dHE_;
-        bool DLPHIN_run_, DLPHIN_scale_, DLPHIN_save_, DLPHIN_truncate_, DLPHIN_print_1d_, DLPHIN_print_2d_;
+        bool DLPHIN_run_, DLPHIN_scale_, DLPHIN_save_, DLPHIN_truncate_, DLPHIN_print_1d_, DLPHIN_print_2d_HB_, DLPHIN_print_2d_HE_;
 
         // simHits parameters
         bool simHits_run_, simHits_save_;
@@ -426,7 +426,8 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
     DLPHIN_save_(conf.getParameter<bool>("DLPHIN_save")),
     DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
     DLPHIN_print_1d_(conf.getParameter<bool>("DLPHIN_print_1d")),
-    DLPHIN_print_2d_(conf.getParameter<bool>("DLPHIN_print_2d")),
+    DLPHIN_print_2d_HB_(conf.getParameter<bool>("DLPHIN_print_2d_HB")),
+    DLPHIN_print_2d_HE_(conf.getParameter<bool>("DLPHIN_print_2d_HE")),
 
     simHits_run_(conf.getParameter<bool>("simHits_run")),    
     simHits_save_(conf.getParameter<bool>("simHits_save")),
@@ -936,7 +937,8 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<bool>("DLPHIN_save");
     desc.add<bool>("DLPHIN_truncate");
     desc.add<bool>("DLPHIN_print_1d");
-    desc.add<bool>("DLPHIN_print_2d");
+    desc.add<bool>("DLPHIN_print_2d_HB");
+    desc.add<bool>("DLPHIN_print_2d_HE");
     desc.add<bool>("simHits_run");
     desc.add<bool>("simHits_save");
     desc.add<double>("max_simHit_time");
@@ -956,6 +958,10 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
     const int HE_ieta_min = 16;
     const int HE_ieta_max = 29;
     const int HE_tot_rows = (HE_ieta_max - HE_ieta_min + 1) * 2 * 72;
+    const int HB_depth_max = 4;
+    const int HB_ieta_min = 1;
+    const int HB_ieta_max = 16;
+    const int HB_tot_rows = (HB_ieta_max - HB_ieta_min + 1) * 2 * 72;
 
     tensorflow::Tensor ch_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, 56});
     for (int i = 0; i < HE_tot_rows * 56; i++) {ch_input_2d.flat<float>()(i) = 0.0;}
@@ -979,32 +985,55 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
        */
     //======================== end of test ====================================
 
-    std::map <int_int_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map;
     std::vector<float> channel_vec(23, 0.0);
-    std::vector<std::vector<float>> depth_vec(HE_depth_max, channel_vec);
-    std::map <int_int_pair, int> ieta_iphi_row_map;
-    int row = 0;
+
+    std::map <int_int_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map_HE;
+    std::vector<std::vector<float>> depth_vec_HE(HE_depth_max, channel_vec);
+    std::map <int_int_pair, int> ieta_iphi_row_map_HE;
+    int row_HE = 0;
     for(int ieta = -HE_ieta_max; ieta <= -HE_ieta_min; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
-            ieta_iphi_row_map[std::make_pair(ieta, iphi)] = row;
-            row++;
+            ieta_iphi_energy_map_HE[std::make_pair(ieta, iphi)] = depth_vec_HE;
+            ieta_iphi_row_map_HE[std::make_pair(ieta, iphi)] = row_HE;
+            row_HE++;
         }
     }
     for(int ieta = HE_ieta_min; ieta <= HE_ieta_max; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
-            ieta_iphi_row_map[std::make_pair(ieta, iphi)] = row;
-            row++;
+            ieta_iphi_energy_map_HE[std::make_pair(ieta, iphi)] = depth_vec_HE;
+            ieta_iphi_row_map_HE[std::make_pair(ieta, iphi)] = row_HE;
+            row_HE++;
         }
     }
 
+    std::map <int_int_pair, std::vector<std::vector<float>>> ieta_iphi_energy_map_HB;
+    std::vector<std::vector<float>> depth_vec_HB(HB_depth_max, channel_vec);
+    std::map <int_int_pair, int> ieta_iphi_row_map_HB;
+    int row_HB = 0;
+    for(int ieta = -HB_ieta_max; ieta <= -HB_ieta_min; ieta ++)
+    {
+        for(int iphi = 1; iphi <= 72; iphi ++)
+        {
+            ieta_iphi_energy_map_HB[std::make_pair(ieta, iphi)] = depth_vec_HB;
+            ieta_iphi_row_map_HB[std::make_pair(ieta, iphi)] = row_HB;
+            row_HB++;
+        }
+    }
+    for(int ieta = HB_ieta_min; ieta <= HB_ieta_max; ieta ++)
+    {
+        for(int iphi = 1; iphi <= 72; iphi ++)
+        {
+            ieta_iphi_energy_map_HB[std::make_pair(ieta, iphi)] = depth_vec_HB;
+            ieta_iphi_row_map_HB[std::make_pair(ieta, iphi)] = row_HB;
+            row_HB++;
+        }
+    }
     /*
-       for(auto iter : ieta_iphi_row_map)
+       for(auto iter : ieta_iphi_row_map_HE)
        {
        auto key = iter.first;
        auto value = iter.second;
@@ -1063,7 +1092,7 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         int HE_col = -1;
         if(subdet == 2)
         {
-            HE_row = ieta_iphi_row_map.at(std::make_pair(ieta, iphi));
+            HE_row = ieta_iphi_row_map_HE.at(std::make_pair(ieta, iphi));
             HE_col = (depth - 1) * 8;
             ty_input_2d.tensor<float, 2>()(HE_row, 0) = fabs(ieta);
             ma_input_2d.tensor<float, 2>()(HE_row, depth - 1) = 1.0;
@@ -1172,30 +1201,35 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
             auto ped = channel_info.tsPedestal(iTS);
 
             if(DLPHIN_print_1d_)std::cout << charge << ", " << ped << ", ";
-            if(subdet == 2)
-            {
-                channel_vec_temp.at(2*iTS) = charge;
-                channel_vec_temp.at(2*iTS + 1) = ped;
-            }
+            channel_vec_temp.at(2*iTS) = charge;
+            channel_vec_temp.at(2*iTS + 1) = ped;
+        }
+
+        channel_vec_temp.at(16) = rawgain;
+        channel_vec_temp.at(17) = gain;
+        channel_vec_temp.at(18) = eraw;
+        channel_vec_temp.at(19) = eaux;
+        channel_vec_temp.at(20) = energy;
+        channel_vec_temp.at(21) = 1;
+
+        if(subdet == 1)
+        {
+            channel_vec_temp.at(22) = Doutput.at(channel_index);
+
+            ieta_iphi_energy_map_HB.at(std::make_pair(ieta, iphi)).at(depth - 1) = channel_vec_temp;
         }
 
         if(subdet == 2)
         {
-            auto HE_row = ieta_iphi_row_map.at(std::make_pair(ieta, iphi));
+            auto HE_row = ieta_iphi_row_map_HE.at(std::make_pair(ieta, iphi));
             auto pred = outputs_2d[0].tensor<float, 3>()(HE_row,0,depth-1);
             auto mask = outputs_2d[0].tensor<float, 3>()(HE_row,1,depth-1);
 
             if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
             Doutput.at(channel_index) = pred;
-
-            channel_vec_temp.at(16) = rawgain;
-            channel_vec_temp.at(17) = gain;
-            channel_vec_temp.at(18) = eraw;
-            channel_vec_temp.at(19) = eaux;
-            channel_vec_temp.at(20) = energy;
-            channel_vec_temp.at(21) = 1;
             channel_vec_temp.at(22) = pred;
-            ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = channel_vec_temp;
+
+            ieta_iphi_energy_map_HE.at(std::make_pair(ieta, iphi)).at(depth - 1) = channel_vec_temp;
         }
 
         float DLPHIN_SF = 1.0;
@@ -1226,10 +1260,14 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         if(DLPHIN_print_1d_) std::cout << rawgain << ", " << gain << ", " << eraw << ", " << eaux << ", " << energy << ", " << flags << ", " << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << Doutput.at(channel_index) << ", " << DLPHIN_SF << std::endl;
     }
 
-    if(DLPHIN_print_2d_)
+    if(DLPHIN_print_2d_HB_ || DLPHIN_print_2d_HE_)
     {
         std::string title_string = "reco: ";
-        for (int depth = 1; depth <= HE_depth_max; depth++)
+
+        int depth_max = HB_depth_max;
+        if(DLPHIN_print_2d_HE_) {depth_max = HE_depth_max;}
+
+        for (int depth = 1; depth <= depth_max; depth++)
         {
             std::string depth_string = "d" + std::to_string(depth);
             for (int TS = 1; TS <= 8; TS++)
@@ -1243,7 +1281,10 @@ void HBHEPhase1Reconstructor::run_dlphin(std::vector<DLPHIN_input> Dinput_vec, s
         title_string = title_string + "ieta, iphi";
         std::cout << title_string << std::endl;
 
-        for(auto iter : ieta_iphi_energy_map)
+        auto ieta_iphi_energy_map_ptr = & ieta_iphi_energy_map_HB;
+        if (DLPHIN_print_2d_HE_) {ieta_iphi_energy_map_ptr = & ieta_iphi_energy_map_HE;}
+
+        for(auto iter : *ieta_iphi_energy_map_ptr)
         {
             auto key = iter.first;
             auto value = iter.second;
