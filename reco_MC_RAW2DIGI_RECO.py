@@ -23,7 +23,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(5)
 )
 
 # Input source
@@ -31,11 +31,14 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #"file:results_temp/step2_PU.root"
         #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_PU-2020-12-20/UL_1TeV_pion_gun_RAW_PU_0.root"
-        #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_noPU-2020-12-20/UL_1TeV_pion_gun_RAW_0.root"
+        #"root://cmseos.fnal.gov//store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_noPU-2020-12-20/UL_1TeV_pion_gun_RAW_0.root"
         #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/huiwang/HCAL/RSGravitonToQuarkQuark_kMpl01_M_2000_RAW_PU-2021-05-02/UL_MC_RAW_PU_0.root"
         "root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_PU-2021-05-23/UL_MC_RAW_PU_0.root"
+        #"/store/mc/RunIISummer19UL18DIGIPremix/QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8/GEN-SIM-DIGI/106X_upgrade2018_realistic_v11_L1v1-v2/260000/ED88DE9D-DF15-EF43-AFE2-37DBB0105D8A.root"
+        #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_DoublePion_E-50_RAW_noPU-2020-12-25/UL_1TeV_pion_gun_RAW_0_0.root"
+        #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_DoublePion_E-50_RAW_PU-2020-12-25/UL_1TeV_pion_gun_RAW_PU_0_0.root"
     ),
-    #skipEvents = cms.untracked.uint32(516),
+    #skipEvents = cms.untracked.uint32(620),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -79,8 +82,9 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11
 # Path and EndPath definitions
 process.myAna = cms.EDAnalyzer(
     "HCALTestAna",
-    print_1d = cms.untracked.bool(True),
-    print_2d = cms.untracked.bool(False),
+    print_1d = cms.untracked.bool(False),
+    print_2d_HB = cms.untracked.bool(True),
+    print_2d_HE = cms.untracked.bool(False),
     do_PU = cms.untracked.bool(True),
     is_run3_relVal = cms.untracked.bool(False),
     min_simHit_energy = cms.untracked.double(0.0),

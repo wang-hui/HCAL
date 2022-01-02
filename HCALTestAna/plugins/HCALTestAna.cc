@@ -80,7 +80,7 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
         void sum_energy_per_rawId(std::map <int, std::vector<float>> & id_energy_map, int id, float energy);
 
         bool print_1d;
-        bool print_2d;
+        bool print_2d_HB, print_2d_HE;
         bool do_PU;
         bool is_run3_relVal;
         float min_simHit_energy, max_simHit_time;
@@ -104,7 +104,8 @@ class HCALTestAna : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //
 HCALTestAna::HCALTestAna(const edm::ParameterSet& iConfig):
     print_1d(iConfig.getUntrackedParameter<bool>("print_1d")),
-    print_2d(iConfig.getUntrackedParameter<bool>("print_2d")),
+    print_2d_HB(iConfig.getUntrackedParameter<bool>("print_2d_HB")),
+    print_2d_HE(iConfig.getUntrackedParameter<bool>("print_2d_HE")),
     do_PU(iConfig.getUntrackedParameter<bool>("do_PU")),
     is_run3_relVal(iConfig.getUntrackedParameter<bool>("is_run3_relVal")),
     min_simHit_energy(iConfig.getUntrackedParameter<double>("min_simHit_energy")),
@@ -169,23 +170,44 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     const int HE_depth_max = 7; 
     const int HE_ieta_min = 16;
     const int HE_ieta_max = 29;
+    const int HB_depth_max = 4;
+    const int HB_ieta_min = 1;
+    const int HB_ieta_max = 16;
 
     typedef std::pair<int, int> ieta_iphi_pair;
     typedef std::pair<float, float> energy_time_pair;
-    std::map <ieta_iphi_pair, std::vector<energy_time_pair>> ieta_iphi_energy_map;
-    std::vector<energy_time_pair> depth_vec(HE_depth_max, std::make_pair(0.0, 0.0));
+
+    std::map <ieta_iphi_pair, std::vector<energy_time_pair>> ieta_iphi_energy_map_HE;
+    std::vector<energy_time_pair> depth_vec_HE(HE_depth_max, std::make_pair(0.0, 0.0));
     for(int ieta = -HE_ieta_max; ieta <= -HE_ieta_min; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
+            ieta_iphi_energy_map_HE[std::make_pair(ieta, iphi)] = depth_vec_HE;
         }
     }
     for(int ieta = HE_ieta_min; ieta <= HE_ieta_max; ieta ++)
     {
         for(int iphi = 1; iphi <= 72; iphi ++)
         {
-            ieta_iphi_energy_map[std::make_pair(ieta, iphi)] = depth_vec;
+            ieta_iphi_energy_map_HE[std::make_pair(ieta, iphi)] = depth_vec_HE;
+        }
+    }
+
+    std::map <ieta_iphi_pair, std::vector<energy_time_pair>> ieta_iphi_energy_map_HB;
+    std::vector<energy_time_pair> depth_vec_HB(HB_depth_max, std::make_pair(0.0, 0.0));
+    for(int ieta = -HB_ieta_max; ieta <= -HB_ieta_min; ieta ++)
+    {
+        for(int iphi = 1; iphi <= 72; iphi ++)
+        {
+            ieta_iphi_energy_map_HB[std::make_pair(ieta, iphi)] = depth_vec_HB;
+        }
+    }
+    for(int ieta = HB_ieta_min; ieta <= HB_ieta_max; ieta ++)
+    {
+        for(int iphi = 1; iphi <= 72; iphi ++)
+        {
+            ieta_iphi_energy_map_HB[std::make_pair(ieta, iphi)] = depth_vec_HB;
         }
     }
 
@@ -350,8 +372,10 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         std::sort(time_vec.begin(), time_vec.end());
         float median_time = time_vec.at(vec_size/2);
 
+        if(subdet == 1)
+        {ieta_iphi_energy_map_HB.at(std::make_pair(ieta, iphi)).at(depth - 1) = std::make_pair(energy_sum, weighted_time);}
         if(subdet == 2)
-        {ieta_iphi_energy_map.at(std::make_pair(ieta, iphi)).at(depth - 1) = std::make_pair(energy_sum, weighted_time);}
+        {ieta_iphi_energy_map_HE.at(std::make_pair(ieta, iphi)).at(depth - 1) = std::make_pair(energy_sum, weighted_time);}
 
         //============= test un-reconstructed channels =========================
         /*
@@ -369,17 +393,25 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         }
     }
 
-    if(print_2d)
+    if(print_2d_HB || print_2d_HE)
     {
         std::string title_string = "gen: ieta, iphi";
-        for (int depth = 1; depth <= HE_depth_max; depth++)
+
+        int depth_max = HB_depth_max;
+        if(print_2d_HE) {depth_max = HE_depth_max;}
+
+        for (int depth = 1; depth <= depth_max; depth++)
         {
             std::string depth_string = "d" + std::to_string(depth);
             title_string = title_string + ", " + depth_string + " raw truth energy, " + depth_string + " weighted time";
         }
 
         std::cout << title_string << std::endl;
-        for(auto iter : ieta_iphi_energy_map)
+ 
+        auto ieta_iphi_energy_map_ptr = & ieta_iphi_energy_map_HB;
+        if (print_2d_HE) {ieta_iphi_energy_map_ptr = & ieta_iphi_energy_map_HE;}
+
+        for(auto iter : *ieta_iphi_energy_map_ptr)
         {
             auto key = iter.first;
             auto value = iter.second;
