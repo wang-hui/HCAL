@@ -1,32 +1,16 @@
-# DLPHIN test
-This is a git repo for DLPHIN tests  
-Use master branch for 2018 MC and data  
-Use the CMSSW_11_1_x branch for run 3 MC  
+# DLPHIN: Deep Learning Processes for HCAL INtegration
 
-1. setup CMSSW and this repo
+Modified files:
 ```
-cmsrel CMSSW_10_2_18
-cd CMSSW_10_2_18/src
-cmsenv
-git cms-addpkg RecoLocalCalo/HcalRecProducers
-git clone https://github.com/wang-hui/HCAL.git
+RecoLocalCalo/HcalRecProducers/BuildFile.xml
+RecoLocalCalo/HcalRecProducers/python/HBHEPhase1Reconstructor_cfi.py
+RecoLocalCalo/HcalRecProducers/src/HBHEPhase1Reconstructor.cc
+
 ```
 
-2. add DLPHIN and compile
+Added files:
 ```
-mv HCAL/BuildFile.xml RecoLocalCalo/HcalRecProducers
-mv HCAL/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
-scram b -j 4
-```
-
-3. modify the cfg file and run
-```
-#edit these 2 lines of HCAL/HBHEPhase1Reconstructor_cfi.py if necessary
-100     DLPHIN_scale = cms.bool(True),  #Apply DLPHIN/MAHI scale factor on DLPHIN energy. Set True in data
-101     DLPHIN_save = cms.bool(True),   #If False, DLPHIN will have a "dry run" without being saved
-        #If True, DLPHIN energy will be saved by overwriting the original (MAHI) energy in HBHERecHits
-
-mv HCAL/HBHEPhase1Reconstructor_cfi.py RecoLocalCalo/HcalRecProducers/python
-cd HCAL
-cmsRun reco_data_RAW2DIGI_RECO.py
+RecoLocalCalo/HcalRecAlgos/interface/DLPHIN.h
+RecoLocalCalo/HcalRecAlgos/src/DLPHIN.cc
+RecoLocalCalo/HcalRecProducers/python/DLPHIN_cfi.py
 ```

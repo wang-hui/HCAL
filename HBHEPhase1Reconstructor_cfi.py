@@ -3,11 +3,9 @@ import RecoLocalCalo.HcalRecProducers.HBHEMethod3Parameters_cfi as method3
 import RecoLocalCalo.HcalRecProducers.HBHEMethod2Parameters_cfi as method2
 import RecoLocalCalo.HcalRecProducers.HBHEMethod0Parameters_cfi as method0
 import RecoLocalCalo.HcalRecProducers.HBHEMahiParameters_cfi as mahi
+import RecoLocalCalo.HcalRecProducers.DLPHIN_cfi as DLPHIN
 import RecoLocalCalo.HcalRecProducers.HBHEPulseShapeFlagSetter_cfi as pulseShapeFlag
 import RecoLocalCalo.HcalRecProducers.HBHEStatusBitSetter_cfi as hbheStatusFlag
-
-import os
-DLPHIN_pb_folder = "%s/src/HCAL/DLPHIN_pb/" % os.environ['CMSSW_BASE']
 
 hbheprereco = cms.EDProducer(
     "HBHEPhase1Reconstructor",
@@ -48,6 +46,10 @@ hbheprereco = cms.EDProducer(
     # collection will not include such channels even if this flag is set.
     saveDroppedInfos = cms.bool(False),
 
+    # Flag to use only 8 TSs for reconstruction. This should be in effect
+    # only when there are 10 TSs, e.g., <=2017
+    use8ts = cms.bool(True),
+
     # Parameters which define how we calculate the charge for the basic SiPM
     # nonlinearity correction. To sum up the charge in all time slices
     # (e.g., for cosmics), set sipmQTSShift to -100 and sipmQNTStoSum to 200.
@@ -74,8 +76,13 @@ hbheprereco = cms.EDProducer(
         useM3 = cms.bool(True),
 
         # Use Mahi?
-        useMahi = cms.bool(True)
+        useMahi = cms.bool(True),
+
+        # Apply legacy HB- energy correction?
+        applyLegacyHBMCorrection = cms.bool(True)
     ),
+
+    DLPHINConfig = DLPHIN.DLPHINConfig,
 
     # Reconstruction algorithm configuration data to fetch from DB, if any
     algoConfigClass = cms.string(""),
@@ -89,16 +96,6 @@ hbheprereco = cms.EDProducer(
     setPulseShapeFlagsQIE11 = cms.bool(False),
     setLegacyFlagsQIE8 = cms.bool(True),
     setLegacyFlagsQIE11 = cms.bool(False),
-
-    # DLPHIN parameters
-    DLPHIN_pb_d1HB = cms.string(DLPHIN_pb_folder + "model_d1HB_R2.pb"),
-    DLPHIN_pb_dg1HB = cms.string(DLPHIN_pb_folder + "model_dg1HB_R2.pb"),
-    DLPHIN_pb_d1HE = cms.string(DLPHIN_pb_folder + "model_d1HE_R2.pb"),
-    DLPHIN_pb_dg1HE = cms.string(DLPHIN_pb_folder + "model_dg1HE_R2.pb"),
-    DLPHIN_pb_SF = cms.string(DLPHIN_pb_folder + "DLPHIN_MAHI_ratio.root"),
-    DLPHIN_print = cms.bool(False),
-    DLPHIN_scale = cms.bool(True),
-    DLPHIN_save = cms.bool(True),
 
     # Parameter sets configuring rechit status bit setters
     flagParametersQIE8 = cms.PSet(
@@ -117,3 +114,6 @@ hbheprereco.pulseShapeParametersQIE8.TrianglePeakTS = cms.uint32(10000)
 
 from Configuration.Eras.Modifier_run2_HE_2017_cff import run2_HE_2017
 run2_HE_2017.toModify(hbheprereco, saveEffectivePedestal = cms.bool(True))
+
+from Configuration.Eras.Modifier_run3_HB_cff import run3_HB
+run3_HB.toModify(hbheprereco, algorithm = dict(applyLegacyHBMCorrection = cms.bool(False)))
