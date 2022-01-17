@@ -2,10 +2,9 @@
 
 Modified files:
 ```
-RecoLocalCalo/HcalRecProducers/BuildFile.xml
+RecoLocalCalo/HcalRecAlgos/BuildFile.xml
 RecoLocalCalo/HcalRecProducers/python/HBHEPhase1Reconstructor_cfi.py
 RecoLocalCalo/HcalRecProducers/src/HBHEPhase1Reconstructor.cc
-
 ```
 
 Added files:

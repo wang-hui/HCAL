@@ -706,8 +706,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
             hbheFlagSetterQIE11_->SetFlagsFromRecHits(*out);
     }
 
-    DLPHIN_.get_channel_infos(infos.get());
-    DLPHIN_.print_channel_infos();
+    DLPHIN_.DLPHIN_run(*conditions, infos.get(), out.get());
 
     // Add the output collections to the event record
     if (saveInfos_)

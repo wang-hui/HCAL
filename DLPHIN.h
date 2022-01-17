@@ -24,8 +24,9 @@
 
 // user include files
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
+#include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 
 // forward declarations
 
@@ -39,14 +40,30 @@ public:
     // ---------- static member functions --------------------
 
     // ---------- member functions ---------------------------
-    void get_channel_infos (HBHEChannelInfoCollection* channel_infos);
-    void print_channel_infos();
+    void DLPHIN_run (const HcalDbService& DbServ, HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits);
 
 private:
     // ---------- member data --------------------------------
-    std::string MyString_;
-    int MyInt_;
-    HBHEChannelInfoCollection* channel_infos_;
+    const int iphi_max = 72;
+    const int TS_max = 8;
+
+    const int HE_ieta_min = 16;
+    const int HE_ieta_max = 29;
+    const int HE_tot_rows = (HE_ieta_max - HE_ieta_min + 1) * iphi_max * 2;
+    const int HE_depth_max = 7;
+    const int HE_tot_col = TS_max * HE_depth_max;
+
+    const int HB_ieta_min = 1;
+    const int HB_ieta_max = 16;
+    const int HB_tot_rows = (HB_ieta_max - HB_ieta_min + 1) * iphi_max * 2;
+    const int HB_depth_max = 4;
+    const int HB_tot_col = TS_max * HB_depth_max;
+
+    typedef std::pair<int, int> int_int_pair;
+    std::map <int_int_pair, int> HE_ieta_iphi_row_map, HB_ieta_iphi_row_map;
+
+    std::string DLPHIN_pb_2dHB_, DLPHIN_pb_2dHE_;
+    tensorflow::Session *session_2dHB, *session_2dHE;
 };
 
 #endif

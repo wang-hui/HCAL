@@ -7,5 +7,6 @@ __init__.py
 *.tar
 *.stdout
 *.stderr
+*.log
 plots*/
 results*/
