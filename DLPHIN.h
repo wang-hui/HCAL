@@ -40,7 +40,7 @@ public:
     // ---------- static member functions --------------------
 
     // ---------- member functions ---------------------------
-    void DLPHIN_run (const HcalDbService& DbServ, HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits);
+    void DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits);
 
 private:
     // ---------- member data --------------------------------
@@ -60,10 +60,25 @@ private:
     const int HB_tot_col = TS_max * HB_depth_max;
 
     typedef std::pair<int, int> int_int_pair;
-    std::map <int_int_pair, int> HE_ieta_iphi_row_map, HB_ieta_iphi_row_map;
+    std::map <int_int_pair, int> HB_ieta_iphi_row_map, HE_ieta_iphi_row_map;
 
     std::string DLPHIN_pb_2dHB_, DLPHIN_pb_2dHE_;
     tensorflow::Session *session_2dHB, *session_2dHE;
+
+    void process_inputs (const HcalDbService& DbServ,
+                        const HBHEChannelInfoCollection *ChannelInfos,
+                        tensorflow::Tensor& HB_ch_input_2d,
+                        tensorflow::Tensor& HB_ty_input_2d,
+                        tensorflow::Tensor& HB_ma_input_2d,
+                        tensorflow::Tensor& HE_ch_input_2d,
+                        tensorflow::Tensor& HE_ty_input_2d,
+                        tensorflow::Tensor& HE_ma_input_2d
+                        );
+
+    void save_outputs (HBHERecHitCollection *RecHits,
+                      const std::vector<tensorflow::Tensor>& HB_outputs_2d,
+                      const std::vector<tensorflow::Tensor>& HE_outputs_2d
+                      );
 };
 
 #endif
