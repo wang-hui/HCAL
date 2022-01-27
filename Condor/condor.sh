@@ -12,6 +12,7 @@ git cms-init --upstream-only
 git cms-addpkg RecoLocalCalo/HcalRecProducers
 git cms-addpkg RecoLocalCalo/HcalRecAlgos
 git clone -b CMSSW_10_6_x https://github.com/wang-hui/HCAL.git
+mv HCAL/Modified_files/samplingFactor.h RecoLocalCalo/HcalRecProducers/src
 mv HCAL/Modified_files/HBHEPhase1Reconstructor.cc RecoLocalCalo/HcalRecProducers/src
 mv HCAL/Modified_files/BuildFile.xml RecoLocalCalo/HcalRecProducers
 mv HCAL/Modified_files/SimpleHBHEPhase1Algo.cc RecoLocalCalo/HcalRecAlgos/src
@@ -33,11 +34,11 @@ python split_file.py
 #python add_gen_energy.py
 #python compare_gen_reco.py
 python add_gen_energy_2d.py
-python compare_gen_reco_2d.py
+#python compare_gen_reco_2d.py
 
 xrdcp results_temp/reco_MC.stdout root://cmseos.fnal.gov//${2}/reco_MC_${3}.stdout
 #xrdcp results_temp/RECO_MC.root root://cmseos.fnal.gov//${2}/RECO_MC_${3}.root
 #xrdcp results_temp/result.csv root://cmseos.fnal.gov//${2}/result_${3}.csv
 #xrdcp results_temp/result_origin.root root://cmseos.fnal.gov//${2}/result_${3}.root
 xrdcp results_temp/result_2d.csv root://cmseos.fnal.gov//${2}/result_2d_${3}.csv
-xrdcp results_temp/result_2d.root root://cmseos.fnal.gov//${2}/result_2d_${3}.root
+#xrdcp results_temp/result_2d.root root://cmseos.fnal.gov//${2}/result_2d_${3}.root

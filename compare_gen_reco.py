@@ -10,10 +10,11 @@ import numpy as np
 result_dir = "results_temp/"
 result_file = "result"
 #result_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_1TeV_pion_gun_1dHB_2dHE-2021-04-19/"
+#result_dir = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_1d_training-2021-06-03/"
 #result_file = "result_0"
 
 tot_rows = None
-#tot_rows = 100000
+#tot_rows = 500000
 
 run_mod = "origin"
 #run_mod = "slope1"
@@ -71,13 +72,16 @@ genG0_h = rt.TH1F("genG0_h", "truth energy > 0 GeV", Ebins, Emin, Emax)
 genG0_ieta_h = rt.TH1F("genG0_ieta_h", "genG0_ieta_h", 30, 0, 30)
 use_8_pulse_h = rt.TH1F("use_8_pulse_h", "use 8 pulses", 2, 0, 2)
 
-use_8_pulse_vs_arrival_HE_h = rt.TH2F("use_8_pulse_vs_arrival_HE_h", "use_8_pulse_vs_arrival_HE_h", 25, 75, 100,  2, 0, 2)
-use_8_pulse_vs_arrival_HE_depthE1_h = rt.TH2F("use_8_pulse_vs_arrival_HE_depthE1_h", "use_8_pulse_vs_arrival_HE_depthE1_h", 25, 75, 100,  2, 0, 2)
-use_8_pulse_vs_arrival_HE_depthG1_h = rt.TH2F("use_8_pulse_vs_arrival_HE_depthG1_h", "use_8_pulse_vs_arrival_HE_depthG1_h", 25, 75, 100,  2, 0, 2)
+use_8_pulse_vs_AT_HE_h = rt.TH2F("use_8_pulse_vs_AT_HE_h", "use_8_pulse_vs_AT_HE_h", 25, 75, 100,  2, 0, 2)
+use_8_pulse_vs_AT_depthE1_HE_h = rt.TH2F("use_8_pulse_vs_AT_depthE1_HE_h", "use_8_pulse_vs_AT_depthE1_HE_h", 25, 75, 100,  2, 0, 2)
+use_8_pulse_vs_AT_depthG1_HE_h = rt.TH2F("use_8_pulse_vs_AT_depthG1_HE_h", "use_8_pulse_vs_AT_depthG1_HE_h", 25, 75, 100,  2, 0, 2)
 
 #==============reco vs gen 2d hist ==================
 reco_vs_gen_h = rt.TH2F("reco_vs_gen_h", "reco vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
-reco_err_vs_gen_h = rt.TH2F("reco_err_vs_gen_h", "|reco - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
+reco_err_vs_gen_h = rt.TH2F("reco_err_vs_gen_h", "reco_err_vs_gen_h", Ebins, Emin, Emax, 100, -0.5, 0.5)
+reco_err_vs_AT_HE_h = rt.TH2F("reco_err_vs_AT_HE_h", "reco_err_vs_AT_HE_h", 25, 75, 100, 100, -0.5, 0.5)
+reco_err_vs_AT_depthE1_HE_h = rt.TH2F("reco_err_vs_AT_depthE1_HE_h", "reco_err_vs_AT_depthE1_HE_h", 25, 75, 100, 100, -0.5, 0.5)
+reco_err_vs_AT_depthG1_HE_h = rt.TH2F("reco_err_vs_AT_depthG1_HE_h", "reco_err_vs_AT_depthG1_HE_h", 25, 75, 100, 100, -0.5, 0.5)
 reco_vs_gen_depthG1_h = rt.TH2F("reco_vs_gen_depthG1_h", "reco vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_HB_h = rt.TH2F("reco_vs_gen_HB_h", "reco vs gen, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 reco_vs_gen_HB_PUL_h = rt.TH2F("reco_vs_gen_HB_PUL_h", "reco_vs_gen_HB_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -106,7 +110,10 @@ reco_vs_gen_depthE1_HE_8_pulse_h = rt.TH2F("reco_vs_gen_depthE1_HE_8_pulse_h", "
 
 #==============aux vs gen 2d hist ==================
 aux_vs_gen_h = rt.TH2F("aux_vs_gen_h", "aux vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
-aux_err_vs_gen_h = rt.TH2F("aux_err_vs_gen_h", "|aux - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
+aux_err_vs_gen_h = rt.TH2F("aux_err_vs_gen_h", "aux_err_vs_gen_h", Ebins, Emin, Emax, 100, -0.5, 0.5)
+aux_err_vs_AT_HE_h = rt.TH2F("aux_err_vs_AT_HE_h", "aux_err_vs_AT_HE_h", 25, 75, 100, 100, -0.5, 0.5)
+aux_err_vs_AT_depthE1_HE_h = rt.TH2F("aux_err_vs_AT_depthE1_HE_h", "aux_err_vs_AT_depthE1_HE_h", 25, 75, 100, 100, -0.5, 0.5)
+aux_err_vs_AT_depthG1_HE_h = rt.TH2F("aux_err_vs_AT_depthG1_HE_h", "aux_err_vs_AT_depthG1_HE_h", 25, 75, 100, 100, -0.5, 0.5)
 aux_vs_gen_depthG1_h = rt.TH2F("aux_vs_gen_depthG1_h", "aux vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
 aux_vs_gen_HB_h = rt.TH2F("aux_vs_gen_HB_h", "aux vs gen, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 aux_vs_gen_HB_PUL_h = rt.TH2F("aux_vs_gen_HB_PUL_h", "aux_vs_gen_HB_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -145,7 +152,10 @@ raw_vs_gen_depthE1_HE_PUH_h = rt.TH2F("raw_vs_gen_depthE1_HE_PUH_h", "raw_vs_gen
 
 #==============DLPHIN vs gen 2d hist ==================
 DLPHIN_vs_gen_h = rt.TH2F("DLPHIN_vs_gen_h", "DLPHIN vs gen", Ebins, Emin, Emax, Ebins, Emin, Emax)
-DLPHIN_err_vs_gen_h = rt.TH2F("DLPHIN_err_vs_gen_h", "|DLPHIN - gen|/gen vs gen", Ebins, Emin, Emax, 100, 0, 1)
+DLPHIN_err_vs_gen_h = rt.TH2F("DLPHIN_err_vs_gen_h", "DLPHIN_err_vs_gen_h", Ebins, Emin, Emax, 100, -0.5, 0.5)
+DLPHIN_err_vs_AT_HE_h = rt.TH2F("DLPHIN_err_vs_AT_HE_h", "DLPHIN_err_vs_AT_HE_h", 25, 75, 100, 100, -0.5, 0.5)
+DLPHIN_err_vs_AT_depthE1_HE_h = rt.TH2F("DLPHIN_err_vs_AT_depthE1_HE_h", "DLPHIN_err_vs_AT_depthE1_HE_h", 25, 75, 100, 100, -0.5, 0.5)
+DLPHIN_err_vs_AT_depthG1_HE_h = rt.TH2F("DLPHIN_err_vs_AT_depthG1_HE_h", "DLPHIN_err_vs_AT_depthG1_HE_h", 25, 75, 100, 100, -0.5, 0.5)
 DLPHIN_vs_gen_depthG1_h = rt.TH2F("DLPHIN_vs_gen_depthG1_h", "DLPHIN vs gen, depth > 1", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_HB_h = rt.TH2F("DLPHIN_vs_gen_HB_h", "DLPHIN vs gen, HB", Ebins, Emin, Emax, Ebins, Emin, Emax)
 DLPHIN_vs_gen_HB_PUL_h = rt.TH2F("DLPHIN_vs_gen_HB_PUL_h", "DLPHIN_vs_gen_HB_PUL_h", Ebins, Emin, Emax, Ebins, Emin, Emax)
@@ -326,7 +336,7 @@ for i in range(16,30):
 Nrows = result.shape[0]
 print "total rows: ", Nrows
 for i in range(Nrows):
-    if i%100000 == 0: print "process %d rows" %i
+#    if i%100000 == 0: print "process %d rows" %i
 
     reco_corr = 1
     aux_corr = 1
@@ -481,6 +491,16 @@ for i in range(Nrows):
         TS4_charge = max(result["TS4 raw charge"] [i] - result["TS4 ped noise"] [i], 0)
         TS5_charge = max(result["TS5 raw charge"] [i] - result["TS5 ped noise"] [i], 0)
 
+        reco_ratio = reco_energy / gen_energy
+        aux_ratio = aux_energy / gen_energy
+        raw_ratio = raw_energy / gen_energy
+        DLPHIN_ratio = DLPHIN_energy / gen_energy
+
+        reco_err = (reco_energy - gen_energy) / gen_energy
+        aux_err = (aux_energy - gen_energy) / gen_energy
+        raw_err = (raw_energy - gen_energy) / gen_energy
+        DLPHIN_err = (DLPHIN_energy - gen_energy) / gen_energy
+
         TS45_time = 0
         if TS4_charge + TS5_charge > 0:
             TS45_time = (TS4_charge * 75 + TS5_charge * 100) / (TS4_charge + TS5_charge)
@@ -520,14 +540,9 @@ for i in range(Nrows):
         arrival_time_vs_gen_h.Fill(gen_energy, arrival_time)
         median_time_h.Fill(median_time)
 
-        reco_err_vs_gen_h.Fill(gen_energy, abs(reco_energy-gen_energy)/gen_energy)
-        aux_err_vs_gen_h.Fill(gen_energy, abs(aux_energy-gen_energy)/gen_energy)
-        DLPHIN_err_vs_gen_h.Fill(gen_energy, abs(DLPHIN_energy-gen_energy)/gen_energy)
-
-        reco_ratio = reco_energy / gen_energy
-        aux_ratio = aux_energy / gen_energy
-        raw_ratio = raw_energy / gen_energy
-        DLPHIN_ratio = DLPHIN_energy / gen_energy
+        reco_err_vs_gen_h.Fill(gen_energy, reco_err)
+        aux_err_vs_gen_h.Fill(gen_energy, aux_err)
+        DLPHIN_err_vs_gen_h.Fill(gen_energy, DLPHIN_err)
 
         raw_loss = chi2loss(gen_energy, raw_energy)
         DLPHIN_loss = chi2loss(gen_energy, DLPHIN_energy)
@@ -575,7 +590,11 @@ for i in range(Nrows):
             weighted_time_HE_ieta_list[ieta - 16][depth - 1].Fill(weighted_time)
             TS45_time_HE_ieta_list[ieta - 16][depth - 1].Fill(TS45_time)
             arrival_time_HE_ieta_list[ieta - 16][depth - 1].Fill(arrival_time)
-            if gen_energy > 50: use_8_pulse_vs_arrival_HE_h.Fill(arrival_time, use_8_pulse)
+            if gen_energy > 50:
+                use_8_pulse_vs_AT_HE_h.Fill(arrival_time, use_8_pulse)
+                reco_err_vs_AT_HE_h.Fill(arrival_time, reco_err)
+                aux_err_vs_AT_HE_h.Fill(arrival_time, aux_err)
+                DLPHIN_err_vs_AT_HE_h.Fill(arrival_time, DLPHIN_err)
             if depth == 1:
                 reco_ratio_depthE1_HE_h.Fill(reco_ratio)
                 aux_ratio_depthE1_HE_h.Fill(aux_ratio)
@@ -583,8 +602,11 @@ for i in range(Nrows):
                 DLPHIN_ratio_depthE1_HE_h.Fill(DLPHIN_ratio)
                 raw_loss_depthE1_HE_h.Fill(raw_loss)
                 DLPHIN_loss_depthE1_HE_h.Fill(DLPHIN_loss)
-                if gen_energy > 50: use_8_pulse_vs_arrival_HE_depthE1_h.Fill(arrival_time, use_8_pulse)
-
+                if gen_energy > 50:
+                    use_8_pulse_vs_AT_depthE1_HE_h.Fill(arrival_time, use_8_pulse)
+                    reco_err_vs_AT_depthE1_HE_h.Fill(arrival_time, reco_err)
+                    aux_err_vs_AT_depthE1_HE_h.Fill(arrival_time, aux_err)
+                    DLPHIN_err_vs_AT_depthE1_HE_h.Fill(arrival_time, DLPHIN_err)
                 if add_weight and gen_energy < 100:
                     HE_depth1_weight = HE_depth1_weight_hist.GetBinContent(HE_depth1_weight_hist.FindBin(gen_energy))
                     result["weight"].iat[i] = HE_depth1_weight
@@ -613,8 +635,12 @@ for i in range(Nrows):
                 aux_ratio_depthG1_HE_h.Fill(aux_ratio)
                 raw_ratio_depthG1_HE_h.Fill(raw_ratio)
                 DLPHIN_ratio_depthG1_HE_h.Fill(DLPHIN_ratio)
-                if gen_energy > 50: use_8_pulse_vs_arrival_HE_depthG1_h.Fill(arrival_time, use_8_pulse)
-                if arrival_time < 80:
+                if gen_energy > 50:
+                    use_8_pulse_vs_AT_depthG1_HE_h.Fill(arrival_time, use_8_pulse)
+                    reco_err_vs_AT_depthG1_HE_h.Fill(arrival_time, reco_err)
+                    aux_err_vs_AT_depthG1_HE_h.Fill(arrival_time, aux_err)
+                    DLPHIN_err_vs_AT_depthG1_HE_h.Fill(arrival_time, DLPHIN_err)
+                if arrival_time > 76 and arrival_time < 77:
                     reco_vs_gen_depthG1_HE_ATL_h.Fill(gen_energy, reco_energy)
                     aux_vs_gen_depthG1_HE_ATL_h.Fill(gen_energy, aux_energy)
                     raw_vs_gen_depthG1_HE_ATL_h.Fill(gen_energy, raw_energy)
@@ -642,7 +668,7 @@ for i in range(Nrows):
                     DLPHIN_ratio_depthG1_HE_genH_h.Fill(DLPHIN_ratio)
 
                 #if gen_energy > 50 and use_8_pulse and reco_ratio < 0.7 and aux_ratio > 0.9 and aux_ratio < 1.1: 
-                #    print reco_ratio, gen_energy, reco_energy, aux_energy, arrival_time
+                    print "ieta", result["ieta"] [i], "iphi", result["iphi"] [i], "depth", result["depth"] [i], "reco_ratio %.2f" %reco_ratio, "gen_energy", gen_energy, "mahi_enerngy", result["mahi energy"][i], "aux_energy", result["aux energy"][i], "arrival_time", arrival_time
 
 out_file.cd()
 out_file.Write()
