@@ -28,6 +28,9 @@
 // constructors and destructor
 //
 DLPHIN::DLPHIN(const edm::ParameterSet& conf):
+    DLPHIN_apply_respCorr_(conf.getParameter<bool>("DLPHIN_apply_respCorr")),
+    DLPHIN_respCorr_name_(conf.getParameter<std::string>("DLPHIN_respCorr_name")),
+    DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
     DLPHIN_pb_2dHB_(conf.getParameter<std::string>("DLPHIN_pb_2dHB")),
     DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE"))
 {
@@ -65,6 +68,19 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
             HE_ieta_iphi_row_map[std::make_pair(ieta, iphi)] = HE_row;
             HE_row++;
         }
+    }
+
+    if (DLPHIN_apply_respCorr_) {
+        TFile *DLPHIN_respCorr_file = new TFile(DLPHIN_respCorr_name_.c_str());
+        for(int depth = 1; depth <= HE_depth_max; depth++) {
+            std::string hist_name = "D" + std::to_string(depth);
+            auto depth_hist = (TH1F*)DLPHIN_respCorr_file->Get(hist_name.c_str());
+            for(int ieta = -HE_ieta_max; ieta <= HE_ieta_max; ieta++) {
+                auto respCorr = depth_hist->GetBinContent(depth_hist->FindBin(ieta));
+                ieta_depth_respCorr_map[std::make_pair(ieta, depth)] = respCorr;
+            }
+        }
+        DLPHIN_respCorr_file->Close();
     }
 
     tensorflow::GraphDef *graphDef_2dHB = tensorflow::loadGraphDef(DLPHIN_pb_2dHB_);
@@ -220,6 +236,14 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
         //if(pred < 0) {std::cout << "Error! ReLU outputs < 0" << std::endl;}
         if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
         //if(subdet == 2) std::cout << hid << ": " << RecHit.energy() << ", " << pred << std::endl;
+        if (DLPHIN_apply_respCorr_) {
+            auto respCorr = ieta_depth_respCorr_map.at(std::make_pair(ieta, depth));
+            if (respCorr <= 0) {std::cout << "Error! A real channel has wrong respCorr" << std::endl;}
+            pred = pred * respCorr;
+        }
+        if(DLPHIN_truncate_) {
+            if(RecHit.energy() <= 0) {pred = 0;}
+        }
         (*RecHits)[iRecHit].setEnergy(pred);
     }
 }

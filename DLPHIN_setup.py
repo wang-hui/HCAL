@@ -6,11 +6,19 @@ if len(sys.argv) != 2 or sys.argv[1] not in ["diff", "cp", "mv"]:
     print "python DLPHIN_setup.py <diff / cp / mv>"
     quit()
 
-command = sys.argv[1]
-os.system(command + "  BuildFile.xml ../RecoLocalCalo/HcalRecAlgos/")
-os.system(command + "  HBHEPhase1Reconstructor_cfi.py ../RecoLocalCalo/HcalRecProducers/python/")
-os.system(command + "  HBHEPhase1Reconstructor.cc ../RecoLocalCalo/HcalRecProducers/src/")
+Oper = sys.argv[1]
 
-os.system(command + "  DLPHIN.h ../RecoLocalCalo/HcalRecAlgos/interface/")
-os.system(command + "  DLPHIN.cc ../RecoLocalCalo/HcalRecAlgos/src/")
-os.system(command + "  DLPHIN_cfi.py ../RecoLocalCalo/HcalRecProducers/python/")
+File_Loca_Dict = {
+"BuildFile.xml"                         : "../RecoLocalCalo/HcalRecAlgos/",
+"HBHEPhase1Reconstructor_cfi.py"        : "../RecoLocalCalo/HcalRecProducers/python/",
+"HBHEPhase1Reconstructor.cc"            : "../RecoLocalCalo/HcalRecProducers/src/",
+
+"DLPHIN.h"                              : "../RecoLocalCalo/HcalRecAlgos/interface/",
+"DLPHIN.cc"                             : "../RecoLocalCalo/HcalRecAlgos/src/",
+"DLPHIN_cfi.py"                         : "../RecoLocalCalo/HcalRecProducers/python/",
+}
+
+for File, Loca in File_Loca_Dict.items():
+    Command = Oper + " " + File + " " + Loca
+    print Command
+    os.system(Command)
