@@ -19,6 +19,6 @@ File_Loca_Dict = {
 }
 
 for File, Loca in File_Loca_Dict.items():
-    Command = Oper + " " + File + " " + Loca
+    Command = Oper + " DLPHIN_code/" + File + " " + Loca
     print Command
     os.system(Command)
