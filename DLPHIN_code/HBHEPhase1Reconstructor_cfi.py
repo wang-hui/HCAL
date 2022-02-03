@@ -82,6 +82,7 @@ hbheprereco = cms.EDProducer(
         applyLegacyHBMCorrection = cms.bool(True)
     ),
 
+    useDLPHIN = cms.bool(True),
     DLPHINConfig = DLPHIN.DLPHINConfig,
 
     # Reconstruction algorithm configuration data to fetch from DB, if any

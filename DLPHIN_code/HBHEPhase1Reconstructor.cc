@@ -321,7 +321,8 @@ private:
     std::unique_ptr<AbsHBHEPhase1Algo> reco_;
     std::unique_ptr<AbsHcalAlgoData> recoConfig_;
     std::unique_ptr<HcalRecoParams> paramTS_;
-    //std::unique_ptr<DLPHIN> DLPHIN_;
+
+    bool useDLPHIN_;
     DLPHIN DLPHIN_;
 
     // Status bit setters
@@ -381,6 +382,7 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
       setPulseShapeFlagsQIE8_(conf.getParameter<bool>("setPulseShapeFlagsQIE8")),
       setPulseShapeFlagsQIE11_(conf.getParameter<bool>("setPulseShapeFlagsQIE11")),
       reco_(parseHBHEPhase1AlgoDescription(conf.getParameter<edm::ParameterSet>("algorithm"))),
+      useDLPHIN_(conf.getParameter<bool>("useDLPHIN")),
       DLPHIN_(conf.getParameter<edm::ParameterSet>("DLPHINConfig")),
       negEFilter_(nullptr)
 {
@@ -666,8 +668,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
 
     // Create new output collections
     std::unique_ptr<HBHEChannelInfoCollection> infos;
-    if (true)
-    //if (saveInfos_)
+    if (saveInfos_ || useDLPHIN_)
     {
         infos = std::make_unique<HBHEChannelInfoCollection>();
         infos->reserve(maxOutputSize);
@@ -706,7 +707,8 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
             hbheFlagSetterQIE11_->SetFlagsFromRecHits(*out);
     }
 
-    DLPHIN_.DLPHIN_run(*conditions, infos.get(), out.get());
+    if(useDLPHIN_)
+        DLPHIN_.DLPHIN_run(*conditions, infos.get(), out.get());
 
     // Add the output collections to the event record
     if (saveInfos_)
@@ -796,8 +798,10 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<bool>("setLegacyFlagsQIE8");
     desc.add<bool>("setLegacyFlagsQIE11");
 
-    desc.add<edm::ParameterSetDescription>("algorithm", fillDescriptionForParseHBHEPhase1Algo());
+    desc.add<bool>("useDLPHIN", false);
     add_param_set(DLPHINConfig);
+
+    desc.add<edm::ParameterSetDescription>("algorithm", fillDescriptionForParseHBHEPhase1Algo());
     add_param_set(flagParametersQIE8);
     add_param_set(flagParametersQIE11);
     add_param_set(pulseShapeParametersQIE8);
