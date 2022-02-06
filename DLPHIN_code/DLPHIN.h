@@ -65,6 +65,9 @@ private:
     typedef std::pair<int, int> int_int_pair;
     std::map <int_int_pair, int> HB_ieta_iphi_row_map, HE_ieta_iphi_row_map;
 
+    bool DLPHIN_print_config_;
+    void print_config();
+
     bool DLPHIN_apply_respCorr_;
     std::string DLPHIN_respCorr_name_;
     std::map <int_int_pair, float> ieta_depth_respCorr_map;

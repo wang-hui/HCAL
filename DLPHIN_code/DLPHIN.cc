@@ -28,12 +28,16 @@
 // constructors and destructor
 //
 DLPHIN::DLPHIN(const edm::ParameterSet& conf):
+    DLPHIN_print_config_(conf.getParameter<bool>("DLPHIN_print_config")),
     DLPHIN_apply_respCorr_(conf.getParameter<bool>("DLPHIN_apply_respCorr")),
     DLPHIN_respCorr_name_(conf.getParameter<std::string>("DLPHIN_respCorr_name")),
     DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
     DLPHIN_pb_2dHB_(conf.getParameter<std::string>("DLPHIN_pb_2dHB")),
     DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE"))
 {
+    if (DLPHIN_print_config_)
+        print_config();
+
     int HB_row = 0;
     for(int ieta = -HB_ieta_max; ieta <= -HB_ieta_min; ieta ++)
     {
@@ -91,6 +95,16 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
 //
 // member functions
 //
+void DLPHIN::print_config() {
+    std::cout << "=========================================================" << std::endl;
+    std::cout << "DLPHIN_apply_respCorr: " << DLPHIN_apply_respCorr_ << std::endl;
+    std::cout << "DLPHIN_respCorr_name: " << DLPHIN_respCorr_name_ << std::endl;
+    std::cout << "DLPHIN_truncate: " << DLPHIN_truncate_ << std::endl;
+    std::cout << "DLPHIN_pb_2dHB: " << DLPHIN_pb_2dHB_ << std::endl;
+    std::cout << "DLPHIN_pb_2dHE: " << DLPHIN_pb_2dHE_ << std::endl;
+    std::cout << "=========================================================" << std::endl;
+}
+
 void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits) {
     //std::cout << "nChannelInfos " << ChannelInfos->size() << ", nRecHits " << RecHits->size() << std::endl;
 
@@ -98,13 +112,13 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     /*
     tensorflow::Tensor test_empty(tensorflow::DT_FLOAT, {2, 10});
     tensorflow::Tensor test_2d = test_empty;
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 10; i++)
     {
        test_2d.flat<float>()(i) = float(i);
     }
     for (int i = 0; i < 2; i++)
     {
-       for(int j = 0; j < 10; j++)
+       for(int j = 0; j < 5; j++)
        {
             std::cout << i << ", " << j << ": " << test_empty.tensor<float, 2>()(i,j) << ", " << test_2d.tensor<float, 2>()(i,j) << std::endl;
         }
@@ -233,7 +247,7 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
             pred = HE_outputs_2d[0].tensor<float, 3>()(HE_row,0,depth-1);
             mask = HE_outputs_2d[0].tensor<float, 3>()(HE_row,1,depth-1);
         }
-        //if(pred < 0) {std::cout << "Error! ReLU outputs < 0" << std::endl;}
+        if(pred < 0) {std::cout << "Error! ReLU outputs < 0" << std::endl;}
         if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
         //if(subdet == 2) std::cout << hid << ": " << RecHit.energy() << ", " << pred << std::endl;
         if (DLPHIN_apply_respCorr_) {
