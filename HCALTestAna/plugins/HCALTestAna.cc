@@ -150,12 +150,15 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 {
     edm::Handle<std::vector<PCaloHit>> hcalhitsHandle;
     iEvent.getByToken(hcalhitsToken_, hcalhitsHandle);
-    //iEvent.getByLabel("g4SimHits", "HcalHits", hand);
-    const std::vector<PCaloHit> * SimHits = hcalhitsHandle.product();
+    std::vector<PCaloHit> SimHits = *hcalhitsHandle;
 
     edm::ESHandle<HcalDDDRecConstants> pHRNDC;
     iSetup.get<HcalRecNumberingRecord>().get(pHRNDC);
     const HcalDDDRecConstants *hcons = &(*pHRNDC);
+
+    HcalHitRelabeller SimHitRelabeller(true);
+    SimHitRelabeller.setGeometry(hcons);
+    SimHitRelabeller.process(SimHits);
 
     edm::ESHandle<CaloGeometry> geometry;
     iSetup.get<CaloGeometryRecord>().get(geometry);
@@ -214,12 +217,12 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     std::map <int, std::vector<float>> id_energy_map, id_time_map;
     //int Nhb = 0, Nhe = 0, Nho = 0, Nhf = 0;
     //std::cout << "rawId, simHit.id(), iter.energy(), iter.time()" << std::endl;
-    for(auto iter : *SimHits)
+    for(auto iter : SimHits)
     {
         auto time = iter.time();
         if(time > max_simHit_time) {continue;}
         HcalDetId hid(iter.id());
-        hid = HcalDetId(HcalHitRelabeller::relabel(iter.id(), hcons));
+        //hid = HcalDetId(HcalHitRelabeller::relabel(iter.id(), hcons));
         auto rawId = hid.rawId();
         auto subdet = hid.subdet();
         auto depth = hid.depth();
@@ -250,13 +253,13 @@ void HCALTestAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             {
                 samplingFactor = samplingFactors_hb.at(ietaAbs_HB);
                 //factor 0.5 for HB depth1, except for |ieta|=16 depth1
-                if (is_run3_relVal && depth == 1 && ietaAbs != 16) digi_SF = 0.5;
+                //if (is_run3_relVal && depth == 1 && ietaAbs != 16) digi_SF = 0.5;
             }
             if(subdet == 2 && ietaAbs_HE < (int)samplingFactors_he.size())
             {
                 samplingFactor = samplingFactors_he.at(ietaAbs_HE);
                 //factor 1.2 for HE depth1
-                if (depth == 1) digi_SF = 1.2;
+                //if (depth == 1) digi_SF = 1.2;
             }
             if(samplingFactor == 0) std::cout << "Error! miss-match samplingFactor" << std::endl;
             //std::cout << rawId << ", " << subdet << ", " << depth << ", " << ieta << ", " << iphi << ", " << energy << ", " << samplingFactor << std::endl;

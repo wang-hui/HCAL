@@ -668,7 +668,7 @@ for i in range(Nrows):
                     DLPHIN_ratio_depthG1_HE_genH_h.Fill(DLPHIN_ratio)
 
                 #if gen_energy > 50 and use_8_pulse and reco_ratio < 0.7 and aux_ratio > 0.9 and aux_ratio < 1.1: 
-                    print "ieta", result["ieta"] [i], "iphi", result["iphi"] [i], "depth", result["depth"] [i], "reco_ratio %.2f" %reco_ratio, "gen_energy", gen_energy, "mahi_enerngy", result["mahi energy"][i], "aux_energy", result["aux energy"][i], "arrival_time", arrival_time
+                    #print "ieta", result["ieta"] [i], "iphi", result["iphi"] [i], "depth", result["depth"] [i], "reco_ratio %.2f" %reco_ratio, "gen_energy", gen_energy, "mahi_enerngy", result["mahi energy"][i], "aux_energy", result["aux energy"][i], "arrival_time", arrival_time
 
 out_file.cd()
 out_file.Write()
