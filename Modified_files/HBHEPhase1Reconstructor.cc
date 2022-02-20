@@ -374,7 +374,7 @@ class HBHEPhase1Reconstructor : public edm::stream::EDProducer<>
         void save_dlphin(std::vector<float> Doutput, HBHERecHitCollection* rechits);
 
         // Functions for simHits
-        std::map <int, std::vector<float>> run_simHits(const std::vector<PCaloHit> * SimHits, const HcalDDDRecConstants *hcons); 
+        std::map <int, std::vector<float>> run_simHits(std::vector<PCaloHit> SimHits, const HcalDDDRecConstants *hcons); 
         void sum_energy_per_rawId(std::map <int, std::vector<float>> & id_energy_map, int id, float energy);
         void save_simHits(std::map <int, std::vector<float>> id_energy_map, HBHERecHitCollection* rechits);
 
@@ -829,7 +829,7 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
     {
         edm::Handle<std::vector<PCaloHit>> hcalhitsHandle;
         e.getByToken(hcalhitsToken_, hcalhitsHandle);
-        const std::vector<PCaloHit> * SimHits = hcalhitsHandle.product();
+        std::vector<PCaloHit> SimHits = *hcalhitsHandle;
 
         edm::ESHandle<HcalDDDRecConstants> pHRNDC;
         eventSetup.get<HcalRecNumberingRecord>().get(pHRNDC);
@@ -1307,17 +1307,20 @@ void HBHEPhase1Reconstructor::save_dlphin(std::vector<float> Doutput, HBHERecHit
     }
 }
 
-std::map <int, std::vector<float>> HBHEPhase1Reconstructor::run_simHits(const std::vector<PCaloHit> * SimHits, const HcalDDDRecConstants *hcons)
+std::map <int, std::vector<float>> HBHEPhase1Reconstructor::run_simHits(std::vector<PCaloHit> SimHits, const HcalDDDRecConstants *hcons)
 {
     const int HE_ieta_min = 16;
+    HcalHitRelabeller SimHitRelabeller(true);
+    SimHitRelabeller.setGeometry(hcons);
+    SimHitRelabeller.process(SimHits);
 
     std::map <int, std::vector<float>> id_energy_map;
-    for(auto iter : *SimHits)
+    for(auto iter : SimHits)
     {
         auto time = iter.time();
         if(time > max_simHit_time_) {continue;}
         HcalDetId hid(iter.id());
-        hid = HcalDetId(HcalHitRelabeller::relabel(iter.id(), hcons));
+        //hid = HcalDetId(HcalHitRelabeller::relabel(iter.id(), hcons));
         auto rawId = hid.rawId();
         auto subdet = hid.subdet();
         auto depth = hid.depth();
@@ -1342,7 +1345,7 @@ std::map <int, std::vector<float>> HBHEPhase1Reconstructor::run_simHits(const st
             {
                 samplingFactor = samplingFactors_he.at(ietaAbs_HE);
                 //factor 1.2 for HE depth1
-                if (depth == 1) digi_SF = 1.2;
+                //if (depth == 1) digi_SF = 1.2;
             }
             if(samplingFactor == 0) std::cout << "Error! miss-match samplingFactor" << std::endl;
 
