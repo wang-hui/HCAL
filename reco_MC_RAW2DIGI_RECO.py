@@ -30,7 +30,8 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #'file:step2.root'
-        "root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_noPU-2020-12-20/UL_1TeV_pion_gun_RAW_0.root"
+        "root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_PU-2021-05-23/UL_MC_RAW_PU_0.root"
+        #"root://cmseos.fnal.gov//store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_noPU-2021-06-11/UL_MC_RAW_noPU_0.root"
     ),
     secondaryFileNames = cms.untracked.vstring()
 )
@@ -63,6 +64,9 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
+
+#process.hbheprereco.saveInfos = cms.bool(True)
+#process.ak4CaloJets.jetPtMin = cms.double(1.0)
 
 # Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)

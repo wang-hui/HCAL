@@ -165,7 +165,7 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     std::cout << "HB_outputs_2d.size() " << HB_outputs_2d.size() <<
     ", tensor.shape().dim_size(0) " << HB_outputs_2d[0].shape().dim_size(0) <<
     ", tensor.shape().dim_size(1) " << HB_outputs_2d[0].shape().dim_size(1) <<
-    ", tensor.shape().dim_size(2) " << HB_outputs_2d[0].shape().dim_size(2) << std::endl;   
+    ", tensor.shape().dim_size(2) " << HB_outputs_2d[0].shape().dim_size(2) << std::endl; 
     */
 
     //Save DLPHIN outputs to RecHits
@@ -234,7 +234,7 @@ void DLPHIN::process_inputs (const HcalDbService& DbServ,
 void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
                           const std::vector<tensorflow::Tensor>& HB_outputs_2d,
                           const std::vector<tensorflow::Tensor>& HE_outputs_2d
-                          ){
+                          ) {
     int nRecHits = RecHits->size();
     for (int iRecHit = 0; iRecHit < nRecHits; iRecHit++) {
         auto RecHit = (*RecHits)[iRecHit];
