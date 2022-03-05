@@ -28,6 +28,7 @@
 // constructors and destructor
 //
 DLPHIN::DLPHIN(const edm::ParameterSet& conf):
+    DLPHIN_debug_(conf.getParameter<bool>("DLPHIN_debug")),
     DLPHIN_print_config_(conf.getParameter<bool>("DLPHIN_print_config")),
     DLPHIN_apply_respCorr_(conf.getParameter<bool>("DLPHIN_apply_respCorr")),
     DLPHIN_respCorr_name_(conf.getParameter<std::string>("DLPHIN_respCorr_name")),
@@ -97,6 +98,7 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
 //
 void DLPHIN::print_config() {
     std::cout << "=========================================================" << std::endl;
+    std::cout << "DLPHIN_debug: " << DLPHIN_debug_ << std::endl;
     std::cout << "DLPHIN_apply_respCorr: " << DLPHIN_apply_respCorr_ << std::endl;
     std::cout << "DLPHIN_respCorr_name: " << DLPHIN_respCorr_name_ << std::endl;
     std::cout << "DLPHIN_truncate: " << DLPHIN_truncate_ << std::endl;
@@ -107,6 +109,7 @@ void DLPHIN::print_config() {
 
 void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits) {
     //std::cout << "nChannelInfos " << ChannelInfos->size() << ", nRecHits " << RecHits->size() << std::endl;
+    DLPHIN_inter_data.clear();
 
     //=========== a test for 2d tensor, to be commented out ===================
     /*
@@ -152,9 +155,18 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     //DLPHIN inference
     //outputs is a vector of one rank-3 tensor [pred:mask:depth]
     std::vector<tensorflow::Tensor> HB_outputs_2d, HE_outputs_2d;
-    tensorflow::run(session_2dHB, {{"net_charges",HB_ch_input_2d},{"types_input",HB_ty_input_2d},{"mask_input",HB_ma_input_2d}}, {"output/Reshape"}, &HB_outputs_2d);
-    tensorflow::run(session_2dHE, {{"net_charges",HE_ch_input_2d},{"types_input",HE_ty_input_2d},{"mask_input",HE_ma_input_2d}}, {"output/Reshape"}, &HE_outputs_2d);
-    //std::cout << "HB_outputs_2d.size() " << HB_outputs_2d.size() << ", tensor.shape().dim_size(0) " << HB_outputs_2d[0].shape().dim_size(0) << ", tensor.shape().dim_size(1) " << HB_outputs_2d[0].shape().dim_size(1) << ", tensor.shape().dim_size(2) " << HB_outputs_2d[0].shape().dim_size(2) << std::endl;   
+    tensorflow::run(session_2dHB,
+        {{"net_charges",HB_ch_input_2d},{"types_input",HB_ty_input_2d},{"mask_input",HB_ma_input_2d}},
+        {"output/Reshape"}, &HB_outputs_2d);
+    tensorflow::run(session_2dHE,
+        {{"net_charges",HE_ch_input_2d},{"types_input",HE_ty_input_2d},{"mask_input",HE_ma_input_2d}},
+        {"output/Reshape"}, &HE_outputs_2d);
+    /*
+    std::cout << "HB_outputs_2d.size() " << HB_outputs_2d.size() <<
+    ", tensor.shape().dim_size(0) " << HB_outputs_2d[0].shape().dim_size(0) <<
+    ", tensor.shape().dim_size(1) " << HB_outputs_2d[0].shape().dim_size(1) <<
+    ", tensor.shape().dim_size(2) " << HB_outputs_2d[0].shape().dim_size(2) << std::endl;   
+    */
 
     //Save DLPHIN outputs to RecHits
     save_outputs (RecHits, HB_outputs_2d, HE_outputs_2d);
@@ -235,6 +247,8 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
 
         float pred = 0.0;
         float mask = 0.0;
+        float respCorr = 1.0;
+
         if(subdet == 1)
         {
             auto HB_row = HB_ieta_iphi_row_map.at(std::make_pair(ieta, iphi));
@@ -251,14 +265,20 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
         if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
         //if(subdet == 2) std::cout << hid << ": " << RecHit.energy() << ", " << pred << std::endl;
         if (DLPHIN_apply_respCorr_) {
-            auto respCorr = ieta_depth_respCorr_map.at(std::make_pair(ieta, depth));
+            respCorr = ieta_depth_respCorr_map.at(std::make_pair(ieta, depth));
             if (respCorr <= 0) {std::cout << "Error! A real channel has wrong respCorr" << std::endl;}
+        }
+        if(DLPHIN_debug_) {
+            // Save DLPHIN results in a public member, instead of overwriting the recHits
+            DLPHIN_inter_data.push_back(std::make_pair(pred, respCorr));
+        }
+        else {
             pred = pred * respCorr;
+            if(DLPHIN_truncate_) {
+                if(RecHit.energy() <= 0) {pred = 0;}
+            }
+            (*RecHits)[iRecHit].setEnergy(pred);
         }
-        if(DLPHIN_truncate_) {
-            if(RecHit.energy() <= 0) {pred = 0;}
-        }
-        (*RecHits)[iRecHit].setEnergy(pred);
     }
 }
 

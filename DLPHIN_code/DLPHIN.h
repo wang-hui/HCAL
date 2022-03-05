@@ -44,6 +44,8 @@ public:
 
     // ---------- member functions ---------------------------
     void DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits);
+    typedef std::pair<float, float> pred_respCorr_pair;
+    std::vector<pred_respCorr_pair> DLPHIN_inter_data;
 
 private:
     // ---------- member data --------------------------------
@@ -65,6 +67,7 @@ private:
     typedef std::pair<int, int> int_int_pair;
     std::map <int_int_pair, int> HB_ieta_iphi_row_map, HE_ieta_iphi_row_map;
 
+    bool DLPHIN_debug_;
     bool DLPHIN_print_config_;
     void print_config();
 

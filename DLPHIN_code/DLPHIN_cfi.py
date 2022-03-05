@@ -4,6 +4,7 @@ import os
 DLPHIN_pb_folder = "%s/src/HCAL/DLPHIN_pb/" % os.environ['CMSSW_BASE']
 
 DLPHINConfig = cms.PSet(
+    DLPHIN_debug = cms.bool(False),
     DLPHIN_print_config = cms.bool(True),
     DLPHIN_apply_respCorr = cms.bool(True),
     DLPHIN_respCorr_name = cms.string(DLPHIN_pb_folder + "respCorr_2dHBHE_E50_truncate_mini.root"),
