@@ -57,7 +57,7 @@ SimG4CoreRAW = cms.PSet(
         'keep edmHepMCProduct_source_*_*')
 )
 outputCommands_temp = process.RECOSIMEventContent.outputCommands
-outputCommands_temp.extend(SimG4CoreRAW.outputCommands)
+#outputCommands_temp.extend(SimG4CoreRAW.outputCommands)
 
 process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
@@ -69,21 +69,19 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0)
 )
 
-# Additional output definition
-#process.TFileService = cms.Service("TFileService", fileName = cms.string("gen_hist.root") )
-
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
 
-# Path and EndPath definitions
-#process.myAna = cms.EDAnalyzer(
-#    "HCALTestAna",
-#    do_PU = cms.untracked.bool(True),
-#    is_run3_relVal = cms.untracked.bool(False),
-#    min_simHit_energy = cms.untracked.double(0.0))
+process.GlobalTag.toGet = cms.VPSet(
+    cms.PSet(record = cms.string("PFCalibrationRcd"),
+             tag = cms.string("PFCalibration_v10_mc"),
+             connect = cms.string("sqlite_file:DLPHIN_pb/PFCalibration_simHit.db")
+             #connect = cms.untracked.string("sqlite_file:PFCalibration.db")
+             )
+    )
 
-#process.raw2digi_step = cms.Path(process.myAna + process.RawToDigi)
+# Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)
 process.reconstruction_step = cms.Path(process.reconstruction)
 process.endjob_step = cms.EndPath(process.endOfProcess)
