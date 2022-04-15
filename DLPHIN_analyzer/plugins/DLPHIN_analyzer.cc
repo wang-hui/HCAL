@@ -49,6 +49,7 @@
 //ROOT includes
 #include "TTree.h"
 #include "TMath.h"
+#include "classes.h"
 
 //STL headers
 #include <vector>
@@ -91,6 +92,7 @@ class DLPHIN_analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
         typedef std::pair<std::vector<float>, std::vector<float>> energy_time_pair;
         void add_info_to_map(std::map <int, energy_time_pair>& id_info_map, const int& id, const float& energy, const float& time);
         void make_id_info_map(std::map <int, energy_time_pair>& id_info_map, std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons);
+        void clear_vectors();
 
         edm::Service<TFileService> FileService;
         TTree* OutTree;
@@ -98,13 +100,15 @@ class DLPHIN_analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
         // ----------varialbes to be filled in TTree ---------------------------
         int Run, Event, LS;
         float PU;
-        int Subdet, Ieta, Iphi, Depth;
-        int RawId, Flags;
-        float RawCharges[8], Pedestals[8], TotNoises[8];
-        float RecoEnergy, AuxEnergy, RawEnergy, DLPHINEnergy;
-        float Chi2, RawGain, RespCorr, DLPHINRespCorr;
-        int nSimHits;
-        float SimHitEnergy, SimHitTime, ArrivalTime; 
+
+        std::vector<int> SubdetVec, IetaVec, IphiVec, DepthVec;
+        std::vector<unsigned int> RawIdVec;
+        std::vector<std::vector<float>> RawChargesVec, PedestalsVec, TotNoisesVec; // plural form for vec of vec
+        std::vector<float> RecoEnergyVec, AuxEnergyVec, RawEnergyVec, DLPHINEnergyVec;
+        std::vector<unsigned int> FlagVec;
+        std::vector<float> Chi2Vec, RawGainVec, RespCorrVec, DLPHINRespCorrVec;
+        std::vector<int> nSimHitsVec;
+        std::vector<float> SimHitEnergyVec, SimHitTimeVec, ArrivalTimeVec;
 };
 
 //
@@ -152,6 +156,8 @@ DLPHIN_analyzer::~DLPHIN_analyzer()
 
 // ------------ method called for each event  ------------
 void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+    clear_vectors();
+
     Run = iEvent.id().run();
     Event = iEvent.id().event();
     LS = iEvent.id().luminosityBlock();
@@ -206,17 +212,19 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     for (int iRecHit = 0; iRecHit < nRecHits; iRecHit++) {
         auto HBHERecHit = HBHERecHits[iRecHit];
         auto Hid = HBHERecHit.id();
-        RawId = Hid.rawId();
-        Subdet = Hid.subdet();
-        Ieta = Hid.ieta();
-        Iphi = Hid.iphi();
-        Depth = Hid.depth();
+        auto RawId = Hid.rawId();
+        auto Subdet = Hid.subdet();
+        auto Ieta = Hid.ieta();
+        auto Iphi = Hid.iphi();
+        auto Depth = Hid.depth();
 
-        Flags = HBHERecHit.flags();
-        RecoEnergy = HBHERecHit.energy();
-        AuxEnergy = HBHERecHit.eaux();
-        RawEnergy = HBHERecHit.eraw();
-        Chi2 = HBHERecHit.chi2();
+        auto RecoEnergy = HBHERecHit.energy();
+        auto AuxEnergy = HBHERecHit.eaux();
+        auto RawEnergy = HBHERecHit.eraw();
+        auto Chi2 = HBHERecHit.chi2();
+        auto Flag = HBHERecHit.flags();
+
+        std::vector<float> RawCharges(8), Pedestals(8), TotNoises(8);
 
         auto ChannelInfo = (*ChannelInfos)[iRecHit];
         for (int iTS = 0; iTS < 8; ++iTS)
@@ -239,17 +247,17 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         }
 
         auto DLPHIN_pair = DLPHIN_inter_data.at(iRecHit);
-        DLPHINEnergy = DLPHIN_pair.first;
-        DLPHINRespCorr = DLPHIN_pair.second;
+        auto DLPHINEnergy = DLPHIN_pair.first;
+        auto DLPHINRespCorr = DLPHIN_pair.second;
 
         const HcalCalibrations& calib = DbServ->getHcalCalibrations(Hid);
-        RawGain = calib.rawgain(0);
-        RespCorr = calib.respcorr();
+        auto RawGain = calib.rawgain(0);
+        auto RespCorr = calib.respcorr();
 
-        nSimHits = 0;
-        SimHitEnergy = 0.0;
-        SimHitTime = 0.0;
-        ArrivalTime = 0.0;
+        int nSimHits = 0;
+        float SimHitEnergy = 0.0;
+        float SimHitTime = 0.0;
+        float ArrivalTime = 0.0;
 
         if (HaveSimHits_) {
             auto it = id_info_map.find(RawId);
@@ -273,8 +281,33 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
                   << ", " << DLPHINRespCorr << ", " << RespCorr
                   << ", " << SimHitTime << ", " << ArrivalTime << std::endl;
         */
-        OutTree->Fill();
+        SubdetVec.push_back(Subdet);
+        IetaVec.push_back(Ieta);
+        IphiVec.push_back(Iphi);
+        DepthVec.push_back(Depth);
+        RawIdVec.push_back(RawId);
+
+        RawChargesVec.push_back(RawCharges);
+        PedestalsVec.push_back(Pedestals);
+        TotNoisesVec.push_back(TotNoises);
+
+        RecoEnergyVec.push_back(RecoEnergy);
+        AuxEnergyVec.push_back(AuxEnergy);
+        RawEnergyVec.push_back(RawEnergy);
+        DLPHINEnergyVec.push_back(DLPHINEnergy);
+
+        FlagVec.push_back(Flag);
+        Chi2Vec.push_back(Chi2);
+        RawGainVec.push_back(RawGain);
+        RespCorrVec.push_back(RespCorr);
+        DLPHINRespCorrVec.push_back(DLPHINRespCorr);
+
+        nSimHitsVec.push_back(nSimHits);
+        SimHitEnergyVec.push_back(SimHitEnergy);
+        SimHitTimeVec.push_back(SimHitTime);
+        ArrivalTimeVec.push_back(ArrivalTime);
     }
+    OutTree->Fill();
 }
 
 
@@ -287,35 +320,63 @@ void DLPHIN_analyzer::beginJob() {
     OutTree->Branch("LS", &LS, "LS/I");
     OutTree->Branch("PU", &PU, "PU/F");
 
-    OutTree->Branch("Subdet", &Subdet, "Subdet/I");
-    OutTree->Branch("Ieta", &Ieta, "Ieta/I");
-    OutTree->Branch("Iphi", &Iphi, "Iphi/I");
-    OutTree->Branch("Depth", &Depth, "Depth/I");
-    OutTree->Branch("RawId", &RawId, "RawId/I");
-    OutTree->Branch("Flags", &Flags, "Flags/I");
+    OutTree->Branch("SubdetVec", &SubdetVec);
+    OutTree->Branch("IetaVec", &IetaVec);
+    OutTree->Branch("IphiVec", &IphiVec);
+    OutTree->Branch("DepthVec", &DepthVec);
+    OutTree->Branch("RawIdVec", &RawIdVec);
 
-    OutTree->Branch("RawCharges", &RawCharges, "RawCharges[8]/F");
-    OutTree->Branch("Pedestals", &Pedestals, "Pedestals[8]/F");
-    OutTree->Branch("TotNoises", &TotNoises, "TotNoises[8]/F");
+    OutTree->Branch("RawChargesVec", &RawChargesVec);
+    OutTree->Branch("PedestalsVec", &PedestalsVec);
+    OutTree->Branch("TotNoisesVec", &TotNoisesVec);
 
-    OutTree->Branch("RecoEnergy", &RecoEnergy, "RecoEnergy/F");
-    OutTree->Branch("AuxEnergy", &AuxEnergy, "AuxEnergy/F");
-    OutTree->Branch("RawEnergy", &RawEnergy, "RawEnergy/F");
-    OutTree->Branch("DLPHINEnergy", &DLPHINEnergy, "DLPHINEnergy/F");
+    OutTree->Branch("RecoEnergyVec", &RecoEnergyVec);
+    OutTree->Branch("AuxEnergyVec", &AuxEnergyVec);
+    OutTree->Branch("RawEnergyVec", &RawEnergyVec);
+    OutTree->Branch("DLPHINEnergyVec", &DLPHINEnergyVec);
 
-    OutTree->Branch("Chi2", &Chi2, "Chi2/F");
-    OutTree->Branch("RawGain", &RawGain, "RawGain/F");
-    OutTree->Branch("RespCorr", &RespCorr, "RespCorr/F");
-    OutTree->Branch("DLPHINRespCorr", &DLPHINRespCorr, "DLPHINRespCorr/F");
+    OutTree->Branch("FlagVec", &FlagVec);
+    OutTree->Branch("Chi2Vec", &Chi2Vec);
+    OutTree->Branch("RawGainVec", &RawGainVec);
+    OutTree->Branch("RespCorrVec", &RespCorrVec);
+    OutTree->Branch("DLPHINRespCorrVec", &DLPHINRespCorrVec);
 
-    OutTree->Branch("nSimHits", &nSimHits, "nSimHits/I");
-    OutTree->Branch("SimHitEnergy", &SimHitEnergy, "SimHitEnergy/F");
-    OutTree->Branch("SimHitTime", &SimHitTime, "SimHitTime/F");
-    OutTree->Branch("ArrivalTime", &ArrivalTime, "ArrivalTime/F");
+    OutTree->Branch("nSimHitsVec", &nSimHitsVec);
+    OutTree->Branch("SimHitEnergyVec", &SimHitEnergyVec);
+    OutTree->Branch("SimHitTimeVec", &SimHitTimeVec);
+    OutTree->Branch("ArrivalTimeVec", &ArrivalTimeVec);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void DLPHIN_analyzer::endJob() {
+}
+
+void DLPHIN_analyzer::clear_vectors() {
+    SubdetVec.clear();
+    IetaVec.clear();
+    IphiVec.clear();
+    DepthVec.clear();
+    RawIdVec.clear();
+
+    RawChargesVec.clear();
+    PedestalsVec.clear();
+    TotNoisesVec.clear();
+
+    RecoEnergyVec.clear();
+    AuxEnergyVec.clear();
+    RawEnergyVec.clear();
+    DLPHINEnergyVec.clear();
+
+    FlagVec.clear();
+    Chi2Vec.clear();
+    RawGainVec.clear();
+    RespCorrVec.clear();
+    DLPHINRespCorrVec.clear();
+
+    nSimHitsVec.clear();
+    SimHitEnergyVec.clear();
+    SimHitTimeVec.clear();
+    ArrivalTimeVec.clear();
 }
 
 void DLPHIN_analyzer::add_info_to_map(std::map <int, energy_time_pair>& id_info_map, const int& id, const float& energy, const float& time) {
