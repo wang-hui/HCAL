@@ -44,7 +44,7 @@ void TreeReader::Loop()
 
 void TreeReader::make_1d_plots() {
     auto OutputFileName = InputFileName;
-    OutputFileName.ReplaceAll(".root", "_plots.root");
+    OutputFileName.ReplaceAll(".root", "_1d_plots.root");
     OutputFileName.ReplaceAll("results/", "");
     auto OutputFile = new TFile(OutputFileName, "RECREATE");
 
@@ -113,12 +113,12 @@ void TreeReader::make_1d_plots() {
     auto TotEntries = fChain->GetEntries();
     //TotEntries = 100;
 
-    for (int iEntry=0; iEntry<TotEntries; iEntry++) {
+    for (int iEntry=0; iEntry<TotEntries; iEntry++) { // start event loop
         fChain->GetEntry(iEntry);
-        if (iEntry%10000000 == 0) std::cout << "Processed " << iEntry << " entries" << std::endl;
+        if (iEntry%1000 == 0) std::cout << "Processed " << iEntry << " entries" << std::endl;
         //std::cout << RawIdVec->size() << std::endl;
 
-        for (int iHit=0; iHit<RawIdVec->size(); iHit++) {
+        for (int iHit=0; iHit<RawIdVec->size(); iHit++) { // start channel loop
             auto SimHitEnergy = SimHitEnergyVec->at(iHit);
 
             auto RecoEnergy = RecoEnergyVec->at(iHit);
@@ -211,8 +211,147 @@ void TreeReader::make_1d_plots() {
                     }
                 }
             }
+        } // end channel loop
+    } // end event loop
+
+    OutputFile->Write();
+    OutputFile->Close();
+}
+
+void TreeReader::make_2d_plots() {
+    auto OutputFileName = InputFileName;
+    OutputFileName.ReplaceAll(".root", "_2d_plots.root");
+    OutputFileName.ReplaceAll("results/", "");
+    auto OutputFile = new TFile(OutputFileName, "RECREATE");
+
+    std::vector<float> EnergyBins = {100,0,200};
+    std::vector<float> RatioBins = {100,0,2};
+
+    // book histos in OutputFile gDirectory
+    // recHits vs simHits
+    auto Reco_vs_SimHit_HB = BookTH2F("Reco_vs_SimHit_HB", EnergyBins, EnergyBins);
+    auto Reco_vs_SimHit_HE = BookTH2F("Reco_vs_SimHit_HE", EnergyBins, EnergyBins);
+    auto Aux_vs_SimHit_HB = BookTH2F("Aux_vs_SimHit_HB", EnergyBins, EnergyBins);
+    auto Aux_vs_SimHit_HE = BookTH2F("Aux_vs_SimHit_HE", EnergyBins, EnergyBins);
+    auto Raw_vs_SimHit_HB = BookTH2F("Raw_vs_SimHit_HB", EnergyBins, EnergyBins);
+    auto Raw_vs_SimHit_HE = BookTH2F("Raw_vs_SimHit_HE", EnergyBins, EnergyBins);
+    auto DLPHIN_vs_SimHit_HB = BookTH2F("DLPHIN_vs_SimHit_HB", EnergyBins, EnergyBins);
+    auto DLPHIN_vs_SimHit_HE = BookTH2F("DLPHIN_vs_SimHit_HE", EnergyBins, EnergyBins);
+
+    // recHits/simHits vs simHits
+    auto RecoRatio_vs_SimHit_HB = BookTH2F("RecoRatio_vs_SimHit_HB", EnergyBins, RatioBins);
+    auto RecoRatio_vs_SimHit_HE = BookTH2F("RecoRatio_vs_SimHit_HE", EnergyBins, RatioBins);
+    auto AuxRatio_vs_SimHit_HB = BookTH2F("AuxRatio_vs_SimHit_HB", EnergyBins, RatioBins);
+    auto AuxRatio_vs_SimHit_HE = BookTH2F("AuxRatio_vs_SimHit_HE", EnergyBins, RatioBins);
+    auto RawRatio_vs_SimHit_HB = BookTH2F("RawRatio_vs_SimHit_HB", EnergyBins, RatioBins);
+    auto RawRatio_vs_SimHit_HE = BookTH2F("RawRatio_vs_SimHit_HE", EnergyBins, RatioBins);
+    auto DLPHINRatio_vs_SimHit_HB = BookTH2F("DLPHINRatio_vs_SimHit_HB", EnergyBins, RatioBins);
+    auto DLPHINRatio_vs_SimHit_HE = BookTH2F("DLPHINRatio_vs_SimHit_HE", EnergyBins, RatioBins);
+
+    auto TotEntries = fChain->GetEntries();
+    //TotEntries = 3;
+
+    for (int iEntry=0; iEntry<TotEntries; iEntry++) { // start event loop
+        fChain->GetEntry(iEntry);
+        if (iEntry%1000 == 0) std::cout << "Processed " << iEntry << " entries" << std::endl;
+        //std::cout << RawIdVec->size() << std::endl;
+
+        ieta_iphi_info_map IetaIphiInfoMapHB, IetaIphiInfoMapHE;
+
+        for (int iHit=0; iHit<RawIdVec->size(); iHit++) {
+            auto Subdet = SubdetVec->at(iHit);
+            auto Ieta = IetaVec->at(iHit);
+            auto Iphi = IphiVec->at(iHit);
+            auto Depth = DepthVec->at(iHit);
+
+            auto SimHitEnergy = SimHitEnergyVec->at(iHit);
+
+            auto RecoEnergy = RecoEnergyVec->at(iHit);
+            auto AuxEnergy = AuxEnergyVec->at(iHit);
+            auto RawEnergy = RawEnergyVec->at(iHit);
+            auto DLPHINEnergy = DLPHINEnergyVec->at(iHit);
+
+            auto RespCorr = RespCorrVec->at(iHit);
+
+            auto RecoEnergy_raw = RecoEnergy / RespCorr;
+            auto AuxEnergy_raw = AuxEnergy / RespCorr;
+            auto RawEnergy_raw = RawEnergy / RespCorr;
+
+            auto ChannelInfo = (channel_info) {Subdet, Ieta, Iphi, Depth, SimHitEnergy,
+                RecoEnergy_raw, AuxEnergy_raw, RawEnergy_raw, DLPHINEnergy};
+
+            if (Subdet == 1) add_info_to_map(IetaIphiInfoMapHB, ChannelInfo);
+            else if (Subdet == 2) add_info_to_map(IetaIphiInfoMapHE, ChannelInfo);
         }
-    }
+
+        for(auto iter : IetaIphiInfoMapHB) {
+            auto key = iter.first;
+            auto value = iter.second;
+            //std::cout << key.first << ", " << key.second << std::endl;
+
+            float SimHitEnergy = 0.0;
+            float RecoEnergy = 0.0;
+            float AuxEnergy = 0.0;
+            float RawEnergy = 0.0;
+            float DLPHINEnergy = 0.0;
+            for(int i = 0; i < (int)value.size(); i++) {
+                auto ChannelInfo = value.at(i);
+                //std::cout << ChannelInfo.Ieta << ", " << ChannelInfo.Iphi << ", "
+                //<< ChannelInfo.SimHitEnergy << ", " << ChannelInfo.DLPHINEnergy << ", ";
+                SimHitEnergy += ChannelInfo.SimHitEnergy;
+                RecoEnergy += ChannelInfo.RecoEnergy;
+                AuxEnergy += ChannelInfo.AuxEnergy;
+                RawEnergy += ChannelInfo.RawEnergy;
+                DLPHINEnergy += ChannelInfo.DLPHINEnergy;
+            }
+            //std::cout << std::endl;
+            Reco_vs_SimHit_HB->Fill(SimHitEnergy, RecoEnergy);
+            Aux_vs_SimHit_HB->Fill(SimHitEnergy, AuxEnergy);
+            Raw_vs_SimHit_HB->Fill(SimHitEnergy, RawEnergy);
+            DLPHIN_vs_SimHit_HB->Fill(SimHitEnergy, DLPHINEnergy);
+
+            if (SimHitEnergy > 0) {
+                RecoRatio_vs_SimHit_HB->Fill(SimHitEnergy, RecoEnergy / SimHitEnergy);
+                AuxRatio_vs_SimHit_HB->Fill(SimHitEnergy, AuxEnergy / SimHitEnergy);
+                RawRatio_vs_SimHit_HB->Fill(SimHitEnergy, RawEnergy / SimHitEnergy);
+                DLPHINRatio_vs_SimHit_HB->Fill(SimHitEnergy, DLPHINEnergy / SimHitEnergy);
+            }
+        }
+
+        for(auto iter : IetaIphiInfoMapHE) {
+            auto key = iter.first;
+            auto value = iter.second;
+            //std::cout << key.first << ", " << key.second << std::endl;
+
+            float SimHitEnergy = 0.0;
+            float RecoEnergy = 0.0;
+            float AuxEnergy = 0.0;
+            float RawEnergy = 0.0;
+            float DLPHINEnergy = 0.0;
+            for(int i = 0; i < (int)value.size(); i++) {
+                auto ChannelInfo = value.at(i);
+                //std::cout << ChannelInfo.Ieta << ", " << ChannelInfo.Iphi << ", "
+                //<< ChannelInfo.SimHitEnergy << ", " << ChannelInfo.DLPHINEnergy << ", ";
+                SimHitEnergy += ChannelInfo.SimHitEnergy;
+                RecoEnergy += ChannelInfo.RecoEnergy;
+                AuxEnergy += ChannelInfo.AuxEnergy;
+                RawEnergy += ChannelInfo.RawEnergy;
+                DLPHINEnergy += ChannelInfo.DLPHINEnergy;
+            }
+            //std::cout << std::endl;
+            Reco_vs_SimHit_HE->Fill(SimHitEnergy, RecoEnergy);
+            Aux_vs_SimHit_HE->Fill(SimHitEnergy, AuxEnergy);
+            Raw_vs_SimHit_HE->Fill(SimHitEnergy, RawEnergy);
+            DLPHIN_vs_SimHit_HE->Fill(SimHitEnergy, DLPHINEnergy);
+
+            if (SimHitEnergy > 0) {
+                RecoRatio_vs_SimHit_HE->Fill(SimHitEnergy, RecoEnergy / SimHitEnergy);
+                AuxRatio_vs_SimHit_HE->Fill(SimHitEnergy, AuxEnergy / SimHitEnergy);
+                RawRatio_vs_SimHit_HE->Fill(SimHitEnergy, RawEnergy / SimHitEnergy);
+                DLPHINRatio_vs_SimHit_HE->Fill(SimHitEnergy, DLPHINEnergy / SimHitEnergy);
+            }
+        }
+    } // end event loop
 
     OutputFile->Write();
     OutputFile->Close();

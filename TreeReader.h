@@ -90,9 +90,27 @@ public :
    virtual void     Show(Long64_t entry = -1);
 
     // user functions
+    struct channel_info {
+        int Subdet = 0;
+        int Ieta = 0;
+        int Iphi = 0;
+        int Depth = 0;
+        float SimHitEnergy = 0.0;
+        float RecoEnergy = 0.0;
+        float AuxEnergy = 0.0;
+        float RawEnergy = 0.0;
+        float DLPHINEnergy = 0.0;
+    };
+    typedef std::pair<int, int> int_int_pair;
+    typedef std::map <int_int_pair, std::vector<channel_info>> ieta_iphi_info_map;
     TString InputFileName;
+
     TH2F* BookTH2F(TString Name, std::vector<float> XBinVec, std::vector<float> YBinVec);
     void make_1d_plots();
+    void make_2d_plots();
+
+    void add_info_to_map(ieta_iphi_info_map &IetaIphiInfoMap, const channel_info &ChannelInfo);
+
 };
 
 #endif
@@ -235,6 +253,21 @@ Int_t TreeReader::Cut(Long64_t entry)
 
 TH2F* TreeReader::BookTH2F(TString Name, std::vector<float> XBinVec, std::vector<float> YBinVec) {
     return new TH2F(Name, Name, XBinVec[0], XBinVec[1], XBinVec[2], YBinVec[0], YBinVec[1], YBinVec[2]);
+}
+
+void TreeReader::add_info_to_map(ieta_iphi_info_map &IetaIphiInfoMap, const channel_info &ChannelInfo) {
+    auto IetaIphi = std::make_pair(ChannelInfo.Ieta, ChannelInfo.Iphi);
+    if (IetaIphiInfoMap.find(IetaIphi) != IetaIphiInfoMap.end()) {
+        (IetaIphiInfoMap.at(IetaIphi))[ChannelInfo.Depth-1] = ChannelInfo;
+    }
+    else {
+        int MaxDepth = 4;
+        if (ChannelInfo.Subdet == 2) {MaxDepth = 7;}
+        channel_info ChannelInfoTmp;
+        std::vector<channel_info> ChannelInfoVecTmp(MaxDepth, ChannelInfoTmp);
+        IetaIphiInfoMap[IetaIphi] = ChannelInfoVecTmp;
+        (IetaIphiInfoMap.at(IetaIphi))[ChannelInfo.Depth-1] = ChannelInfo;
+    }
 }
 
 #endif // #ifdef TreeReader_cxx
