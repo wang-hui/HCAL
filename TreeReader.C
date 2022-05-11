@@ -42,6 +42,38 @@ void TreeReader::Loop()
    }
 }
 
+void TreeReader::make_test_plots() {
+    auto OutputFileName = InputFileName;
+    OutputFileName.ReplaceAll(".root", "_test_plots.root");
+    OutputFileName.ReplaceAll("results/", "");
+    auto OutputFile = new TFile(OutputFileName, "RECREATE");
+
+    auto PedGainRespCorrHB = new TH1F("PedGainRespCorrHB", "PedGainRespCorrHB", 100, 0, 3);
+
+    auto TotEntries = fChain->GetEntries();
+    //TotEntries = 100;
+
+    for (int iEntry=0; iEntry<TotEntries; iEntry++) { // start event loop
+        fChain->GetEntry(iEntry);
+        if (iEntry%1000 == 0) std::cout << "Processed " << iEntry << " entries" << std::endl;
+        //std::cout << RawIdVec->size() << std::endl;
+
+        for (int iHit=0; iHit<RawIdVec->size(); iHit++) { // start channel loop
+            auto Subdet = SubdetVec->at(iHit);
+            auto RawGain = RawGainVec->at(iHit);
+            auto RespCorr = RespCorrVec->at(iHit);
+
+            auto Pedestals = PedestalsVec->at(iHit);
+            for (auto Pedestal : Pedestals) {
+                if (Subdet == 1) {PedGainRespCorrHB->Fill(Pedestal*RawGain*RespCorr);}
+            }
+        } // end channel loop
+    } // end event loop
+
+    OutputFile->Write();
+    OutputFile->Close();
+}
+
 void TreeReader::make_1d_plots() {
     auto OutputFileName = InputFileName;
     OutputFileName.ReplaceAll(".root", "_1d_plots.root");

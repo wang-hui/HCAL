@@ -106,6 +106,7 @@ public :
     TString InputFileName;
 
     TH2F* BookTH2F(TString Name, std::vector<float> XBinVec, std::vector<float> YBinVec);
+    void make_test_plots();
     void make_1d_plots();
     void make_2d_plots();
 
