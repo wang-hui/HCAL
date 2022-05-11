@@ -28,6 +28,11 @@
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 
+#include "Geometry/Records/interface/HcalRecNumberingRecord.h"
+#include "Geometry/HcalCommonData/interface/HcalDDDRecConstants.h"
+#include "Geometry/HcalCommonData/interface/HcalHitRelabeller.h"
+#include "SimCalorimetry/HcalSimAlgos/interface/HcalSimParameterMap.h"
+
 #include "TFile.h"
 #include "TH1.h"
 
@@ -44,8 +49,14 @@ public:
 
     // ---------- member functions ---------------------------
     void DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits);
-    typedef std::pair<float, float> pred_respCorr_pair;
-    std::vector<pred_respCorr_pair> DLPHIN_inter_data;
+    void SimHit_run (std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons, HBHERecHitCollection *RecHits);
+    struct DLPHIN_debug_info {
+        float DLPHINEnergy;
+        float DLPHINRespCorr;
+        std::vector<float> SimHitEnergyVec;
+        std::vector<float> SimHitTimeVec;
+    };
+    std::vector<DLPHIN_debug_info> DLPHIN_debug_infos;
 
 private:
     // ---------- member data --------------------------------
@@ -94,6 +105,16 @@ private:
                       const std::vector<tensorflow::Tensor>& HB_outputs_2d,
                       const std::vector<tensorflow::Tensor>& HE_outputs_2d
                       );
+
+    float MaxSimHitTime_;
+    HcalSimParameterMap HcalSimParameterMap_;
+    typedef std::pair<std::vector<float>, std::vector<float>> energy_time_pair;
+
+    void add_info_to_map(std::map <int, energy_time_pair>& id_info_map, const int& id, const float& energy, const float& time);
+
+    void make_id_info_map(std::map <int, energy_time_pair>& id_info_map, std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons);
+
+    void save_outputs (HBHERecHitCollection *RecHits, const std::map <int, energy_time_pair>& id_info_map);
 };
 
 #endif

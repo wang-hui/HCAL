@@ -34,7 +34,9 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
     DLPHIN_respCorr_name_(conf.getParameter<std::string>("DLPHIN_respCorr_name")),
     DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
     DLPHIN_pb_2dHB_(conf.getParameter<std::string>("DLPHIN_pb_2dHB")),
-    DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE"))
+    DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
+    MaxSimHitTime_(conf.getParameter<double>("MaxSimHitTime")),
+    HcalSimParameterMap_(conf.getParameter<edm::ParameterSet>("hcalSimParameters"))
 {
     if (DLPHIN_print_config_)
         print_config();
@@ -109,7 +111,7 @@ void DLPHIN::print_config() {
 
 void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits) {
     //std::cout << "nChannelInfos " << ChannelInfos->size() << ", nRecHits " << RecHits->size() << std::endl;
-    DLPHIN_inter_data.clear();
+    DLPHIN_debug_infos.clear();
 
     //=========== a test for 2d tensor, to be commented out ===================
     /*
@@ -270,13 +272,97 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
         }
         if(DLPHIN_debug_) {
             // Save DLPHIN results in a public member, instead of overwriting the recHits
-            DLPHIN_inter_data.push_back(std::make_pair(pred, respCorr));
+            DLPHIN_debug_infos.push_back((DLPHIN_debug_info){pred, respCorr, {}, {}});
         }
         else {
             pred = pred * respCorr;
             if(DLPHIN_truncate_) {
                 if(RecHit.energy() <= 0) {pred = 0;}
             }
+            (*RecHits)[iRecHit].setEnergy(pred);
+        }
+    }
+}
+
+void DLPHIN::SimHit_run (std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons, HBHERecHitCollection *RecHits) {
+    std::map <int, energy_time_pair> id_info_map;
+    make_id_info_map(id_info_map, SimHits, hcons);
+    save_outputs (RecHits, id_info_map);
+}
+
+void DLPHIN::add_info_to_map(std::map <int, energy_time_pair>& id_info_map, const int& id, const float& energy, const float& time) {
+    auto it = id_info_map.find(id);
+    if (it != id_info_map.end()) {
+        id_info_map.at(id).first.push_back(energy);
+        id_info_map.at(id).second.push_back(time);
+    }
+    else {
+        energy_time_pair temp_pair = {{energy},{time}};
+        id_info_map[id] = temp_pair;
+    }
+}
+
+void DLPHIN::make_id_info_map(std::map <int, energy_time_pair>& id_info_map, std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons) {
+    HcalHitRelabeller SimHitRelabeller(true);
+    SimHitRelabeller.setGeometry(hcons);
+    SimHitRelabeller.process(SimHits);
+
+    for(auto SimHit : SimHits)
+    {
+        auto id = SimHit.id();
+        auto energy = SimHit.energy();
+        auto time = SimHit.time();
+
+        HcalDetId hid(id);
+        auto rawId = hid.rawId();
+        auto subdet = hid.subdet();
+
+        if ((subdet == 1 || subdet == 2) && time < MaxSimHitTime_) {
+            float samplingFactor = 1.0;
+            if (subdet == 1) {
+                samplingFactor = HcalSimParameterMap_.hbParameters().samplingFactor(hid);
+            }
+            else {
+                samplingFactor = HcalSimParameterMap_.heParameters().samplingFactor(hid);
+            }
+            add_info_to_map(id_info_map, rawId, energy * samplingFactor, time);
+        }
+    }
+}
+
+void DLPHIN::save_outputs (HBHERecHitCollection *RecHits, const std::map <int, energy_time_pair>& id_info_map) {
+    int nRecHits = RecHits->size();
+    for (int iRecHit = 0; iRecHit < nRecHits; iRecHit++) {
+        auto RecHit = (*RecHits)[iRecHit];
+        auto hid = RecHit.id();
+        auto rawId = hid.rawId();
+        //auto subdet = hid.subdet();
+        auto depth = hid.depth();
+        auto ieta = hid.ieta();
+        //auto iphi = hid.iphi();
+
+        float pred = 0.0;
+        float respCorr = 1.0;
+
+        std::vector<float> SimHitEnergyVec, SimHitTimeVec;
+        auto it = id_info_map.find(rawId);
+        if (it != id_info_map.end()) {
+            SimHitEnergyVec = id_info_map.at(rawId).first;
+            SimHitTimeVec = id_info_map.at(rawId).second;
+            pred = std::accumulate(SimHitEnergyVec.begin(), SimHitEnergyVec.end(), 0.0);
+        }
+
+        if (DLPHIN_apply_respCorr_) {
+            respCorr = ieta_depth_respCorr_map.at(std::make_pair(ieta, depth));
+            if (respCorr <= 0) {std::cout << "Error! A real channel has wrong respCorr" << std::endl;}
+        }
+        if(DLPHIN_debug_) {
+            // Save DLPHIN results in a public member, instead of overwriting the recHits
+            DLPHIN_debug_infos.at(iRecHit).SimHitEnergyVec = SimHitEnergyVec;
+            DLPHIN_debug_infos.at(iRecHit).SimHitTimeVec = SimHitTimeVec;
+        }
+        else {
+            pred = pred * respCorr;
             (*RecHits)[iRecHit].setEnergy(pred);
         }
     }

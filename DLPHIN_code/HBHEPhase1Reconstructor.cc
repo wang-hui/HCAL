@@ -322,8 +322,9 @@ private:
     std::unique_ptr<AbsHcalAlgoData> recoConfig_;
     std::unique_ptr<HcalRecoParams> paramTS_;
 
-    bool useDLPHIN_;
+    bool saveDLPHIN_, saveSimHit_;
     DLPHIN DLPHIN_;
+    edm::EDGetTokenT<std::vector<PCaloHit>> HcalHitsToken_;
 
     // Status bit setters
     const HBHENegativeEFilter* negEFilter_;    // We don't manage this pointer
@@ -382,7 +383,8 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
       setPulseShapeFlagsQIE8_(conf.getParameter<bool>("setPulseShapeFlagsQIE8")),
       setPulseShapeFlagsQIE11_(conf.getParameter<bool>("setPulseShapeFlagsQIE11")),
       reco_(parseHBHEPhase1AlgoDescription(conf.getParameter<edm::ParameterSet>("algorithm"))),
-      useDLPHIN_(conf.getParameter<bool>("useDLPHIN")),
+      saveDLPHIN_(conf.getParameter<bool>("saveDLPHIN")),
+      saveSimHit_(conf.getParameter<bool>("saveSimHit")),
       DLPHIN_(conf.getParameter<edm::ParameterSet>("DLPHINConfig")),
       negEFilter_(nullptr)
 {
@@ -419,6 +421,8 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
     if (processQIE11_)
         tok_qie11_ = consumes<QIE11DigiCollection>(
             conf.getParameter<edm::InputTag>("digiLabelQIE11"));
+    if (saveSimHit_)
+        HcalHitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
 
     if (saveInfos_)
         produces<HBHEChannelInfoCollection>();
@@ -668,14 +672,14 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
 
     // Create new output collections
     std::unique_ptr<HBHEChannelInfoCollection> infos;
-    if (saveInfos_ || useDLPHIN_)
+    if (saveInfos_ || saveDLPHIN_)
     {
         infos = std::make_unique<HBHEChannelInfoCollection>();
         infos->reserve(maxOutputSize);
     }
 
     std::unique_ptr<HBHERecHitCollection> out;
-    if (makeRecHits_)
+    if (makeRecHits_ || saveDLPHIN_ || saveSimHit_)
     {
         out = std::make_unique<HBHERecHitCollection>();
         out->reserve(maxOutputSize);
@@ -707,8 +711,19 @@ HBHEPhase1Reconstructor::produce(edm::Event& e, const edm::EventSetup& eventSetu
             hbheFlagSetterQIE11_->SetFlagsFromRecHits(*out);
     }
 
-    if(useDLPHIN_)
+    if(saveDLPHIN_)
         DLPHIN_.DLPHIN_run(*conditions, infos.get(), out.get());
+    if(saveSimHit_) {
+        edm::Handle<std::vector<PCaloHit>> SimHitsHandle;
+        e.getByToken(HcalHitsToken_, SimHitsHandle);
+        auto SimHits = *SimHitsHandle;
+
+        edm::ESHandle<HcalDDDRecConstants> pHRNDC;
+        eventSetup.get<HcalRecNumberingRecord>().get(pHRNDC);
+        auto hcons = pHRNDC.product();
+
+        DLPHIN_.SimHit_run(SimHits, hcons, out.get());
+    }
 
     // Add the output collections to the event record
     if (saveInfos_)
@@ -798,7 +813,8 @@ HBHEPhase1Reconstructor::fillDescriptions(edm::ConfigurationDescriptions& descri
     desc.add<bool>("setLegacyFlagsQIE8");
     desc.add<bool>("setLegacyFlagsQIE11");
 
-    desc.add<bool>("useDLPHIN", false);
+    desc.add<bool>("saveDLPHIN", false);
+    desc.add<bool>("saveSimHit", false);
     add_param_set(DLPHINConfig);
 
     desc.add<edm::ParameterSetDescription>("algorithm", fillDescriptionForParseHBHEPhase1Algo());
