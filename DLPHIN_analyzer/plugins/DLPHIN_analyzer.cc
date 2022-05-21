@@ -32,24 +32,18 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-#include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
-//#include "DataFormats/HcalDetId/interface/HcalDetId.h"
+//#include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "CalibFormats/HcalObjects/interface/HcalDbRecord.h"
 #include "CLHEP/Units/GlobalPhysicalConstants.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
-#include "Geometry/Records/interface/HcalRecNumberingRecord.h"
-#include "Geometry/HcalCommonData/interface/HcalDDDRecConstants.h"
-#include "Geometry/HcalCommonData/interface/HcalHitRelabeller.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
-#include "SimCalorimetry/HcalSimAlgos/interface/HcalSimParameterMap.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
 
 #include "RecoLocalCalo/HcalRecAlgos/interface/DLPHIN.h"
 
 //ROOT includes
 #include "TTree.h"
 #include "TMath.h"
-#include "classes.h"
 
 //STL headers
 #include <vector>
@@ -79,7 +73,6 @@ class DLPHIN_analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 
         // ----------member data ---------------------------
         bool HaveSimHits_;
-        float MaxSimHitTime_;
 
         edm::EDGetTokenT<std::vector<PCaloHit>> HcalHitsToken_;
         edm::EDGetTokenT<std::vector<PileupSummaryInfo>> PUInfosToken_;
@@ -87,11 +80,6 @@ class DLPHIN_analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
         edm::EDGetTokenT<HBHERecHitCollection> HBHERecHitsToken_;
 
         DLPHIN DLPHIN_;
-        HcalSimParameterMap HcalSimParameterMap_;
-
-        typedef std::pair<std::vector<float>, std::vector<float>> energy_time_pair;
-        void add_info_to_map(std::map <int, energy_time_pair>& id_info_map, const int& id, const float& energy, const float& time);
-        void make_id_info_map(std::map <int, energy_time_pair>& id_info_map, std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons);
         void clear_vectors();
 
         edm::Service<TFileService> FileService;
@@ -124,9 +112,7 @@ class DLPHIN_analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 //
 DLPHIN_analyzer::DLPHIN_analyzer(const edm::ParameterSet& iConfig):
     HaveSimHits_(iConfig.getParameter<bool>("HaveSimHits")),
-    MaxSimHitTime_(iConfig.getParameter<double>("MaxSimHitTime")),
-    DLPHIN_(iConfig.getParameter<edm::ParameterSet>("DLPHINConfig")),
-    HcalSimParameterMap_(iConfig.getParameter<edm::ParameterSet>("hcalSimParameters"))
+    DLPHIN_(iConfig.getParameter<edm::ParameterSet>("DLPHINConfig"))
 {
     //now do what ever initialization is needed
     //std::cout << iConfig << std::endl;
@@ -162,8 +148,26 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     Event = iEvent.id().event();
     LS = iEvent.id().luminosityBlock();
 
+    edm::ESHandle<CaloGeometry> geometry;
+    iSetup.get<CaloGeometryRecord>().get(geometry);
+    auto theGeometry = geometry.product();
+
+    edm::ESHandle<HcalDbService> DbServ;
+    iSetup.get<HcalDbRecord>().get(DbServ);
+
+    edm::Handle<HBHEChannelInfoCollection> ChannelInfosHandle;
+    iEvent.getByToken(ChannelInfosToken_, ChannelInfosHandle);
+    auto ChannelInfos = ChannelInfosHandle.product();
+
+    edm::Handle<HBHERecHitCollection> HBHERecHitsHandle;
+    iEvent.getByToken(HBHERecHitsToken_, HBHERecHitsHandle);
+    auto HBHERecHits = *HBHERecHitsHandle;
+
+    DLPHIN_.DLPHIN_run(*DbServ, ChannelInfos, &HBHERecHits);
+    auto DLPHIN_debug_infos = DLPHIN_.DLPHIN_debug_infos;
+
     PU = 0.0;
-    std::map <int, energy_time_pair> id_info_map;
+    std::vector<DLPHIN::energy_time_pair> SimHit_debug_infos;
     if(HaveSimHits_) {
         edm::Handle<std::vector<PileupSummaryInfo>> PUInfosHandle;
         iEvent.getByToken(PUInfosToken_, PUInfosHandle);
@@ -185,26 +189,9 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         iSetup.get<HcalRecNumberingRecord>().get(pHRNDC);
         auto hcons = pHRNDC.product();
 
-        make_id_info_map(id_info_map, SimHits, hcons);
+        DLPHIN_.SimHit_run(SimHits, hcons, &HBHERecHits);
+        SimHit_debug_infos = DLPHIN_.SimHit_debug_infos;
     }
-
-    edm::ESHandle<CaloGeometry> geometry;
-    iSetup.get<CaloGeometryRecord>().get(geometry);
-    auto theGeometry = geometry.product();
-
-    edm::ESHandle<HcalDbService> DbServ;
-    iSetup.get<HcalDbRecord>().get(DbServ);
-
-    edm::Handle<HBHEChannelInfoCollection> ChannelInfosHandle;
-    iEvent.getByToken(ChannelInfosToken_, ChannelInfosHandle);
-    auto ChannelInfos = ChannelInfosHandle.product();
-
-    edm::Handle<HBHERecHitCollection> HBHERecHitsHandle;
-    iEvent.getByToken(HBHERecHitsToken_, HBHERecHitsHandle);
-    auto HBHERecHits = *HBHERecHitsHandle;
-
-    DLPHIN_.DLPHIN_run(*DbServ, ChannelInfos, &HBHERecHits);
-    auto DLPHIN_inter_data = DLPHIN_.DLPHIN_inter_data;
 
     int nRecHits = HBHERecHits.size();
     //std::cout << nRecHits << ", " << DLPHIN_inter_data.size() << std::endl;
@@ -246,9 +233,9 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
             TotNoises[iTS] = std::sqrt(noiseADC*noiseADC + pedWidth*pedWidth + noisePhotoSq);
         }
 
-        auto DLPHIN_pair = DLPHIN_inter_data.at(iRecHit);
-        auto DLPHINEnergy = DLPHIN_pair.first;
-        auto DLPHINRespCorr = DLPHIN_pair.second;
+        auto DLPHIN_debug_info = DLPHIN_debug_infos.at(iRecHit);
+        auto DLPHINEnergy = DLPHIN_debug_info.first;
+        auto DLPHINRespCorr = DLPHIN_debug_info.second;
 
         const HcalCalibrations& calib = DbServ->getHcalCalibrations(Hid);
         auto RawGain = calib.rawgain(0);
@@ -260,20 +247,18 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         float ArrivalTime = 0.0;
 
         if (HaveSimHits_) {
-            auto it = id_info_map.find(RawId);
-            if (it != id_info_map.end()) {
-                auto SimHitEnergyVec = id_info_map.at(RawId).first;
-                auto SimHitTimeVec = id_info_map.at(RawId).second;
-                auto distance = theGeometry->getPosition(Hid).mag();
-                auto TOF = distance * cm / c_light;  // Units of c_light: mm/ns
+            auto SimHit_debug_info = SimHit_debug_infos.at(iRecHit);
+            auto SimHitEnergyVec = SimHit_debug_info.first;
+            auto SimHitTimeVec = SimHit_debug_info.second;
+            auto distance = theGeometry->getPosition(Hid).mag();
+            auto TOF = distance * cm / c_light;  // Units of c_light: mm/ns
 
-                SimHitEnergy = std::accumulate(SimHitEnergyVec.begin(), SimHitEnergyVec.end(), 0.0);
-                nSimHits = SimHitEnergyVec.size();
-                for(int iSimHit = 0; iSimHit < nSimHits; iSimHit++) {
-                    SimHitTime += SimHitTimeVec.at(iSimHit) * SimHitEnergyVec.at(iSimHit) / SimHitEnergy;
-                }
-                ArrivalTime = SimHitTime - TOF + 75;
+            SimHitEnergy = std::accumulate(SimHitEnergyVec.begin(), SimHitEnergyVec.end(), 0.0);
+            nSimHits = SimHitEnergyVec.size();
+            for(int iSimHit = 0; iSimHit < nSimHits; iSimHit++) {
+                SimHitTime += SimHitTimeVec.at(iSimHit) * SimHitEnergyVec.at(iSimHit) / SimHitEnergy;
             }
+            ArrivalTime = SimHitTime - TOF + 75;
         }
         /*
         std::cout << Hid << ", " << RawId << ", " << SimHitEnergy
@@ -377,46 +362,6 @@ void DLPHIN_analyzer::clear_vectors() {
     SimHitEnergyVec.clear();
     SimHitTimeVec.clear();
     ArrivalTimeVec.clear();
-}
-
-void DLPHIN_analyzer::add_info_to_map(std::map <int, energy_time_pair>& id_info_map, const int& id, const float& energy, const float& time) {
-    auto it = id_info_map.find(id);
-    if (it != id_info_map.end()) {
-        id_info_map.at(id).first.push_back(energy);
-        id_info_map.at(id).second.push_back(time);
-    }
-    else {
-        energy_time_pair temp_pair = {{energy},{time}};
-        id_info_map[id] = temp_pair;
-    }
-}
-
-void DLPHIN_analyzer::make_id_info_map(std::map <int, energy_time_pair>& id_info_map, std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons) {
-    HcalHitRelabeller SimHitRelabeller(true);
-    SimHitRelabeller.setGeometry(hcons);
-    SimHitRelabeller.process(SimHits);
-
-    for(auto SimHit : SimHits)
-    {
-        auto id = SimHit.id();
-        auto energy = SimHit.energy();
-        auto time = SimHit.time();
-
-        HcalDetId hid(id);
-        auto rawId = hid.rawId();
-        auto subdet = hid.subdet();
-
-        if ((subdet == 1 || subdet == 2) && time < MaxSimHitTime_) {
-            float samplingFactor = 1.0;
-            if (subdet == 1) {
-                samplingFactor = HcalSimParameterMap_.hbParameters().samplingFactor(hid);
-            }
-            else {
-                samplingFactor = HcalSimParameterMap_.heParameters().samplingFactor(hid);
-            }
-            add_info_to_map(id_info_map, rawId, energy * samplingFactor, time);
-        }
-    }
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------

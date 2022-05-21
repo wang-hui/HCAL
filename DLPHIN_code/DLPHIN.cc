@@ -272,7 +272,7 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
         }
         if(DLPHIN_debug_) {
             // Save DLPHIN results in a public member, instead of overwriting the recHits
-            DLPHIN_debug_infos.push_back((DLPHIN_debug_info){pred, respCorr, {}, {}});
+            DLPHIN_debug_infos.push_back(std::make_pair(pred, respCorr));
         }
         else {
             pred = pred * respCorr;
@@ -285,6 +285,7 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
 }
 
 void DLPHIN::SimHit_run (std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons, HBHERecHitCollection *RecHits) {
+    SimHit_debug_infos.clear();
     std::map <int, energy_time_pair> id_info_map;
     make_id_info_map(id_info_map, SimHits, hcons);
     save_outputs (RecHits, id_info_map);
@@ -357,9 +358,8 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits, const std::map <int, e
             if (respCorr <= 0) {std::cout << "Error! A real channel has wrong respCorr" << std::endl;}
         }
         if(DLPHIN_debug_) {
-            // Save DLPHIN results in a public member, instead of overwriting the recHits
-            DLPHIN_debug_infos.at(iRecHit).SimHitEnergyVec = SimHitEnergyVec;
-            DLPHIN_debug_infos.at(iRecHit).SimHitTimeVec = SimHitTimeVec;
+            // Save SimHit results in a public member, instead of overwriting the recHits
+            SimHit_debug_infos.push_back(std::make_pair(SimHitEnergyVec, SimHitTimeVec));
         }
         else {
             pred = pred * respCorr;

@@ -50,13 +50,11 @@ public:
     // ---------- member functions ---------------------------
     void DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits);
     void SimHit_run (std::vector<PCaloHit>& SimHits, const HcalDDDRecConstants *hcons, HBHERecHitCollection *RecHits);
-    struct DLPHIN_debug_info {
-        float DLPHINEnergy;
-        float DLPHINRespCorr;
-        std::vector<float> SimHitEnergyVec;
-        std::vector<float> SimHitTimeVec;
-    };
-    std::vector<DLPHIN_debug_info> DLPHIN_debug_infos;
+
+    typedef std::pair<float, float> pred_respCorr_pair;
+    typedef std::pair<std::vector<float>, std::vector<float>> energy_time_pair;
+    std::vector<pred_respCorr_pair> DLPHIN_debug_infos;
+    std::vector<energy_time_pair> SimHit_debug_infos;
 
 private:
     // ---------- member data --------------------------------
@@ -108,7 +106,6 @@ private:
 
     float MaxSimHitTime_;
     HcalSimParameterMap HcalSimParameterMap_;
-    typedef std::pair<std::vector<float>, std::vector<float>> energy_time_pair;
 
     void add_info_to_map(std::map <int, energy_time_pair>& id_info_map, const int& id, const float& energy, const float& time);
 

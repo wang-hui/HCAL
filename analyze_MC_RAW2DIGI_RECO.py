@@ -4,7 +4,7 @@
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
 # with command line options: reco_MC --filein file:step2.root --mc --eventcontent RECOSIM --conditions 106X_upgrade2018_realistic_v11_L1v1 --step RAW2DIGI,RECO --nThreads 4 --geometry DB:Extended --era Run2_2018 -n 10 --no_exec
 import FWCore.ParameterSet.Config as cms
-
+import sys
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
 
 process = cms.Process('RECO',Run2_2018)
@@ -13,6 +13,8 @@ process = cms.Process('RECO',Run2_2018)
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
+#process.MessageLogger.cerr.FwkReport.reportEvery = 10000
+
 #process.load('Configuration.EventContent.EventContent_cff')
 process.load('SimGeneral.MixingModule.mixNoPU_cfi')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -26,15 +28,28 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
+f = open(sys.argv[2], "r")
+my_list = f.readlines()
+f.close()
+
+if len(sys.argv) == 4:
+    nFile = int(sys.argv[3])
+    my_list = my_list[0:nFile]
+
+OutputFile = sys.argv[2].split("/")[-1]
+OutputFile = OutputFile.split(".")[0]
+OutputFile = OutputFile + "_TTree.root"
+
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'file:step2.root'
-        "root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_PU-2021-05-23/UL_MC_RAW_PU_0.root"
+        my_list
+        #"root://cmseos.fnal.gov//store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_PU-2021-05-23/UL_MC_RAW_PU_0.root"
         #"root://cmseos.fnal.gov//store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_noPU-2021-06-11/UL_MC_RAW_noPU_0.root"
     ),
     secondaryFileNames = cms.untracked.vstring()
 )
+process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 process.options = cms.untracked.PSet(
 
@@ -60,15 +75,22 @@ process.configurationMetadata = cms.untracked.PSet(
 #)
 
 # Additional output definition
-process.TFileService = cms.Service("TFileService", fileName = cms.string("analyze_MC_RAW2DIGI_RECO.root") )
+process.TFileService = cms.Service("TFileService", fileName = cms.string(OutputFile) )
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
 
+#special tests for M2 and M3, should be commented out
+#process.hbheprereco.algorithm.useM2 = cms.bool(True)
+#process.hbheprereco.algorithm.useM3 = cms.bool(False)
+#process.hbheprereco.algorithm.chiSqSwitch = cms.double(-1)
+#process.hbheprereco.algorithm.activeBXs = cms.vint32(0)
+
 process.hbheprereco.saveInfos = cms.bool(True)
-process.hbheprereco.useDLPHIN = cms.bool(False)
-import SimCalorimetry.HcalSimProducers.hcalSimParameters_cfi as SimPara
+process.hbheprereco.saveDLPHIN = cms.bool(False)        #turn off DLPHIN in HBHEPhase1Reconstructor 
+process.hbheprereco.saveSimHit = cms.bool(False)        #and run it in the analyzer in debug mode
+
 import RecoLocalCalo.HcalRecProducers.DLPHIN_cfi as DLPHIN
 DLPHIN.DLPHINConfig.DLPHIN_debug = cms.bool(True)
 
@@ -76,8 +98,7 @@ DLPHIN.DLPHINConfig.DLPHIN_debug = cms.bool(True)
 process.raw2digi_step = cms.Path(process.RawToDigi)
 process.reconstruction_step = cms.Path(process.hbheprereco)
 process.DLPHIN_analyzer = cms.EDAnalyzer("DLPHIN_analyzer",
-    HaveSimHits = cms.bool(True), MaxSimHitTime = cms.double(125.0),
-    DLPHINConfig = DLPHIN.DLPHINConfig, hcalSimParameters = SimPara.hcalSimParameters)
+    HaveSimHits = cms.bool(True), DLPHINConfig = DLPHIN.DLPHINConfig)
 process.DLPHIN_step = cms.Path(process.DLPHIN_analyzer)
 #process.endjob_step = cms.EndPath(process.endOfProcess)
 #process.RECOSIMoutput_step = cms.EndPath(process.RECOSIMoutput)
