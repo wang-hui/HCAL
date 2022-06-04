@@ -18,7 +18,6 @@ mv ${_CONDOR_SCRATCH_DIR}/HBHEPhase1Reconstructor_cfi.py DLPHIN_code
 python DLPHIN_setup.py mv
 cd ..
 scram b -j 4
-cd HCAL
 mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_RECO.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
 tar -xvf FileList.tar

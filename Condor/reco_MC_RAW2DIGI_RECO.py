@@ -52,6 +52,20 @@ process.configurationMetadata = cms.untracked.PSet(
 )
 
 # Output definition
+outputCommands_slim = cms.untracked.vstring(
+        "drop *",
+        "keep HBHERecHits*_*_*_*",
+        "keep CaloTowers*_*_*_*",
+        "keep recoCaloMETs*_*_*_*",
+        "keep recoPFMETs*_*_*_*",
+        "keep recoMuons*_*_*_*",
+        "keep recoGsfElectrons*_*_*_*",
+        "keep recoCaloJets*_*_*_*",
+        "keep recoPFJets*_*_*_*",
+        "keep recoVertexs*_*_*_*",
+        "keep recoGenMETs*_*_*_*",
+        "keep recoGenJets*_*_*_*",
+)
 
 process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
@@ -59,7 +73,8 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string('reco_MC_RAW2DIGI_RECO.root'),
-    outputCommands = process.RECOSIMEventContent.outputCommands,
+    #outputCommands = process.RECOSIMEventContent.outputCommands,
+    outputCommands = outputCommands_slim,
     splitLevel = cms.untracked.int32(0)
 )
 
@@ -68,6 +83,18 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
+
+import os
+DLPHIN_pb_folder = "%s/src/HCAL/DLPHIN_pb/" % os.environ['CMSSW_BASE']
+
+process.GlobalTag.toGet = cms.VPSet(
+    cms.PSet(record = cms.string("PFCalibrationRcd"),
+             #tag = cms.string("simHit_UL2018"),
+             tag = cms.string("simHit_run3_E_2to500"),
+             connect = cms.string("sqlite_file:" + DLPHIN_pb_folder + "/PFCalibration_simHit.db")
+             #connect = cms.untracked.string("sqlite_file:PFCalibration.db")
+             )
+    )
 
 process.ak4CaloJets.jetPtMin = cms.double(1.0)
 
