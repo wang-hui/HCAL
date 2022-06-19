@@ -58,48 +58,47 @@ public:
 
 private:
     // ---------- member data --------------------------------
-    const int iphi_max = 72;
     const int TS_max = 8;
-
-    const int HE_ieta_min = 16;
-    const int HE_ieta_max = 29;
-    const int HE_tot_rows = (HE_ieta_max - HE_ieta_min + 1) * iphi_max * 2;
     const int HE_depth_max = 7;
     const int HE_tot_col = TS_max * HE_depth_max;
-
-    const int HB_ieta_min = 1;
-    const int HB_ieta_max = 16;
-    const int HB_tot_rows = (HB_ieta_max - HB_ieta_min + 1) * iphi_max * 2;
     const int HB_depth_max = 4;
     const int HB_tot_col = TS_max * HB_depth_max;
 
-    typedef std::pair<int, int> int_int_pair;
-    std::map <int_int_pair, int> HB_ieta_iphi_row_map, HE_ieta_iphi_row_map;
+    const std::vector<float> EmptyChargeVec = std::vector<float>(TS_max, 0.0);
 
     bool DLPHIN_debug_;
     bool DLPHIN_print_config_;
     void print_config();
+    bool DLPHIN_truncate_;
 
     bool DLPHIN_apply_respCorr_;
     std::string DLPHIN_respCorr_name_;
+    typedef std::pair<int, int> int_int_pair;
     std::map <int_int_pair, float> ieta_depth_respCorr_map;
-
-    bool DLPHIN_truncate_;
 
     std::string DLPHIN_pb_2dHB_, DLPHIN_pb_2dHE_;
     tensorflow::Session *session_2dHB, *session_2dHE;
 
-    void process_inputs (const HcalDbService& DbServ,
-                        const HBHEChannelInfoCollection *ChannelInfos,
-                        tensorflow::Tensor& HB_ch_input_2d,
-                        tensorflow::Tensor& HB_ty_input_2d,
-                        tensorflow::Tensor& HB_ma_input_2d,
-                        tensorflow::Tensor& HE_ch_input_2d,
-                        tensorflow::Tensor& HE_ty_input_2d,
-                        tensorflow::Tensor& HE_ma_input_2d
+    void preprocess (const HcalDbService& DbServ,
+                    const HBHEChannelInfoCollection *ChannelInfos,
+                    std::map <int_int_pair, std::vector<std::vector<float>>>& HB_ieta_iphi_charge_map,
+                    std::map <int_int_pair, std::vector<std::vector<float>>>& HE_ieta_iphi_charge_map
+                    );
+
+    void add_info_to_map (std::map <int_int_pair, std::vector<std::vector<float>>>& ieta_iphi_charge_map,
+                        const int& Subdet, const int& Depth, const int& Ieta, const int& Iphi,
+                        const std::vector<float>& ChargeVec
+                        );
+
+    void process_inputs (const std::map <int_int_pair, std::vector<std::vector<float>>>& ieta_iphi_charge_map,
+                        tensorflow::Tensor& ch_input_2d,
+                        tensorflow::Tensor& ty_input_2d,
+                        tensorflow::Tensor& ma_input_2d
                         );
 
     void save_outputs (HBHERecHitCollection *RecHits,
+                      const std::map <int_int_pair, std::vector<std::vector<float>>>& HB_ieta_iphi_charge_map,
+                      const std::map <int_int_pair, std::vector<std::vector<float>>>& HE_ieta_iphi_charge_map,
                       const std::vector<tensorflow::Tensor>& HB_outputs_2d,
                       const std::vector<tensorflow::Tensor>& HE_outputs_2d
                       );
