@@ -41,31 +41,15 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
     if (DLPHIN_print_config_)
         print_config();
 
-/*
+    // an ad hoc way to get respCorr. will update to get respCorr from db
     if (DLPHIN_apply_respCorr_) {
         TFile *DLPHIN_respCorr_file = new TFile(DLPHIN_respCorr_name_.c_str());
-        for(int Depth = 1; Depth <= HE_depth_max; Depth++) {
-            std::string hist_name = "D" + std::to_string(Depth);
-            auto respCorrHist = (TH1F*)DLPHIN_respCorr_file->Get(hist_name.c_str());
-            int IetaFirst = respCorrHist->GetBinCenter(1);
-            int IetaLast = respCorrHist->GetBinCenter(respCorrHist->GetNbinsX());
-            for(int Ieta = IetaFirst; Ieta <= IetaLast; Ieta++) {
-                auto respCorr = respCorrHist->GetBinContent(respCorrHist->FindBin(Ieta));
-                ieta_depth_respCorr_map[std::make_pair(Ieta, Depth)] = respCorr;
-            }
-        }
-        DLPHIN_respCorr_file->Close();
-    }
-*/
-
-    if (DLPHIN_apply_respCorr_) {
-        TFile *DLPHIN_respCorr_file = new TFile(DLPHIN_respCorr_name_.c_str());
-        for(int depth = 1; depth <= HE_depth_max; depth++) {
-            std::string hist_name = "D" + std::to_string(depth);
-            auto depth_hist = (TH1F*)DLPHIN_respCorr_file->Get(hist_name.c_str());
-            for(int ieta = -29; ieta <= 29; ieta++) {
-                auto respCorr = depth_hist->GetBinContent(depth_hist->FindBin(ieta));
-                ieta_depth_respCorr_map[std::make_pair(ieta, depth)] = respCorr;
+        for(int Depth = 1; Depth <= 7; Depth++) {
+            std::string HistName = "D" + std::to_string(Depth);
+            auto Hist = (TH1F*)DLPHIN_respCorr_file->Get(HistName.c_str());
+            for(int Ieta = -29; Ieta <= 29; Ieta++) {
+                auto RespCorr = Hist->GetBinContent(Hist->FindBin(Ieta));
+                ieta_depth_respCorr_map[std::make_pair(Ieta, Depth)] = RespCorr;
             }
         }
         DLPHIN_respCorr_file->Close();
@@ -92,35 +76,10 @@ void DLPHIN::print_config() {
 void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoCollection *ChannelInfos, HBHERecHitCollection *RecHits) {
     //std::cout << "nChannelInfos " << ChannelInfos->size() << ", nRecHits " << RecHits->size() << std::endl;
     DLPHIN_debug_infos.clear();
-
-    //=========== a test for 2d tensor, to be commented out ===================
-    /*
-    tensorflow::Tensor test_empty(tensorflow::DT_FLOAT, {2, 10});
-    tensorflow::Tensor test_2d = test_empty;
-    for (int i = 0; i < 10; i++) {
-       test_2d.flat<float>()(i) = float(i);
-    }
-    for (int i = 0; i < 2; i++) {
-        for(int j = 0; j < 5; j++) {
-            std::cout << i << ", " << j << ": " << test_empty.tensor<float, 2>()(i,j) << ", " << test_2d.tensor<float, 2>()(i,j) << std::endl;
-        }
-    }
-    */
-    //======================== end of test ====================================
     
     std::map <int_int_pair, std::vector<std::vector<float>>> HB_ieta_iphi_charge_map, HE_ieta_iphi_charge_map;
     preprocess(DbServ, ChannelInfos,HB_ieta_iphi_charge_map, HE_ieta_iphi_charge_map);
-
     //std::cout << HB_ieta_iphi_charge_map.size() << ", " << HE_ieta_iphi_charge_map.size() << std::endl;
-    /*
-    for(auto iter : HB_ieta_iphi_charge_map) {
-        std::cout << "(" << iter.first.first << "," << iter.first.second << "): ";
-        for(auto myvec : iter.second) {
-            std::cout << myvec[0] << ", ";
-        }
-        std::cout << std::endl;
-    }
-    */
 
     //Initialize DLPHIN inputs tensors
     //ch_input: (charge - pedestal) * rawgain
@@ -130,18 +89,12 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     int HE_tot_rows = HE_ieta_iphi_charge_map.size();
 
     tensorflow::Tensor HB_ch_input_2d(tensorflow::DT_FLOAT, {HB_tot_rows, HB_tot_col});
-    //for (int i = 0; i < HB_tot_rows * HB_tot_col; i++) {HB_ch_input_2d.flat<float>()(i) = 0.0;}
     tensorflow::Tensor HB_ty_input_2d(tensorflow::DT_FLOAT, {HB_tot_rows, 1});
-    //for (int i = 0; i < HB_tot_rows; i++) {HB_ty_input_2d.flat<float>()(i) = 0.0;}
     tensorflow::Tensor HB_ma_input_2d(tensorflow::DT_FLOAT, {HB_tot_rows, HB_depth_max});
-    //for (int i = 0; i < HB_tot_rows * HB_depth_max; i++) {HB_ma_input_2d.flat<float>()(i) = 0.0;}
 
     tensorflow::Tensor HE_ch_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, HE_tot_col});
-    //for (int i = 0; i < HE_tot_rows * HE_tot_col; i++) {HE_ch_input_2d.flat<float>()(i) = 0.0;}
     tensorflow::Tensor HE_ty_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, 1});
-    //for (int i = 0; i < HE_tot_rows; i++) {HE_ty_input_2d.flat<float>()(i) = 0.0;}
     tensorflow::Tensor HE_ma_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, HE_depth_max});
-    //for (int i = 0; i < HE_tot_rows * HE_depth_max; i++) {HE_ma_input_2d.flat<float>()(i) = 0.0;}
 
     //Fill DLPHIN inputs tensors
     process_inputs (HB_ieta_iphi_charge_map, HB_ch_input_2d, HB_ty_input_2d, HB_ma_input_2d);
@@ -174,10 +127,7 @@ void DLPHIN::preprocess (const HcalDbService& DbServ,
                         std::map <int_int_pair, std::vector<std::vector<float>>>& HB_ieta_iphi_charge_map,
                         std::map <int_int_pair, std::vector<std::vector<float>>>& HE_ieta_iphi_charge_map
                         ) {
-    //int nChannelInfos = ChannelInfos->size();
-    //for (int iChannelInfo = 0; iChannelInfo < nChannelInfos; iChannelInfo++) {
     for (const auto& ChannelInfo : *ChannelInfos) {
-        //auto ChannelInfo = (*ChannelInfos)[iChannelInfo];
         auto Hid = ChannelInfo.id();
         auto Subdet = Hid.subdet();
         auto Depth = Hid.depth();
@@ -247,10 +197,7 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
                           const std::vector<tensorflow::Tensor>& HB_outputs_2d,
                           const std::vector<tensorflow::Tensor>& HE_outputs_2d
                           ) {
-    //int nRecHits = RecHits->size();
-    //for (int iRecHit = 0; iRecHit < nRecHits; iRecHit++) {
     for (auto& RecHit : *RecHits) {
-        //auto RecHit = (*RecHits)[iRecHit];
         auto Hid = RecHit.id();
         auto Subdet = Hid.subdet();
         auto Depth = Hid.depth();
@@ -274,7 +221,6 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
         }
         if(pred < 0) {std::cout << "Error! ReLU outputs < 0" << std::endl;}
         if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
-        //if(subdet == 2) std::cout << hid << ": " << RecHit.energy() << ", " << pred << std::endl;
         if (DLPHIN_apply_respCorr_) {
             respCorr = ieta_depth_respCorr_map.at(std::make_pair(Ieta, Depth));
             if (respCorr <= 0) {std::cout << "Error! A real channel has wrong respCorr" << std::endl;}
@@ -317,7 +263,7 @@ void DLPHIN::make_id_info_map(std::map <int, energy_time_pair>& id_info_map, std
     SimHitRelabeller.setGeometry(hcons);
     SimHitRelabeller.process(SimHits);
 
-    for(auto SimHit : SimHits)
+    for(const auto& SimHit : SimHits)
     {
         auto id = SimHit.id();
         auto energy = SimHit.energy();
@@ -341,9 +287,7 @@ void DLPHIN::make_id_info_map(std::map <int, energy_time_pair>& id_info_map, std
 }
 
 void DLPHIN::save_outputs (HBHERecHitCollection *RecHits, const std::map <int, energy_time_pair>& id_info_map) {
-    int nRecHits = RecHits->size();
-    for (int iRecHit = 0; iRecHit < nRecHits; iRecHit++) {
-        auto RecHit = (*RecHits)[iRecHit];
+    for (auto& RecHit : *RecHits) {
         auto hid = RecHit.id();
         auto rawId = hid.rawId();
         //auto subdet = hid.subdet();
@@ -372,7 +316,7 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits, const std::map <int, e
         }
         else {
             pred = pred * respCorr;
-            (*RecHits)[iRecHit].setEnergy(pred);
+            RecHit.setEnergy(pred);
         }
     }
 }
