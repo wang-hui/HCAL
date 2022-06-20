@@ -111,8 +111,7 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     std::map <int_int_pair, std::vector<std::vector<float>>> HB_ieta_iphi_charge_map, HE_ieta_iphi_charge_map;
     preprocess(DbServ, ChannelInfos,HB_ieta_iphi_charge_map, HE_ieta_iphi_charge_map);
 
-    
-    std::cout << HB_ieta_iphi_charge_map.size() << ", " << HE_ieta_iphi_charge_map.size() << std::endl;
+    //std::cout << HB_ieta_iphi_charge_map.size() << ", " << HE_ieta_iphi_charge_map.size() << std::endl;
     /*
     for(auto iter : HB_ieta_iphi_charge_map) {
         std::cout << "(" << iter.first.first << "," << iter.first.second << "): ";
@@ -151,10 +150,12 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     //DLPHIN inference
     //outputs is a vector of one rank-3 tensor [pred:mask:depth]
     std::vector<tensorflow::Tensor> HB_outputs_2d, HE_outputs_2d;
-    tensorflow::run(session_2dHB,
+    if (HB_tot_rows > 0)        // protection as TF don't like size=0 tensor
+        tensorflow::run(session_2dHB,
         {{"net_charges",HB_ch_input_2d},{"types_input",HB_ty_input_2d},{"mask_input",HB_ma_input_2d}},
         {"output/Reshape"}, &HB_outputs_2d);
-    tensorflow::run(session_2dHE,
+    if (HE_tot_rows > 0)
+        tensorflow::run(session_2dHE,
         {{"net_charges",HE_ch_input_2d},{"types_input",HE_ty_input_2d},{"mask_input",HE_ma_input_2d}},
         {"output/Reshape"}, &HE_outputs_2d);
     /*
@@ -175,7 +176,7 @@ void DLPHIN::preprocess (const HcalDbService& DbServ,
                         ) {
     //int nChannelInfos = ChannelInfos->size();
     //for (int iChannelInfo = 0; iChannelInfo < nChannelInfos; iChannelInfo++) {
-    for (auto ChannelInfo : *ChannelInfos) {
+    for (const auto& ChannelInfo : *ChannelInfos) {
         //auto ChannelInfo = (*ChannelInfos)[iChannelInfo];
         auto Hid = ChannelInfo.id();
         auto Subdet = Hid.subdet();
@@ -246,9 +247,10 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
                           const std::vector<tensorflow::Tensor>& HB_outputs_2d,
                           const std::vector<tensorflow::Tensor>& HE_outputs_2d
                           ) {
-    int nRecHits = RecHits->size();
-    for (int iRecHit = 0; iRecHit < nRecHits; iRecHit++) {
-        auto RecHit = (*RecHits)[iRecHit];
+    //int nRecHits = RecHits->size();
+    //for (int iRecHit = 0; iRecHit < nRecHits; iRecHit++) {
+    for (auto& RecHit : *RecHits) {
+        //auto RecHit = (*RecHits)[iRecHit];
         auto Hid = RecHit.id();
         auto Subdet = Hid.subdet();
         auto Depth = Hid.depth();
@@ -286,7 +288,7 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
             if(DLPHIN_truncate_) {
                 if(RecHit.energy() <= 0) {pred = 0;}
             }
-            (*RecHits)[iRecHit].setEnergy(pred);
+            RecHit.setEnergy(pred);
         }
     }
 }
