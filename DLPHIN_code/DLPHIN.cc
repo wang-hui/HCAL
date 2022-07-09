@@ -138,7 +138,7 @@ void DLPHIN::preprocess (const HcalDbService& DbServ,
         auto RawGain = Hcalib.rawgain(0);
 
         auto  ChargeVec = EmptyChargeVec;
-        for (int iTS = 0; iTS < TS_max; ++iTS) {
+        for (int iTS = 0; iTS < TS_max; iTS++) {
             ChargeVec[iTS] = (ChannelInfo.tsRawCharge(iTS) - ChannelInfo.tsPedestal(iTS)) * RawGain;
         }
 
@@ -170,19 +170,19 @@ void DLPHIN::process_inputs (const std::map <int_int_pair, std::vector<std::vect
                             tensorflow::Tensor& ty_input_2d,
                             tensorflow::Tensor& ma_input_2d
                             ) {
-    for (auto iter : ieta_iphi_charge_map) {
-        auto IetaIphi = iter.first;
-        auto Row = std::distance(std::begin(ieta_iphi_charge_map), ieta_iphi_charge_map.find(IetaIphi));
-
-        auto VecChargeVec = iter.second;
-        int nDepth = VecChargeVec.size();
-        for (int iDepth = 0; iDepth < nDepth; iDepth ++) {
-            auto ChargeVec = VecChargeVec.at(iDepth);
+    std::map <int_int_pair, std::vector<std::vector<float>>>::const_iterator iter;
+    for (iter = ieta_iphi_charge_map.begin(); iter != ieta_iphi_charge_map.end(); iter++) {
+        const auto& IetaIphi = iter->first;
+        const auto& VecChargeVec = iter->second;
+        const auto Row = std::distance(ieta_iphi_charge_map.begin(), iter);
+        const int nDepth = VecChargeVec.size();
+        for (int iDepth = 0; iDepth < nDepth; iDepth++) {
+            const auto& ChargeVec = VecChargeVec.at(iDepth);
             if (ChargeVec == EmptyChargeVec)
                 ma_input_2d.tensor<float, 2>()(Row, iDepth) = 0.0;
             else
                 ma_input_2d.tensor<float, 2>()(Row, iDepth) = 1.0;
-            for (int iTS = 0; iTS < TS_max; ++iTS) {
+            for (int iTS = 0; iTS < TS_max; iTS++) {
                 ch_input_2d.tensor<float, 2>()(Row, iDepth * TS_max + iTS) = ChargeVec[iTS];
             }
         }
