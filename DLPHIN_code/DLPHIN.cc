@@ -32,9 +32,9 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
     DLPHIN_print_config_(conf.getParameter<bool>("DLPHIN_print_config")),
     DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
     DLPHIN_apply_respCorr_(conf.getParameter<bool>("DLPHIN_apply_respCorr")),
-    DLPHIN_respCorr_name_(conf.getParameter<std::string>("DLPHIN_respCorr_name")),
-    DLPHIN_pb_2dHB_(conf.getParameter<std::string>("DLPHIN_pb_2dHB")),
-    DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
+    DLPHIN_respCorr_name_((conf.getParameter<edm::FileInPath>("DLPHIN_respCorr_name")).fullPath()),
+    DLPHIN_pb_2dHB_((conf.getParameter<edm::FileInPath>("DLPHIN_pb_2dHB")).fullPath()),
+    DLPHIN_pb_2dHE_((conf.getParameter<edm::FileInPath>("DLPHIN_pb_2dHE")).fullPath()),
     MaxSimHitTime_(conf.getParameter<double>("MaxSimHitTime")),
     HcalSimParameterMap_(conf.getParameter<edm::ParameterSet>("hcalSimParameters"))
 {
