@@ -7,8 +7,18 @@ export SCRAM_ARCH=slc7_amd64_gcc700
 echo $SCRAM_ARCH
 
 eval `scramv1 project CMSSW CMSSW_10_6_12`
+#
+# propagate changes to default release. this tarball is made with:
+# tar czvf CMSSW_10_6_12_DLPHIN_partial.tgz \
+# CMSSW_10_6_12/src/RecoLocalCalo/ \
+# CMSSW_10_6_12/src/HCAL/DLPHIN* \
+# CMSSW_10_6_12/lib/ \
+# CMSSW_10_6_12/biglib/ \
+# CMSSW_10_6_12/python/ \
+# CMSSW_10_6_12/cfipython/
 xrdcp root://cmseos.fnal.gov//store/user/hatake/Tarballs/CMSSW_10_6_12_DLPHIN_partial.tgz .
 tar xzf CMSSW_10_6_12_DLPHIN_partial.tgz
+#
 cd CMSSW_10_6_12/src
 eval `scramv1 runtime -sh`
 #git cms-init --upstream-only
