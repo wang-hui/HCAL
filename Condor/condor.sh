@@ -32,7 +32,9 @@ eval `scramv1 runtime -sh`
 #cd ..
 #scram b -j 4
 mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_RECO.py .
+mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_L1Reco_RECO_RECOSIM_EI_PAT.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
+mv ${_CONDOR_SCRATCH_DIR}/PFCalibration_simHit.db .
 tar -xvf FileList.tar
 pwd
 

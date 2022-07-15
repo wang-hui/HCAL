@@ -2,7 +2,7 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "UL_QCD_test31"        #folder name for the result files in EOS
+folder_name = "UL_QCD_test33"        #folder name for the result files in EOS
 result_path = "/eos/uscms/store/user/hcal_upgrade/hatake/HCAL/"          #EOS dir for the above folder                
 condor_path = "/uscms_data/d2/hatake/condor_temp/HCAL/"        #Local dir for condor log files
 file_list = "UL_GEN_SIN_DIGI_RAW.txt"

@@ -1,10 +1,10 @@
 universe = vanilla
 Executable = condor.sh
-transfer_input_files = FileList.tar, DLPHIN_cfi.py, HBHEPhase1Reconstructor_cfi.py, reco_MC_RAW2DIGI_RECO.py, reco_MC_RAW2DIGI_L1Reco_RECO_RECOSIM_EI_PAT.py
+transfer_input_files = FileList.tar, DLPHIN_cfi.py, HBHEPhase1Reconstructor_cfi.py, reco_MC_RAW2DIGI_RECO.py, reco_MC_RAW2DIGI_L1Reco_RECO_RECOSIM_EI_PAT.py, PFCalibration_simHit.db
 should_transfer_files = YES 
 when_to_transfer_output = ON_EXIT
 x509userproxy = $ENV(X509_USER_PROXY)
 transfer_output_files = ""
 
-#request_memory = 6000
 request_cpus = 2
+request_memory = 5000

@@ -28,7 +28,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(-1)
 )
 
 # # Input source
@@ -143,8 +143,8 @@ process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(record = cms.string("PFCalibrationRcd"),
              #tag = cms.string("simHit_UL2018"),
              tag = cms.string("simHit_run3_E_2to500"),
-             connect = cms.string("sqlite_file:" + DLPHIN_pb_folder + "/PFCalibration_simHit.db")
-             #connect = cms.untracked.string("sqlite_file:PFCalibration.db")
+             #connect = cms.string("sqlite_file:" + DLPHIN_pb_folder + "/PFCalibration_simHit.db")
+             connect = cms.string("sqlite_file:PFCalibration_simHit.db")
              )
     )
 
@@ -193,7 +193,7 @@ from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
 #Setup FWK for multithreaded
-process.options.numberOfThreads=cms.untracked.uint32(4)
+process.options.numberOfThreads=cms.untracked.uint32(2)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 process.options.numberOfConcurrentLuminosityBlocks=cms.untracked.uint32(1)
 
