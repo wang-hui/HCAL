@@ -91,8 +91,8 @@ process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(record = cms.string("PFCalibrationRcd"),
              #tag = cms.string("simHit_UL2018"),
              tag = cms.string("simHit_run3_E_2to500"),
-             connect = cms.string("sqlite_file:" + DLPHIN_pb_folder + "/PFCalibration_simHit.db")
-             #connect = cms.untracked.string("sqlite_file:PFCalibration.db")
+             #connect = cms.string("sqlite_file:" + DLPHIN_pb_folder + "/PFCalibration_simHit.db")
+             connect = cms.string("sqlite_file:PFCalibration_simHit.db")
              )
     )
 
