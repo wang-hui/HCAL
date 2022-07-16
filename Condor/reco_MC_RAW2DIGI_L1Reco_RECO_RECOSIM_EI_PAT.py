@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step3 --runUnscheduled --conditions 106X_upgrade2018_realistic_v15_L1v1 -s RAW2DIGI,L1Reco,RECO,RECOSIM,EI,PAT --datatier MINIAODSIM --nThreads 8 -n -1 --era Run2_2018 --eventcontent MINIAODSIM --geometry=DB:Extended --filein root://cmsxrootd.fnal.gov///store/relval/CMSSW_10_6_0/RelValQCD_FlatPt_15_3000HS_13/GEN-SIM-DIGI-RAW/106X_upgrade2018_realistic_v4-v1/10000/B9C0D6C4-3A33-A64B-A764-4F012E12CD0C.root --fileout file:step3_inMINIAODSIM.root
+# with command line options: step3 --runUnscheduled --conditions 106X_upgrade2018_realistic_v11_L1v1 -s RAW2DIGI,L1Reco,RECO,RECOSIM,EI,PAT --datatier MINIAODSIM --nThreads 8 -n -1 --era Run2_2018 --eventcontent MINIAODSIM --geometry=DB:Extended --filein root://cmsxrootd.fnal.gov///store/relval/CMSSW_10_6_0/RelValQCD_FlatPt_15_3000HS_13/GEN-SIM-DIGI-RAW/106X_upgrade2018_realistic_v4-v1/10000/B9C0D6C4-3A33-A64B-A764-4F012E12CD0C.root --fileout file:step3_inMINIAODSIM.root
 import FWCore.ParameterSet.Config as cms
 import sys
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
@@ -31,12 +31,6 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
-# # Input source
-# process.source = cms.Source("PoolSource",
-#     fileNames = cms.untracked.vstring('root://cmsxrootd.fnal.gov///store/relval/CMSSW_10_6_0/RelValQCD_FlatPt_15_3000HS_13/GEN-SIM-DIGI-RAW/106X_upgrade2018_realistic_v4-v1/10000/B9C0D6C4-3A33-A64B-A764-4F012E12CD0C.root'),
-#     secondaryFileNames = cms.untracked.vstring()
-# )
-
 f = open(sys.argv[2], "r")
 my_list = f.readlines()
 f.close()
@@ -45,7 +39,6 @@ f.close()
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #'file:step2.root'
-        #"root://cmseos.fnal.gov//eos/uscms/store/user/lpcrutgers/aatkinso/hcal/UL_1TeV_pion_gun_RAW_noPU-2020-12-20/UL_1TeV_pion_gun_RAW_0.root"
         my_list
     ),
     secondaryFileNames = cms.untracked.vstring()
@@ -134,16 +127,12 @@ process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v15_L1v1', '')
-
-import os
-DLPHIN_pb_folder = "%s/src/HCAL/DLPHIN_pb/" % os.environ['CMSSW_BASE']
+process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
 
 process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(record = cms.string("PFCalibrationRcd"),
              #tag = cms.string("simHit_UL2018"),
              tag = cms.string("simHit_run3_E_2to500"),
-             #connect = cms.string("sqlite_file:" + DLPHIN_pb_folder + "/PFCalibration_simHit.db")
              connect = cms.string("sqlite_file:PFCalibration_simHit.db")
              )
     )

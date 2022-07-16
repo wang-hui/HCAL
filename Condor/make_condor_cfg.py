@@ -2,10 +2,10 @@ import os
 from shutil import copyfile
 from datetime import date
 
-folder_name = "UL_QCD_test33"        #folder name for the result files in EOS
-result_path = "/eos/uscms/store/user/hcal_upgrade/hatake/HCAL/"          #EOS dir for the above folder                
-condor_path = "/uscms_data/d2/hatake/condor_temp/HCAL/"        #Local dir for condor log files
-file_list = "UL_GEN_SIN_DIGI_RAW.txt"
+folder_name = "UL_QCD_Pt_15to3000_miniAOD_PU_simHit_energy_class_PFsimHit_run3_E2to500_test2"        #folder name for the result files in EOS
+result_path = "/eos/uscms/store/user/lpcrutgers/huiwang/HCAL/"          #EOS dir for the above folder
+condor_path = "/uscms_data/d3/huiwang/condor_temp/huiwang/HCAL/"        #Local dir for condor log files
+file_list = "../FileList/UL_QCD_Pt_15to3000_GEN_SIM_DIGI_RAW_PU.list"
 tot_jobs = 100
 
 today = str(date.today())
