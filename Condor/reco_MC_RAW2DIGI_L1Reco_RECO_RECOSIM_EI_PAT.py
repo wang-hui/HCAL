@@ -67,7 +67,7 @@ process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
     dropMetaData = cms.untracked.string('ALL'),
     eventAutoFlushCompressedSize = cms.untracked.int32(-900),
     fastCloning = cms.untracked.bool(False),
-    fileName = cms.untracked.string('file:reco_MC_inMINIAODSIM.root'),
+    fileName = cms.untracked.string('file:reco_MC_RAW2DIGI_RECO.root'),
     outputCommands = process.MINIAODSIMEventContent.outputCommands,
     overrideBranchesSplitLevel = cms.untracked.VPSet(
         cms.untracked.PSet(
@@ -132,7 +132,8 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11
 process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(record = cms.string("PFCalibrationRcd"),
              #tag = cms.string("simHit_UL2018"),
-             tag = cms.string("simHit_run3_E_2to500"),
+             #tag = cms.string("simHit_run3_E_2to500"),
+             tag = cms.string('DLPHIN_run3_E_2to500'),
              connect = cms.string("sqlite_file:PFCalibration_simHit.db")
              )
     )

@@ -93,6 +93,7 @@ class DLPHIN_analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  
         std::vector<unsigned int> RawIdVec;
         std::vector<std::vector<float>> RawChargesVec, PedestalsVec, TotNoisesVec; // plural form for vec of vec
         std::vector<float> RecoEnergyVec, AuxEnergyVec, RawEnergyVec, DLPHINEnergyVec;
+        std::vector<float> RecoTimeVec;
         std::vector<unsigned int> FlagVec;
         std::vector<float> Chi2Vec, RawGainVec, RespCorrVec, DLPHINRespCorrVec;
         std::vector<int> nSimHitsVec;
@@ -208,6 +209,8 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         auto RecoEnergy = HBHERecHit.energy();
         auto AuxEnergy = HBHERecHit.eaux();
         auto RawEnergy = HBHERecHit.eraw();
+
+        auto RecoTime = HBHERecHit.time();
         auto Chi2 = HBHERecHit.chi2();
         auto Flag = HBHERecHit.flags();
 
@@ -281,6 +284,7 @@ void DLPHIN_analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& i
         RawEnergyVec.push_back(RawEnergy);
         DLPHINEnergyVec.push_back(DLPHINEnergy);
 
+        RecoTimeVec.push_back(RecoTime);
         FlagVec.push_back(Flag);
         Chi2Vec.push_back(Chi2);
         RawGainVec.push_back(RawGain);
@@ -320,6 +324,7 @@ void DLPHIN_analyzer::beginJob() {
     OutTree->Branch("RawEnergyVec", &RawEnergyVec);
     OutTree->Branch("DLPHINEnergyVec", &DLPHINEnergyVec);
 
+    OutTree->Branch("RecoTimeVec", &RecoTimeVec);
     OutTree->Branch("FlagVec", &FlagVec);
     OutTree->Branch("Chi2Vec", &Chi2Vec);
     OutTree->Branch("RawGainVec", &RawGainVec);
@@ -352,6 +357,7 @@ void DLPHIN_analyzer::clear_vectors() {
     RawEnergyVec.clear();
     DLPHINEnergyVec.clear();
 
+    RecoTimeVec.clear();
     FlagVec.clear();
     Chi2Vec.clear();
     RawGainVec.clear();

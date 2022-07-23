@@ -54,17 +54,13 @@ process.configurationMetadata = cms.untracked.PSet(
 # Output definition
 outputCommands_slim = cms.untracked.vstring(
         "drop *",
-        "keep HBHERecHits*_*_*_*",
-        "keep CaloTowers*_*_*_*",
-        "keep recoCaloMETs*_*_*_*",
-        "keep recoPFMETs*_*_*_*",
-        "keep recoMuons*_*_*_*",
-        "keep recoGsfElectrons*_*_*_*",
-        "keep recoCaloJets*_*_*_*",
-        "keep recoPFJets*_*_*_*",
-        "keep recoVertexs*_*_*_*",
-        "keep recoGenMETs*_*_*_*",
-        "keep recoGenJets*_*_*_*",
+        'keep SimVertexs_*_*_*',
+        'keep SimTracks_*_*_*',
+        'keep recoTracks_*_*_*',
+        'keep recoPFBlocks_*_*_*',
+        'keep recoPFSimParticles_*_*_*',
+        'keep recoPFCandidates_*_*_*',
+        'keep recoPFClusters_*_*_*',
 )
 
 process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
@@ -83,16 +79,6 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
-
-process.GlobalTag.toGet = cms.VPSet(
-    cms.PSet(record = cms.string("PFCalibrationRcd"),
-             #tag = cms.string("simHit_UL2018"),
-             tag = cms.string("simHit_run3_E_2to500"),
-             connect = cms.string("sqlite_file:PFCalibration_simHit.db")
-             )
-    )
-
-process.ak4CaloJets.jetPtMin = cms.double(1.0)
 
 # Path and EndPath definitions
 process.raw2digi_step = cms.Path(process.RawToDigi)
