@@ -131,9 +131,9 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11
 
 process.GlobalTag.toGet = cms.VPSet(
     cms.PSet(record = cms.string("PFCalibrationRcd"),
-             #tag = cms.string("simHit_UL2018"),
              #tag = cms.string("simHit_run3_E_2to500"),
-             tag = cms.string('DLPHIN_run3_E_2to500'),
+             #tag = cms.string('DLPHIN_run3_E_2to500'),
+             tag = cms.string('DLPHIN_DLPHIN_Func_E_2to500'),
              connect = cms.string("sqlite_file:PFCalibration_simHit.db")
              )
     )
