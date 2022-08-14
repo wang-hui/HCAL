@@ -121,7 +121,7 @@ DLPHIN_analyzer::DLPHIN_analyzer(const edm::ParameterSet& iConfig):
 
     if(HaveSimHits_) {
         PUInfosToken_ = consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"));
-        HcalHitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
+        HcalHitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits"));
     }
     ChannelInfosToken_ = consumes<HBHEChannelInfoCollection>(edm::InputTag("hbheprereco"));
     HBHERecHitsToken_ = consumes<HBHERecHitCollection>(edm::InputTag("hbheprereco"));
