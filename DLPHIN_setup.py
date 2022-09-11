@@ -2,8 +2,8 @@ import sys
 import os
 
 if len(sys.argv) != 2 or sys.argv[1] not in ["diff", "cp", "mv"]:
-    print "Bad argument. Should be:"
-    print "python DLPHIN_setup.py <diff / cp / mv>"
+    print ("Bad argument. Should be:")
+    print ("python DLPHIN_setup.py <diff / cp / mv>")
     quit()
 
 Oper = sys.argv[1]
@@ -20,5 +20,5 @@ File_Loca_Dict = {
 
 for File, Loca in File_Loca_Dict.items():
     Command = Oper + " DLPHIN_code/" + File + " " + Loca
-    print Command
+    print (Command)
     os.system(Command)
