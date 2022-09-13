@@ -80,6 +80,8 @@ private:
     std::string DLPHIN_pb_2dHB_, DLPHIN_pb_2dHE_;
     tensorflow::Session *session_2dHB, *session_2dHE;
 
+    bool DLPHIN_save_to_AUX_;
+
     void preprocess (const HcalDbService& DbServ,
                     const HBHEChannelInfoCollection *ChannelInfos,
                     std::vector<int_int_pair>& HB_ieta_iphi_vec,

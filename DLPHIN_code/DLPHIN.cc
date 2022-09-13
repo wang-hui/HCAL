@@ -35,6 +35,7 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
     DLPHIN_respCorr_name_((conf.getParameter<edm::FileInPath>("DLPHIN_respCorr_name")).fullPath()),
     DLPHIN_pb_2dHB_((conf.getParameter<edm::FileInPath>("DLPHIN_pb_2dHB")).fullPath()),
     DLPHIN_pb_2dHE_((conf.getParameter<edm::FileInPath>("DLPHIN_pb_2dHE")).fullPath()),
+    DLPHIN_save_to_AUX_(conf.getParameter<bool>("DLPHIN_save_to_AUX")),
     MaxSimHitTime_(conf.getParameter<double>("MaxSimHitTime")),
     HcalSimParameterMap_(conf.getParameter<edm::ParameterSet>("hcalSimParameters"))
 {
@@ -70,6 +71,7 @@ void DLPHIN::print_config() {
     std::cout << "DLPHIN_truncate: " << DLPHIN_truncate_ << std::endl;
     std::cout << "DLPHIN_pb_2dHB: " << DLPHIN_pb_2dHB_ << std::endl;
     std::cout << "DLPHIN_pb_2dHE: " << DLPHIN_pb_2dHE_ << std::endl;
+    std::cout << "DLPHIN_save_to_AUX: " << DLPHIN_save_to_AUX_ << std::endl;
     std::cout << "=========================================================" << std::endl;
 }
 
@@ -246,7 +248,8 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
             if(DLPHIN_truncate_) {
                 if(RecHit.energy() <= 0) {pred = 0;}
             }
-            RecHit.setEnergy(pred);
+            if(DLPHIN_save_to_AUX_) RecHit.setAuxEnergy(pred);
+            else RecHit.setEnergy(pred);
         }
     }
 }

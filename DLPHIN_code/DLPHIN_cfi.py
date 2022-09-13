@@ -8,10 +8,12 @@ DLPHINConfig = cms.PSet(
     DLPHIN_print_config = cms.bool(True),
     DLPHIN_apply_respCorr = cms.bool(True),
     DLPHIN_respCorr_name = cms.FileInPath(DLPHIN_pb_folder + "respCorr_2dHBHE_E50_truncate_mini.root"),
+    #DLPHIN_respCorr_name = cms.FileInPath(DLPHIN_pb_folder + "respCorr_2dHBHE_E50_PU_truncate_mini.root"),
     #DLPHIN_respCorr_name = cms.FileInPath(DLPHIN_pb_folder + "simHit_respCorr_minimization.root"),
     DLPHIN_truncate = cms.bool(True),
     DLPHIN_pb_2dHB = cms.FileInPath(DLPHIN_pb_folder + "model_2dHB_p1TeV_cut0_epoch100_weight0.pb"),
     DLPHIN_pb_2dHE = cms.FileInPath(DLPHIN_pb_folder + "model_2dHE_p1TeV_cut0p1_epoch100_weight_0to1.pb"),
+    DLPHIN_save_to_AUX = cms.bool(False),
     MaxSimHitTime = cms.double(125.0),
     hcalSimParameters = SimPara.hcalSimParameters
 )
