@@ -80,8 +80,9 @@ void TreeReader::make_1d_plots() {
     OutputFileName.ReplaceAll("results/", "");
     auto OutputFile = new TFile(OutputFileName, "RECREATE");
 
-    std::vector<float> EnergyBins = {100,0,200};
+    std::vector<float> EnergyBins = {100,0,200};        //{nbins, xmin, xmax}
     std::vector<float> RatioBins = {100,0,2};
+    std::vector<float> EnergyBins_Log = {50,-1,3};        //{nbins, pow_min, pow_max}
 
     // book histos in OutputFile gDirectory
     // recHits vs simHits
@@ -142,6 +143,35 @@ void TreeReader::make_1d_plots() {
     auto DLPHINRatio_vs_SimHit_HE_ietaL = BookTH2F("DLPHINRatio_vs_SimHit_HE_ietaL", EnergyBins, RatioBins);
     auto DLPHINRatio_vs_SimHit_HE_ietaH = BookTH2F("DLPHINRatio_vs_SimHit_HE_ietaH", EnergyBins, RatioBins);
 
+    // recHits vs simHits, log log
+    auto Reco_vs_SimHit_Log = BookTH2F_Log("Reco_vs_SimHit_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Reco_vs_SimHit_HB_Log = BookTH2F_Log("Reco_vs_SimHit_HB_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Reco_vs_SimHit_ieta1516_Log = BookTH2F_Log("Reco_vs_SimHit_ieta1516_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Reco_vs_SimHit_HE_Log = BookTH2F_Log("Reco_vs_SimHit_HE_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Reco_vs_SimHit_HE_ietaL_Log = BookTH2F_Log("Reco_vs_SimHit_HE_ietaL_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Reco_vs_SimHit_HE_ietaH_Log = BookTH2F_Log("Reco_vs_SimHit_HE_ietaH_Log", EnergyBins_Log, EnergyBins_Log);
+
+    auto Aux_vs_SimHit_Log = BookTH2F_Log("Aux_vs_SimHit_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Aux_vs_SimHit_HB_Log = BookTH2F_Log("Aux_vs_SimHit_HB_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Aux_vs_SimHit_ieta1516_Log = BookTH2F_Log("Aux_vs_SimHit_ieta1516_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Aux_vs_SimHit_HE_Log = BookTH2F_Log("Aux_vs_SimHit_HE_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Aux_vs_SimHit_HE_ietaL_Log = BookTH2F_Log("Aux_vs_SimHit_HE_ietaL_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Aux_vs_SimHit_HE_ietaH_Log = BookTH2F_Log("Aux_vs_SimHit_HE_ietaH_Log", EnergyBins_Log, EnergyBins_Log);
+
+    auto Raw_vs_SimHit_Log = BookTH2F_Log("Raw_vs_SimHit_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Raw_vs_SimHit_HB_Log = BookTH2F_Log("Raw_vs_SimHit_HB_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Raw_vs_SimHit_ieta1516_Log = BookTH2F_Log("Raw_vs_SimHit_ieta1516_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Raw_vs_SimHit_HE_Log = BookTH2F_Log("Raw_vs_SimHit_HE_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Raw_vs_SimHit_HE_ietaL_Log = BookTH2F_Log("Raw_vs_SimHit_HE_ietaL_Log", EnergyBins_Log, EnergyBins_Log);
+    auto Raw_vs_SimHit_HE_ietaH_Log = BookTH2F_Log("Raw_vs_SimHit_HE_ietaH_Log", EnergyBins_Log, EnergyBins_Log);
+
+    auto DLPHIN_vs_SimHit_Log = BookTH2F_Log("DLPHIN_vs_SimHit_Log", EnergyBins_Log, EnergyBins_Log);
+    auto DLPHIN_vs_SimHit_HB_Log = BookTH2F_Log("DLPHIN_vs_SimHit_HB_Log", EnergyBins_Log, EnergyBins_Log);
+    auto DLPHIN_vs_SimHit_ieta1516_Log = BookTH2F_Log("DLPHIN_vs_SimHit_ieta1516_Log", EnergyBins_Log, EnergyBins_Log);
+    auto DLPHIN_vs_SimHit_HE_Log = BookTH2F_Log("DLPHIN_vs_SimHit_HE_Log", EnergyBins_Log, EnergyBins_Log);
+    auto DLPHIN_vs_SimHit_HE_ietaL_Log = BookTH2F_Log("DLPHIN_vs_SimHit_HE_ietaL_Log", EnergyBins_Log, EnergyBins_Log);
+    auto DLPHIN_vs_SimHit_HE_ietaH_Log = BookTH2F_Log("DLPHIN_vs_SimHit_HE_ietaH_Log", EnergyBins_Log, EnergyBins_Log);
+
     auto TotEntries = fChain->GetEntries();
     //TotEntries = 100;
 
@@ -171,36 +201,60 @@ void TreeReader::make_1d_plots() {
             Aux_vs_SimHit->Fill(SimHitEnergy, AuxEnergy_raw);
             Raw_vs_SimHit->Fill(SimHitEnergy, RawEnergy_raw);
             DLPHIN_vs_SimHit->Fill(SimHitEnergy, DLPHINEnergy);
+            Reco_vs_SimHit_Log->Fill(SimHitEnergy, RecoEnergy_raw);
+            Aux_vs_SimHit_Log->Fill(SimHitEnergy, AuxEnergy_raw);
+            Raw_vs_SimHit_Log->Fill(SimHitEnergy, RawEnergy_raw);
+            DLPHIN_vs_SimHit_Log->Fill(SimHitEnergy, DLPHINEnergy);
     
             if (IetaAbs <= 14) {
                 Reco_vs_SimHit_HB->Fill(SimHitEnergy, RecoEnergy_raw);
                 Aux_vs_SimHit_HB->Fill(SimHitEnergy, AuxEnergy_raw);
                 Raw_vs_SimHit_HB->Fill(SimHitEnergy, RawEnergy_raw);
                 DLPHIN_vs_SimHit_HB->Fill(SimHitEnergy, DLPHINEnergy);
+                Reco_vs_SimHit_HB_Log->Fill(SimHitEnergy, RecoEnergy_raw);
+                Aux_vs_SimHit_HB_Log->Fill(SimHitEnergy, AuxEnergy_raw);
+                Raw_vs_SimHit_HB_Log->Fill(SimHitEnergy, RawEnergy_raw);
+                DLPHIN_vs_SimHit_HB_Log->Fill(SimHitEnergy, DLPHINEnergy);
             }
             else if (IetaAbs <= 16) {
                 Reco_vs_SimHit_ieta1516->Fill(SimHitEnergy, RecoEnergy_raw);
                 Aux_vs_SimHit_ieta1516->Fill(SimHitEnergy, AuxEnergy_raw);
                 Raw_vs_SimHit_ieta1516->Fill(SimHitEnergy, RawEnergy_raw);
                 DLPHIN_vs_SimHit_ieta1516->Fill(SimHitEnergy, DLPHINEnergy);
+                Reco_vs_SimHit_ieta1516_Log->Fill(SimHitEnergy, RecoEnergy_raw);
+                Aux_vs_SimHit_ieta1516_Log->Fill(SimHitEnergy, AuxEnergy_raw);
+                Raw_vs_SimHit_ieta1516_Log->Fill(SimHitEnergy, RawEnergy_raw);
+                DLPHIN_vs_SimHit_ieta1516_Log->Fill(SimHitEnergy, DLPHINEnergy);
             }
             else if (IetaAbs <= 29) {
                 Reco_vs_SimHit_HE->Fill(SimHitEnergy, RecoEnergy_raw);
                 Aux_vs_SimHit_HE->Fill(SimHitEnergy, AuxEnergy_raw);
                 Raw_vs_SimHit_HE->Fill(SimHitEnergy, RawEnergy_raw);
                 DLPHIN_vs_SimHit_HE->Fill(SimHitEnergy, DLPHINEnergy);
+                Reco_vs_SimHit_HE_Log->Fill(SimHitEnergy, RecoEnergy_raw);
+                Aux_vs_SimHit_HE_Log->Fill(SimHitEnergy, AuxEnergy_raw);
+                Raw_vs_SimHit_HE_Log->Fill(SimHitEnergy, RawEnergy_raw);
+                DLPHIN_vs_SimHit_HE_Log->Fill(SimHitEnergy, DLPHINEnergy);
     
                 if (IetaAbs <= 26) {
                     Reco_vs_SimHit_HE_ietaL->Fill(SimHitEnergy, RecoEnergy_raw);
                     Aux_vs_SimHit_HE_ietaL->Fill(SimHitEnergy, AuxEnergy_raw);
                     Raw_vs_SimHit_HE_ietaL->Fill(SimHitEnergy, RawEnergy_raw);
                     DLPHIN_vs_SimHit_HE_ietaL->Fill(SimHitEnergy, DLPHINEnergy);
+                    Reco_vs_SimHit_HE_ietaL_Log->Fill(SimHitEnergy, RecoEnergy_raw);
+                    Aux_vs_SimHit_HE_ietaL_Log->Fill(SimHitEnergy, AuxEnergy_raw);
+                    Raw_vs_SimHit_HE_ietaL_Log->Fill(SimHitEnergy, RawEnergy_raw);
+                    DLPHIN_vs_SimHit_HE_ietaL_Log->Fill(SimHitEnergy, DLPHINEnergy);
                 }
                 else {
                     Reco_vs_SimHit_HE_ietaH->Fill(SimHitEnergy, RecoEnergy_raw);
                     Aux_vs_SimHit_HE_ietaH->Fill(SimHitEnergy, AuxEnergy_raw);
                     Raw_vs_SimHit_HE_ietaH->Fill(SimHitEnergy, RawEnergy_raw);
                     DLPHIN_vs_SimHit_HE_ietaH->Fill(SimHitEnergy, DLPHINEnergy);
+                    Reco_vs_SimHit_HE_ietaH_Log->Fill(SimHitEnergy, RecoEnergy_raw);
+                    Aux_vs_SimHit_HE_ietaH_Log->Fill(SimHitEnergy, AuxEnergy_raw);
+                    Raw_vs_SimHit_HE_ietaH_Log->Fill(SimHitEnergy, RawEnergy_raw);
+                    DLPHIN_vs_SimHit_HE_ietaH_Log->Fill(SimHitEnergy, DLPHINEnergy);
                 }
             }
     

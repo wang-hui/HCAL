@@ -5,7 +5,20 @@ echo "Running on: `uname -a`" #Condor job is running on this node
 source /cvmfs/cms.cern.ch/cmsset_default.sh  ## if a tcsh script, use .csh instead of .sh
 export SCRAM_ARCH=slc7_amd64_gcc700
 echo $SCRAM_ARCH
+
 eval `scramv1 project CMSSW CMSSW_10_6_12`
+#
+# propagate changes to default release. this tarball is made with:
+# tar czvf CMSSW_10_6_12_DLPHIN_partial.tgz \
+# CMSSW_10_6_12/src/RecoLocalCalo/ \
+# CMSSW_10_6_12/src/HCAL/DLPHIN* \
+# CMSSW_10_6_12/lib/ \
+# CMSSW_10_6_12/biglib/ \
+# CMSSW_10_6_12/python/ \
+# CMSSW_10_6_12/cfipython/
+#xrdcp root://cmseos.fnal.gov//store/user/hatake/Tarballs/CMSSW_10_6_12_DLPHIN_partial.tgz .
+#tar xzf CMSSW_10_6_12_DLPHIN_partial.tgz
+#
 cd CMSSW_10_6_12/src
 eval `scramv1 runtime -sh`
 git cms-init --upstream-only
@@ -17,12 +30,17 @@ mv ${_CONDOR_SCRATCH_DIR}/DLPHIN_cfi.py DLPHIN_code
 mv ${_CONDOR_SCRATCH_DIR}/HBHEPhase1Reconstructor_cfi.py DLPHIN_code
 python DLPHIN_setup.py mv
 cd ..
-scram b -j 4
+scram b -j 2
 mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_RECO.py .
+mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_RECO_for_PF_Calib.py .
+mv ${_CONDOR_SCRATCH_DIR}/reco_MC_RAW2DIGI_L1Reco_RECO_RECOSIM_EI_PAT.py .
 mv ${_CONDOR_SCRATCH_DIR}/FileList.tar .
+mv ${_CONDOR_SCRATCH_DIR}/PFCalibration_simHit.db .
 tar -xvf FileList.tar
 pwd
 
-cmsRun reco_MC_RAW2DIGI_RECO.py $1
+#cmsRun reco_MC_RAW2DIGI_RECO.py $1
+#cmsRun reco_MC_RAW2DIGI_RECO_for_PF_Calib.py $1
+cmsRun reco_MC_RAW2DIGI_L1Reco_RECO_RECOSIM_EI_PAT.py $1
 
-xrdcp reco_MC_RAW2DIGI_RECO.root root://cmseos.fnal.gov//${2}/MC_RECO_${3}.root
+xrdcp -f reco_MC_RAW2DIGI_RECO.root root://cmseos.fnal.gov//${2}/MC_RECO_${3}.root

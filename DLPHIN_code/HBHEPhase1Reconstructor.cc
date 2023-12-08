@@ -422,7 +422,7 @@ HBHEPhase1Reconstructor::HBHEPhase1Reconstructor(const edm::ParameterSet& conf)
         tok_qie11_ = consumes<QIE11DigiCollection>(
             conf.getParameter<edm::InputTag>("digiLabelQIE11"));
     if (saveSimHit_)
-        HcalHitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits","SIM"));
+        HcalHitsToken_ = consumes<std::vector<PCaloHit>>(edm::InputTag("g4SimHits","HcalHits"));
 
     if (saveInfos_)
         produces<HBHEChannelInfoCollection>();

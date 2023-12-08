@@ -32,9 +32,10 @@ DLPHIN::DLPHIN(const edm::ParameterSet& conf):
     DLPHIN_print_config_(conf.getParameter<bool>("DLPHIN_print_config")),
     DLPHIN_truncate_(conf.getParameter<bool>("DLPHIN_truncate")),
     DLPHIN_apply_respCorr_(conf.getParameter<bool>("DLPHIN_apply_respCorr")),
-    DLPHIN_respCorr_name_(conf.getParameter<std::string>("DLPHIN_respCorr_name")),
-    DLPHIN_pb_2dHB_(conf.getParameter<std::string>("DLPHIN_pb_2dHB")),
-    DLPHIN_pb_2dHE_(conf.getParameter<std::string>("DLPHIN_pb_2dHE")),
+    DLPHIN_respCorr_name_((conf.getParameter<edm::FileInPath>("DLPHIN_respCorr_name")).fullPath()),
+    DLPHIN_pb_2dHB_((conf.getParameter<edm::FileInPath>("DLPHIN_pb_2dHB")).fullPath()),
+    DLPHIN_pb_2dHE_((conf.getParameter<edm::FileInPath>("DLPHIN_pb_2dHE")).fullPath()),
+    DLPHIN_save_to_AUX_(conf.getParameter<bool>("DLPHIN_save_to_AUX")),
     MaxSimHitTime_(conf.getParameter<double>("MaxSimHitTime")),
     HcalSimParameterMap_(conf.getParameter<edm::ParameterSet>("hcalSimParameters"))
 {
@@ -70,6 +71,7 @@ void DLPHIN::print_config() {
     std::cout << "DLPHIN_truncate: " << DLPHIN_truncate_ << std::endl;
     std::cout << "DLPHIN_pb_2dHB: " << DLPHIN_pb_2dHB_ << std::endl;
     std::cout << "DLPHIN_pb_2dHE: " << DLPHIN_pb_2dHE_ << std::endl;
+    std::cout << "DLPHIN_save_to_AUX: " << DLPHIN_save_to_AUX_ << std::endl;
     std::cout << "=========================================================" << std::endl;
 }
 
@@ -77,16 +79,16 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     //std::cout << "nChannelInfos " << ChannelInfos->size() << ", nRecHits " << RecHits->size() << std::endl;
     DLPHIN_debug_infos.clear();
     
-    std::map <int_int_pair, std::vector<std::vector<float>>> HB_ieta_iphi_charge_map, HE_ieta_iphi_charge_map;
-    preprocess(DbServ, ChannelInfos,HB_ieta_iphi_charge_map, HE_ieta_iphi_charge_map);
-    //std::cout << HB_ieta_iphi_charge_map.size() << ", " << HE_ieta_iphi_charge_map.size() << std::endl;
+    std::vector<int_int_pair> HB_ieta_iphi_vec, HE_ieta_iphi_vec;
+    std::vector<vec_depth_charge> HB_depth_charge_vec, HE_depth_charge_vec;
+    preprocess(DbServ, ChannelInfos, HB_ieta_iphi_vec, HE_ieta_iphi_vec, HB_depth_charge_vec, HE_depth_charge_vec);
 
     //Initialize DLPHIN inputs tensors
     //ch_input: (charge - pedestal) * rawgain
     //ty_input: |ieta|
     //ma_input: whether a channel is real or a place holder
-    int HB_tot_rows = HB_ieta_iphi_charge_map.size();
-    int HE_tot_rows = HE_ieta_iphi_charge_map.size();
+    int HB_tot_rows = HB_ieta_iphi_vec.size();
+    int HE_tot_rows = HE_ieta_iphi_vec.size();
 
     tensorflow::Tensor HB_ch_input_2d(tensorflow::DT_FLOAT, {HB_tot_rows, HB_tot_col});
     tensorflow::Tensor HB_ty_input_2d(tensorflow::DT_FLOAT, {HB_tot_rows, 1});
@@ -97,8 +99,8 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     tensorflow::Tensor HE_ma_input_2d(tensorflow::DT_FLOAT, {HE_tot_rows, HE_depth_max});
 
     //Fill DLPHIN inputs tensors
-    process_inputs (HB_ieta_iphi_charge_map, HB_ch_input_2d, HB_ty_input_2d, HB_ma_input_2d);
-    process_inputs (HE_ieta_iphi_charge_map, HE_ch_input_2d, HE_ty_input_2d, HE_ma_input_2d);
+    process_inputs (HB_ieta_iphi_vec, HB_depth_charge_vec, HB_ch_input_2d, HB_ty_input_2d, HB_ma_input_2d);
+    process_inputs (HE_ieta_iphi_vec, HE_depth_charge_vec, HE_ch_input_2d, HE_ty_input_2d, HE_ma_input_2d);
 
     //DLPHIN inference
     //outputs is a vector of one rank-3 tensor [pred:mask:depth]
@@ -119,13 +121,15 @@ void DLPHIN::DLPHIN_run (const HcalDbService& DbServ, const HBHEChannelInfoColle
     */
 
     //Save DLPHIN outputs to RecHits
-    save_outputs (RecHits, HB_ieta_iphi_charge_map, HE_ieta_iphi_charge_map, HB_outputs_2d, HE_outputs_2d);
+    save_outputs (RecHits, HB_ieta_iphi_vec, HE_ieta_iphi_vec, HB_outputs_2d, HE_outputs_2d);
 }
 
 void DLPHIN::preprocess (const HcalDbService& DbServ,
                         const HBHEChannelInfoCollection *ChannelInfos,
-                        std::map <int_int_pair, std::vector<std::vector<float>>>& HB_ieta_iphi_charge_map,
-                        std::map <int_int_pair, std::vector<std::vector<float>>>& HE_ieta_iphi_charge_map
+                        std::vector<int_int_pair>& HB_ieta_iphi_vec,
+                        std::vector<int_int_pair>& HE_ieta_iphi_vec,
+                        std::vector<vec_depth_charge>& HB_depth_charge_vec,
+                        std::vector<vec_depth_charge>& HE_depth_charge_vec
                         ) {
     for (const auto& ChannelInfo : *ChannelInfos) {
         auto Hid = ChannelInfo.id();
@@ -138,62 +142,66 @@ void DLPHIN::preprocess (const HcalDbService& DbServ,
         auto RawGain = Hcalib.rawgain(0);
 
         auto  ChargeVec = EmptyChargeVec;
-        for (int iTS = 0; iTS < TS_max; ++iTS) {
-            ChargeVec[iTS] = (ChannelInfo.tsRawCharge(iTS) - ChannelInfo.tsPedestal(iTS)) * RawGain;
+        for (int iTS = 0; iTS < TS_max; iTS++) {
+            ChargeVec.at(iTS) = (ChannelInfo.tsRawCharge(iTS) - ChannelInfo.tsPedestal(iTS)) * RawGain;
         }
 
-        if (Subdet == 1) add_info_to_map(HB_ieta_iphi_charge_map, Subdet, Depth, Ieta, Iphi, ChargeVec);
-        else if (Subdet == 2) add_info_to_map(HE_ieta_iphi_charge_map, Subdet, Depth, Ieta, Iphi, ChargeVec);
+        if (Subdet == 1) add_info_to_vec(HB_ieta_iphi_vec, HB_depth_charge_vec, Subdet, Depth, Ieta, Iphi, ChargeVec);
+        else if (Subdet == 2) add_info_to_vec(HE_ieta_iphi_vec, HE_depth_charge_vec, Subdet, Depth, Ieta, Iphi, ChargeVec);
     }
 }
 
-void DLPHIN::add_info_to_map (std::map <int_int_pair, std::vector<std::vector<float>>>& ieta_iphi_charge_map,
+void DLPHIN::add_info_to_vec (std::vector<int_int_pair>& ieta_iphi_vec,
+                            std::vector<vec_depth_charge>& vec_depth_charge_vec,
                             const int& Subdet, const int& Depth, const int& Ieta, const int& Iphi,
                             const std::vector<float>& ChargeVec
                             ) {
     auto IetaIphi = std::make_pair(Ieta, Iphi);
-    if (ieta_iphi_charge_map.find(IetaIphi) != ieta_iphi_charge_map.end()) {
-        (ieta_iphi_charge_map.at(IetaIphi))[Depth-1] = ChargeVec;
+    auto iter = std::find(ieta_iphi_vec.begin(), ieta_iphi_vec.end(), IetaIphi);
+    if (iter != ieta_iphi_vec.end()) {
+        int Row = iter - ieta_iphi_vec.begin();
+        vec_depth_charge_vec.at(Row).at(Depth-1) = ChargeVec;
     }
     else {
+        ieta_iphi_vec.push_back(IetaIphi);
+
         int MaxDepth = HB_depth_max;
         if (Subdet == 2) {MaxDepth = HE_depth_max;}
         auto ChargeVecTmp = EmptyChargeVec;
-        std::vector<std::vector<float>> VecChargeVecTmp(MaxDepth, ChargeVecTmp);
-        ieta_iphi_charge_map[IetaIphi] = VecChargeVecTmp;
-        (ieta_iphi_charge_map.at(IetaIphi))[Depth-1] = ChargeVec;
+        vec_depth_charge VecChargeVecTmp(MaxDepth, ChargeVecTmp);
+        vec_depth_charge_vec.push_back(VecChargeVecTmp);
+        vec_depth_charge_vec.back().at(Depth-1) = ChargeVec;
     }
 }
 
-void DLPHIN::process_inputs (const std::map <int_int_pair, std::vector<std::vector<float>>>& ieta_iphi_charge_map,
+void DLPHIN::process_inputs (const std::vector<int_int_pair>& ieta_iphi_vec,
+                            const std::vector<vec_depth_charge>& vec_depth_charge_vec,
                             tensorflow::Tensor& ch_input_2d,
                             tensorflow::Tensor& ty_input_2d,
                             tensorflow::Tensor& ma_input_2d
                             ) {
-    for (auto iter : ieta_iphi_charge_map) {
-        auto IetaIphi = iter.first;
-        auto Row = std::distance(std::begin(ieta_iphi_charge_map), ieta_iphi_charge_map.find(IetaIphi));
-
-        auto VecChargeVec = iter.second;
-        int nDepth = VecChargeVec.size();
-        for (int iDepth = 0; iDepth < nDepth; iDepth ++) {
-            auto ChargeVec = VecChargeVec.at(iDepth);
+    const int nRow = vec_depth_charge_vec.size();
+    for (int Row = 0; Row < nRow; Row++) {
+        const auto& VecChargeVec = vec_depth_charge_vec.at(Row);
+        const int nDepth = VecChargeVec.size();
+        for (int iDepth = 0; iDepth < nDepth; iDepth++) {
+            const auto& ChargeVec = VecChargeVec.at(iDepth);
             if (ChargeVec == EmptyChargeVec)
                 ma_input_2d.tensor<float, 2>()(Row, iDepth) = 0.0;
             else
                 ma_input_2d.tensor<float, 2>()(Row, iDepth) = 1.0;
-            for (int iTS = 0; iTS < TS_max; ++iTS) {
-                ch_input_2d.tensor<float, 2>()(Row, iDepth * TS_max + iTS) = ChargeVec[iTS];
+            for (int iTS = 0; iTS < TS_max; iTS++) {
+                ch_input_2d.tensor<float, 2>()(Row, iDepth * TS_max + iTS) = ChargeVec.at(iTS);
             }
         }
 
-        ty_input_2d.tensor<float, 2>()(Row, 0) = fabs(IetaIphi.first);
+        ty_input_2d.tensor<float, 2>()(Row, 0) = fabs(ieta_iphi_vec.at(Row).first);
     }
 }
 
 void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
-                          const std::map <int_int_pair, std::vector<std::vector<float>>>& HB_ieta_iphi_charge_map,
-                          const std::map <int_int_pair, std::vector<std::vector<float>>>& HE_ieta_iphi_charge_map,
+                          const std::vector<int_int_pair>& HB_ieta_iphi_vec,
+                          const std::vector<int_int_pair>& HE_ieta_iphi_vec,
                           const std::vector<tensorflow::Tensor>& HB_outputs_2d,
                           const std::vector<tensorflow::Tensor>& HE_outputs_2d
                           ) {
@@ -209,15 +217,21 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
         float mask = 0.0;
         float respCorr = 1.0;
 
-        if(Subdet == 1 && HB_ieta_iphi_charge_map.find(IetaIphi) != HB_ieta_iphi_charge_map.end()) {
-            auto Row = std::distance(std::begin(HB_ieta_iphi_charge_map), HB_ieta_iphi_charge_map.find(IetaIphi));
-            pred = HB_outputs_2d[0].tensor<float, 3>()(Row,0,Depth-1);
-            mask = HB_outputs_2d[0].tensor<float, 3>()(Row,1,Depth-1);
+        if(Subdet == 1) {
+            auto iter = std::find(HB_ieta_iphi_vec.begin(), HB_ieta_iphi_vec.end(), IetaIphi);
+            if (iter != HB_ieta_iphi_vec.end()) {
+                int Row = iter - HB_ieta_iphi_vec.begin();
+                pred = HB_outputs_2d[0].tensor<float, 3>()(Row,0,Depth-1);
+                mask = HB_outputs_2d[0].tensor<float, 3>()(Row,1,Depth-1);
+            }
         }
-        else if(Subdet == 2 && HE_ieta_iphi_charge_map.find(IetaIphi) != HE_ieta_iphi_charge_map.end()) {
-            auto Row = std::distance(std::begin(HE_ieta_iphi_charge_map), HE_ieta_iphi_charge_map.find(IetaIphi));
-            pred = HE_outputs_2d[0].tensor<float, 3>()(Row,0,Depth-1);
-            mask = HE_outputs_2d[0].tensor<float, 3>()(Row,1,Depth-1);
+        else if(Subdet == 2) {
+            auto iter = std::find(HE_ieta_iphi_vec.begin(), HE_ieta_iphi_vec.end(), IetaIphi);
+            if (iter != HE_ieta_iphi_vec.end()) {
+                int Row = iter - HE_ieta_iphi_vec.begin();
+                pred = HE_outputs_2d[0].tensor<float, 3>()(Row,0,Depth-1);
+                mask = HE_outputs_2d[0].tensor<float, 3>()(Row,1,Depth-1);
+            }
         }
         if(pred < 0) {std::cout << "Error! ReLU outputs < 0" << std::endl;}
         if(mask != 1) {std::cout << "Error! A real channel is masked" << std::endl;}
@@ -234,7 +248,8 @@ void DLPHIN::save_outputs (HBHERecHitCollection *RecHits,
             if(DLPHIN_truncate_) {
                 if(RecHit.energy() <= 0) {pred = 0;}
             }
-            RecHit.setEnergy(pred);
+            if(DLPHIN_save_to_AUX_) RecHit.setAuxEnergy(pred);
+            else RecHit.setEnergy(pred);
         }
     }
 }

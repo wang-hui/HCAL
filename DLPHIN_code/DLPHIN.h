@@ -65,6 +65,7 @@ private:
     const int HB_tot_col = TS_max * HB_depth_max;
 
     const std::vector<float> EmptyChargeVec = std::vector<float>(TS_max, 0.0);
+    typedef std::vector<std::vector<float>> vec_depth_charge;
 
     bool DLPHIN_debug_;
     bool DLPHIN_print_config_;
@@ -79,26 +80,32 @@ private:
     std::string DLPHIN_pb_2dHB_, DLPHIN_pb_2dHE_;
     tensorflow::Session *session_2dHB, *session_2dHE;
 
+    bool DLPHIN_save_to_AUX_;
+
     void preprocess (const HcalDbService& DbServ,
                     const HBHEChannelInfoCollection *ChannelInfos,
-                    std::map <int_int_pair, std::vector<std::vector<float>>>& HB_ieta_iphi_charge_map,
-                    std::map <int_int_pair, std::vector<std::vector<float>>>& HE_ieta_iphi_charge_map
+                    std::vector<int_int_pair>& HB_ieta_iphi_vec,
+                    std::vector<int_int_pair>& HE_ieta_iphi_vec,
+                    std::vector<vec_depth_charge>& HB_depth_charge_vec,
+                    std::vector<vec_depth_charge>& HE_depth_charge_vec
                     );
 
-    void add_info_to_map (std::map <int_int_pair, std::vector<std::vector<float>>>& ieta_iphi_charge_map,
+    void add_info_to_vec (std::vector<int_int_pair>& ieta_iphi_vec,
+                        std::vector<vec_depth_charge>& vec_depth_charge_vec,
                         const int& Subdet, const int& Depth, const int& Ieta, const int& Iphi,
                         const std::vector<float>& ChargeVec
                         );
 
-    void process_inputs (const std::map <int_int_pair, std::vector<std::vector<float>>>& ieta_iphi_charge_map,
+    void process_inputs (const std::vector<int_int_pair>& ieta_iphi_vec,
+                        const std::vector<vec_depth_charge>& vec_depth_charge_vec,
                         tensorflow::Tensor& ch_input_2d,
                         tensorflow::Tensor& ty_input_2d,
                         tensorflow::Tensor& ma_input_2d
                         );
 
     void save_outputs (HBHERecHitCollection *RecHits,
-                      const std::map <int_int_pair, std::vector<std::vector<float>>>& HB_ieta_iphi_charge_map,
-                      const std::map <int_int_pair, std::vector<std::vector<float>>>& HE_ieta_iphi_charge_map,
+                      const std::vector<int_int_pair>& HB_ieta_iphi_vec,
+                      const std::vector<int_int_pair>& HE_ieta_iphi_vec,
                       const std::vector<tensorflow::Tensor>& HB_outputs_2d,
                       const std::vector<tensorflow::Tensor>& HE_outputs_2d
                       );
