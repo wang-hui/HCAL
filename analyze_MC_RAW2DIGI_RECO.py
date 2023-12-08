@@ -28,24 +28,25 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
-f = open(sys.argv[2], "r")
-my_list = f.readlines()
-f.close()
+#f = open(sys.argv[2], "r")
+#my_list = f.readlines()
+#f.close()
 
-if len(sys.argv) == 4:
-    nFile = int(sys.argv[3])
-    my_list = my_list[0:nFile]
+#if len(sys.argv) == 4:
+#    nFile = int(sys.argv[3])
+#    my_list = my_list[0:nFile]
 
-OutputFile = sys.argv[2].split("/")[-1]
-OutputFile = OutputFile.split(".")[0]
-OutputFile = OutputFile + "_TTree.root"
+OutputFile = "testTTree.root"
+#OutputFile = sys.argv[2].split("/")[-1]
+#OutputFile = OutputFile.split(".")[0]
+#OutputFile = OutputFile + "_TTree.root"
 
 # Input source
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        my_list
+        #my_list
         #"root://cmseos.fnal.gov//store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_PU-2021-05-23/UL_MC_RAW_PU_0.root"
-        #"root://cmseos.fnal.gov//store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_noPU-2021-06-11/UL_MC_RAW_noPU_0.root"
+        "root://cmseos.fnal.gov//store/user/lpcrutgers/huiwang/HCAL/UL_p1TeV_pion_gun_RAW_noPU-2021-06-11/UL_MC_RAW_noPU_0.root"
     ),
     secondaryFileNames = cms.untracked.vstring()
 )
