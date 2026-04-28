@@ -106,6 +106,8 @@ public :
     TString InputFileName;
 
     TH2F* BookTH2F(TString Name, std::vector<float> XBinVec, std::vector<float> YBinVec);
+    TH2F* BookTH2F_Log(TString Name, std::vector<float> XBinVec, std::vector<float> YBinVec);
+
     void make_test_plots();
     void make_1d_plots();
     void make_2d_plots();
@@ -254,6 +256,24 @@ Int_t TreeReader::Cut(Long64_t entry)
 
 TH2F* TreeReader::BookTH2F(TString Name, std::vector<float> XBinVec, std::vector<float> YBinVec) {
     return new TH2F(Name, Name, XBinVec[0], XBinVec[1], XBinVec[2], YBinVec[0], YBinVec[1], YBinVec[2]);
+}
+
+TH2F* TreeReader::BookTH2F_Log(TString Name, std::vector<float> XBinVec, std::vector<float> YBinVec) {
+    const int XBins = XBinVec[0];
+    float XPowLow = XBinVec[1];
+    float XPowHigh = XBinVec[2];
+    float XWidth = (XPowHigh - XPowLow) / XBins;
+    float XArray[XBins+1];
+    for (int i = 0; i <= XBins; i++) {XArray[i] = TMath::Power(10, XPowLow + i * XWidth);}
+
+    const int YBins = YBinVec[0];
+    float YPowLow = YBinVec[1];
+    float YPowHigh = YBinVec[2];
+    float YWidth = (YPowHigh - YPowLow) / YBins;
+    float YArray[YBins+1];
+    for (int i = 0; i <= YBins; i++) {YArray[i] = TMath::Power(10, YPowLow + i * YWidth);}
+
+    return new TH2F(Name, Name, XBins, XArray, YBins, YArray);
 }
 
 void TreeReader::add_info_to_map(ieta_iphi_info_map &IetaIphiInfoMap, const channel_info &ChannelInfo) {
